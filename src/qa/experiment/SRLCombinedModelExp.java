@@ -52,8 +52,8 @@ public class SRLCombinedModelExp {
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-                                 "spear_spearing", "retract"};
-    
+        "spear_spearing", "retract"};
+
     public SRLCombinedModelExp() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
         testFilePath = new ArrayList<String>();
@@ -65,7 +65,7 @@ public class SRLCombinedModelExp {
     public void init() throws FileNotFoundException {
         proc = new ProcessFrameProcessor(processTsvFileName);
         proc.loadProcessData();
-        blackList = new ArrayList( Arrays.asList( blackListProcess ) );
+        blackList = new ArrayList(Arrays.asList(blackListProcess));
         if (nbProcess > 0) {
             limitedProcess = true;
             for (int i = 0; i < proc.getProcArr().size() && processNames.size() < nbProcess; i++) {
@@ -98,24 +98,21 @@ public class SRLCombinedModelExp {
         for (int i = 0; i < frameArr.size(); i++) {
             ProcessFrame testFrame = frameArr.get(i);
             String normalizedProcessName = ProcessFrameUtil.normalizeProcessName(testFrame.getProcessName());
-            if ((!limitedProcess || (limitedProcess && processNames.contains(normalizedProcessName)) ) && !blackList.contains(normalizedProcessName)) {
+            if ((!limitedProcess || (limitedProcess && processNames.contains(normalizedProcessName))) && !blackList.contains(normalizedProcessName)) {
                 int fold = processFold.get(normalizedProcessName);
                 ProcessFrameUtil.toClearParserFormat(testFrame, outDirName + "/" + normalizedProcessName + ".test.cv." + fold);  // out to <process_frame_>.test.cv.<fold>
                 testFilePath.add(outDirName + "/" + normalizedProcessName + ".test.cv." + fold);
                 processFold.put(normalizedProcessName, fold + 1);
 
                 // Get the testing data
-               /*ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>();
+                ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>();
                 for (int j = 0; j < frameArr.size(); j++) {
                     if (i != j) {
                         String processName = ProcessFrameUtil.normalizeProcessName(frameArr.get(j).getProcessName());
-                         //trainingFrames.add(frameArr.get(j));
-                        if (!blackList.contains(processName))
-                        {
+                        //trainingFrames.add(frameArr.get(j));
+                        if (!blackList.contains(processName)) {
                             trainingFrames.add(frameArr.get(j));
-                        }
-                        else
-                        {
+                        } else {
                             System.out.println("BLACKLIST");
                         }
                     }
@@ -126,7 +123,7 @@ public class SRLCombinedModelExp {
                 ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
 
                 // Train trainingFrames
-               SRLTrain train = new SRLTrain();
+                SRLTrain train = new SRLTrain();
                 CmdLineParser cmd = new CmdLineParser(train);
 
                 try {
@@ -141,18 +138,18 @@ public class SRLCombinedModelExp {
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.exit(0);
-                }*/
-                   
+                }
+
             }
             // Perform prediction
         }
-       /* Thread.sleep(10000);
+        Thread.sleep(10000);
         for (int i = 0; i < testFilePath.size(); i++) {
             ClearParserUtil.PREDICT_ARGS[3] = testFilePath.get(i);
             ClearParserUtil.PREDICT_ARGS[5] = testFilePath.get(i).replace(".test.", ".combined.predict.");
             ClearParserUtil.PREDICT_ARGS[7] = trainingModelFilePath.get(i);
             new SRLPredict(ClearParserUtil.PREDICT_ARGS);
-        }*/
+        }
 
         // Prediction time
     }
@@ -188,7 +185,7 @@ public class SRLCombinedModelExp {
         BufferedReader bfr = new BufferedReader(new InputStreamReader(pr.getInputStream()));
         String line = "";
         while ((line = bfr.readLine()) != null) {
-        // display each output line form python script
+            // display each output line form python script
             System.out.println(line);
         }
         StdUtil.printError(pr);
@@ -203,7 +200,7 @@ public class SRLCombinedModelExp {
             srlExp.init();
             srlExp.trainAndPredict();
             Thread.sleep(5000);
-           // srlExp.evaluate();
+            srlExp.evaluate();
             System.out.println("FINISH");
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
