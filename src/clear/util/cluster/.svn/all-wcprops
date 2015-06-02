@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/217/trunk/src/clear/util/cluster
+END
+ProbCluster.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/141/trunk/src/clear/util/cluster/ProbCluster.java
+END
+Prob1dMap.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/177/trunk/src/clear/util/cluster/Prob1dMap.java
+END
+Similarity.java
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/217/trunk/src/clear/util/cluster/Similarity.java
+END
+Prob2dMap.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/177/trunk/src/clear/util/cluster/Prob2dMap.java
+END
+SRLClusterBuilder.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/!svn/ver/177/trunk/src/clear/util/cluster/SRLClusterBuilder.java
+END
+Kmeans.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/177/trunk/src/clear/util/cluster/Kmeans.java
+END

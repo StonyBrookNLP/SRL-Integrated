@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/215/trunk/src/clear/model
+END
+AbstractMultiModel.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/124/trunk/src/clear/model/AbstractMultiModel.java
+END
+SupportVectorModel.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/135/trunk/src/clear/model/SupportVectorModel.java
+END
+AbstractModel.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/215/trunk/src/clear/model/AbstractModel.java
+END
+OneVsAllModel.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/141/trunk/src/clear/model/OneVsAllModel.java
+END
+BinaryModel.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/141/trunk/src/clear/model/BinaryModel.java
+END

@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/223/trunk/src/clear/util
+END
+JString.java
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/132/trunk/src/clear/util/JString.java
+END
+JFileTokenizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/57/trunk/src/clear/util/JFileTokenizer.java
+END
+DSUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/177/trunk/src/clear/util/DSUtil.java
+END
+IOUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/132/trunk/src/clear/util/IOUtil.java
+END
+JSet.java
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/131/trunk/src/clear/util/JSet.java
+END
+JMap.java
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/223/trunk/src/clear/util/JMap.java
+END
+JArrays.java
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/132/trunk/src/clear/util/JArrays.java
+END

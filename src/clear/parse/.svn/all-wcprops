@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/217/trunk/src/clear/parse
+END
+VoiceDetector.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/144/trunk/src/clear/parse/VoiceDetector.java
+END
+AbstractParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/215/trunk/src/clear/parse/AbstractParser.java
+END
+AbstractSRLParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/145/trunk/src/clear/parse/AbstractSRLParser.java
+END
+AbstractDepParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/215/trunk/src/clear/parse/AbstractDepParser.java
+END
+Lemmatizer.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/217/trunk/src/clear/parse/Lemmatizer.java
+END
+ShiftPopParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/215/trunk/src/clear/parse/ShiftPopParser.java
+END
+SRLParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/145/trunk/src/clear/parse/SRLParser.java
+END
+ShiftEagerParser.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/215/trunk/src/clear/parse/ShiftEagerParser.java
+END

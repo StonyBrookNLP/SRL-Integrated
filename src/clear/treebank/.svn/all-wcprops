@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/223/trunk/src/clear/treebank
+END
+TBEnLib.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/149/trunk/src/clear/treebank/TBEnLib.java
+END
+TBHeadRule.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/73/trunk/src/clear/treebank/TBHeadRule.java
+END
+TBHeadRules.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/73/trunk/src/clear/treebank/TBHeadRules.java
+END
+TBKrConvert.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/215/trunk/src/clear/treebank/TBKrConvert.java
+END
+TBTree.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/196/trunk/src/clear/treebank/TBTree.java
+END
+TBReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/223/trunk/src/clear/treebank/TBReader.java
+END
+TBKrLib.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/215/trunk/src/clear/treebank/TBKrLib.java
+END
+TBEnConvert.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/215/trunk/src/clear/treebank/TBEnConvert.java
+END
+AbstractTBConvert.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/149/trunk/src/clear/treebank/AbstractTBConvert.java
+END
+TBNode.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/223/trunk/src/clear/treebank/TBNode.java
+END
+TBLib.java
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/73/trunk/src/clear/treebank/TBLib.java
+END

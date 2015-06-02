@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/215/trunk/src/clear/train
+END
+AbstractTrainer.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/123/trunk/src/clear/train/AbstractTrainer.java
+END
+OneVsAllTrainer.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/120/trunk/src/clear/train/OneVsAllTrainer.java
+END
+BinaryTrainer.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/122/trunk/src/clear/train/BinaryTrainer.java
+END

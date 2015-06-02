@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/223/trunk/src/clear/morph
+END
+MorphEnLib.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/217/trunk/src/clear/morph/MorphEnLib.java
+END
+MorphKr.java
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/215/trunk/src/clear/morph/MorphKr.java
+END
+MorphKrAnalyzer.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/215/trunk/src/clear/morph/MorphKrAnalyzer.java
+END
+MorphKrAnalyzer.class
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/215/trunk/src/clear/morph/MorphKrAnalyzer.class
+END
+MorphEnAnalyzer.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/223/trunk/src/clear/morph/MorphEnAnalyzer.java
+END

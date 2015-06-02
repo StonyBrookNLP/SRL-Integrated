@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/141/trunk/src/clear/dep/feat
+END
+AbstractFeat.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/132/trunk/src/clear/dep/feat/AbstractFeat.java
+END
+FeatEnglish.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/141/trunk/src/clear/dep/feat/FeatEnglish.java
+END
+FeatCzech.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/132/trunk/src/clear/dep/feat/FeatCzech.java
+END

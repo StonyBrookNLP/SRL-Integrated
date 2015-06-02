@@ -1,0 +1,167 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/223/trunk/src/clear/experiment
+END
+SRLTopicCluster.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/144/trunk/src/clear/experiment/SRLTopicCluster.java
+END
+AnalyzePBArgs.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/177/trunk/src/clear/experiment/AnalyzePBArgs.java
+END
+DepProjectize.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/128/trunk/src/clear/experiment/DepProjectize.java
+END
+DepKrClean.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/215/trunk/src/clear/experiment/DepKrClean.java
+END
+DepSelect.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/177/trunk/src/clear/experiment/DepSelect.java
+END
+DepPrintStates.java
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/215/trunk/src/clear/experiment/DepPrintStates.java
+END
+MergeDepSRL.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/223/trunk/src/clear/experiment/MergeDepSRL.java
+END
+ExtractMissPredicates.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/215/trunk/src/clear/experiment/ExtractMissPredicates.java
+END
+SRLDevelop.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/215/trunk/src/clear/experiment/SRLDevelop.java
+END
+DepCount.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/215/trunk/src/clear/experiment/DepCount.java
+END
+Tab2Dep.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/88/trunk/src/clear/experiment/Tab2Dep.java
+END
+SRLVerbCluster.java
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/144/trunk/src/clear/experiment/SRLVerbCluster.java
+END
+DepFuzzyCluster.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/215/trunk/src/clear/experiment/DepFuzzyCluster.java
+END
+DepAdapt.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/215/trunk/src/clear/experiment/DepAdapt.java
+END
+CheckNonPorjective.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/144/trunk/src/clear/experiment/CheckNonPorjective.java
+END
+ExtractVoices.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/144/trunk/src/clear/experiment/ExtractVoices.java
+END
+ExcludeUnknowVB.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/142/trunk/src/clear/experiment/ExcludeUnknowVB.java
+END
+generateCV.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/137/trunk/src/clear/experiment/generateCV.java
+END
+DepSplit.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/128/trunk/src/clear/experiment/DepSplit.java
+END
+ExtractDeps.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/223/trunk/src/clear/experiment/ExtractDeps.java
+END
+ExtractArgs.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/132/trunk/src/clear/experiment/ExtractArgs.java
+END
+DepDevelop.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/223/trunk/src/clear/experiment/DepDevelop.java
+END
+SRLProbE.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/177/trunk/src/clear/experiment/SRLProbE.java
+END
+ExtractClusterFeature.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/144/trunk/src/clear/experiment/ExtractClusterFeature.java
+END
+DepAnalyze.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/177/trunk/src/clear/experiment/DepAnalyze.java
+END
+DepGMCluster.java
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/215/trunk/src/clear/experiment/DepGMCluster.java
+END
+PennMap.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/132/trunk/src/clear/experiment/PennMap.java
+END

@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/215/trunk/src/clear/ftr/xml
+END
+AbstractFtrXml.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/144/trunk/src/clear/ftr/xml/AbstractFtrXml.java
+END
+DepFtrXml.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/215/trunk/src/clear/ftr/xml/DepFtrXml.java
+END
+FtrTemplate.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/90/trunk/src/clear/ftr/xml/FtrTemplate.java
+END
+FtrToken.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/132/trunk/src/clear/ftr/xml/FtrToken.java
+END
+SRLFtrXml.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/144/trunk/src/clear/ftr/xml/SRLFtrXml.java
+END

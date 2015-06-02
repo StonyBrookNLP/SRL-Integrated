@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/251/trunk/src/clear/dep/srl
+END
+SRLHead.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/196/trunk/src/clear/dep/srl/SRLHead.java
+END
+SRLSpan.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/145/trunk/src/clear/dep/srl/SRLSpan.java
+END
+SRLProb.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/144/trunk/src/clear/dep/srl/SRLProb.java
+END
+SRLLib.java
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/144/trunk/src/clear/dep/srl/SRLLib.java
+END
+SRLEval.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/251/trunk/src/clear/dep/srl/SRLEval.java
+END
+SRLArg.java
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/144/trunk/src/clear/dep/srl/SRLArg.java
+END
+SRLInfo.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/223/trunk/src/clear/dep/srl/SRLInfo.java
+END

@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/215/trunk/src/clear/util/tuple
+END
+JObjectObjectTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/141/trunk/src/clear/util/tuple/JObjectObjectTuple.java
+END
+JIntObjectTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/141/trunk/src/clear/util/tuple/JIntObjectTuple.java
+END
+JObjectIntTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/177/trunk/src/clear/util/tuple/JObjectIntTuple.java
+END
+JStringIntTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/57/trunk/src/clear/util/tuple/JStringIntTuple.java
+END
+JObjectDoubleTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/215/trunk/src/clear/util/tuple/JObjectDoubleTuple.java
+END
+JIntIntTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/78/trunk/src/clear/util/tuple/JIntIntTuple.java
+END
+JMorphTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/215/trunk/src/clear/util/tuple/JMorphTuple.java
+END
+JDoubleDoubleTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/!svn/ver/124/trunk/src/clear/util/tuple/JDoubleDoubleTuple.java
+END
+JIntDoubleTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/81/trunk/src/clear/util/tuple/JIntDoubleTuple.java
+END
+JShortDoubleArrayTuple.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/57/trunk/src/clear/util/tuple/JShortDoubleArrayTuple.java
+END
+JMorphTuple.class
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/215/trunk/src/clear/util/tuple/JMorphTuple.class
+END

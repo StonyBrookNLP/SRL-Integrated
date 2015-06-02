@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/217/trunk/src/clear/reader
+END
+CoNLLXReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/144/trunk/src/clear/reader/CoNLLXReader.java
+END
+SRLReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/145/trunk/src/clear/reader/SRLReader.java
+END
+ReaderXML.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/217/trunk/src/clear/reader/ReaderXML.java
+END
+PosReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/217/trunk/src/clear/reader/PosReader.java
+END
+AbstractReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/217/trunk/src/clear/reader/AbstractReader.java
+END
+ClearReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/217/trunk/src/clear/reader/ClearReader.java
+END
+DepReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/144/trunk/src/clear/reader/DepReader.java
+END
+RawReader.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/217/trunk/src/clear/reader/RawReader.java
+END

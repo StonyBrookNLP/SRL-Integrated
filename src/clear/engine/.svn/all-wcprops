@@ -1,0 +1,89 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/227/trunk/src/clear/engine
+END
+DepEvaluate.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/144/trunk/src/clear/engine/DepEvaluate.java
+END
+AbstractTrain.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/215/trunk/src/clear/engine/AbstractTrain.java
+END
+DepPredict.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/227/trunk/src/clear/engine/DepPredict.java
+END
+MLPredict.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/141/trunk/src/clear/engine/MLPredict.java
+END
+MLTrain.java
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/135/trunk/src/clear/engine/MLTrain.java
+END
+DepTrain.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/209/trunk/src/clear/engine/DepTrain.java
+END
+SRLEvaluate.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/144/trunk/src/clear/engine/SRLEvaluate.java
+END
+MorphAnalyze.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/122/trunk/src/clear/engine/MorphAnalyze.java
+END
+SRLPredict.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/217/trunk/src/clear/engine/SRLPredict.java
+END
+PropToDep.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/209/trunk/src/clear/engine/PropToDep.java
+END
+PennToDep.java
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/177/trunk/src/clear/engine/PennToDep.java
+END
+ExtractVerbs.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/196/trunk/src/clear/engine/ExtractVerbs.java
+END
+AbstractCommon.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/217/trunk/src/clear/engine/AbstractCommon.java
+END
+SRLTrain.java
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/209/trunk/src/clear/engine/SRLTrain.java
+END

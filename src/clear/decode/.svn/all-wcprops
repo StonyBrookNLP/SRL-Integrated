@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/215/trunk/src/clear/decode
+END
+AbstractMultiDecoder.java
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/123/trunk/src/clear/decode/AbstractMultiDecoder.java
+END
+AbstractDecoder.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/141/trunk/src/clear/decode/AbstractDecoder.java
+END
+OneVsAllDecoder.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/215/trunk/src/clear/decode/OneVsAllDecoder.java
+END
+BinaryDecoder.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/141/trunk/src/clear/decode/BinaryDecoder.java
+END

@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/!svn/ver/251/trunk/src/clear/dep
+END
+DepLib.java
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/144/trunk/src/clear/dep/DepLib.java
+END
+DepEval.java
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/196/trunk/src/clear/dep/DepEval.java
+END
+DepProj.java
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/81/trunk/src/clear/dep/DepProj.java
+END
+DepFeat.java
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/249/trunk/src/clear/dep/DepFeat.java
+END
+ITree.java
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/129/trunk/src/clear/dep/ITree.java
+END
+DepTree.java
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/226/trunk/src/clear/dep/DepTree.java
+END
+DepNode.java
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/215/trunk/src/clear/dep/DepNode.java
+END
