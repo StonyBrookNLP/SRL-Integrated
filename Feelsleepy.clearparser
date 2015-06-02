@@ -1,0 +1,11 @@
+1	Ready	ready	JJ	_	0	ROOT	_	_
+2	for	for	IN	_	1	dep	_	_
+3	or	or	CC	_	2	cc	_	_
+4	needing	need	VBG	_	2	conj	_	_
+5	sleep	sleep	NN	_	4	dobj	_	_
+6	.	.	.	_	1	punct	_	_
+
+1	Inducing	induce	VBG	_	2	amod	induce.01	_
+2	sleep	sleep	NN	_	0	ROOT	_	1:A2
+3	.	.	.	_	2	punct	_	_
+

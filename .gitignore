@@ -1,0 +1,13 @@
+build/
+nbbuild/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+.nb-gradle/
+data/
+lib/
+<<<<<<< HEAD
+=======
+dist/
+>>>>>>> 
+stanford-parser-full-2015-01-30/

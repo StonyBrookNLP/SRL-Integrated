@@ -1,0 +1,11 @@
+<!--Default English feature set -->
+<feature_template>
+	<cutoff label="0" ngram="3" extra="3"/>
+
+	<ngram n="1" f0="l:f"/>
+	<ngram n="1" f0="l:m"/>
+	<ngram n="1" f0="b:f"/>
+	<ngram n="1" f0="b:m"/>
+
+	<ngram n="1" f0="b:ft2" visible="false"/>
+</feature_template>
