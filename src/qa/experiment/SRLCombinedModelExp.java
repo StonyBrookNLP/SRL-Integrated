@@ -52,7 +52,7 @@ public class SRLCombinedModelExp {
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-                                 "spearing"};
+                                 "spear_spearing", "retract"};
     
     public SRLCombinedModelExp() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
@@ -98,18 +98,17 @@ public class SRLCombinedModelExp {
         for (int i = 0; i < frameArr.size(); i++) {
             ProcessFrame testFrame = frameArr.get(i);
             String normalizedProcessName = ProcessFrameUtil.normalizeProcessName(testFrame.getProcessName());
-            if (!limitedProcess || (limitedProcess && processNames.contains(normalizedProcessName)) ) {
+            if ((!limitedProcess || (limitedProcess && processNames.contains(normalizedProcessName)) ) && !blackList.contains(normalizedProcessName)) {
                 int fold = processFold.get(normalizedProcessName);
                 ProcessFrameUtil.toClearParserFormat(testFrame, outDirName + "/" + normalizedProcessName + ".test.cv." + fold);  // out to <process_frame_>.test.cv.<fold>
                 testFilePath.add(outDirName + "/" + normalizedProcessName + ".test.cv." + fold);
                 processFold.put(normalizedProcessName, fold + 1);
 
                 // Get the testing data
-                ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>();
+               /*ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>();
                 for (int j = 0; j < frameArr.size(); j++) {
                     if (i != j) {
                         String processName = ProcessFrameUtil.normalizeProcessName(frameArr.get(j).getProcessName());
-                        System.out.println(processName);
                          //trainingFrames.add(frameArr.get(j));
                         if (!blackList.contains(processName))
                         {
@@ -142,18 +141,18 @@ public class SRLCombinedModelExp {
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.exit(0);
-                }
-
+                }*/
+                   
             }
             // Perform prediction
         }
-        Thread.sleep(10000);
+       /* Thread.sleep(10000);
         for (int i = 0; i < testFilePath.size(); i++) {
             ClearParserUtil.PREDICT_ARGS[3] = testFilePath.get(i);
             ClearParserUtil.PREDICT_ARGS[5] = testFilePath.get(i).replace(".test.", ".combined.predict.");
             ClearParserUtil.PREDICT_ARGS[7] = trainingModelFilePath.get(i);
             new SRLPredict(ClearParserUtil.PREDICT_ARGS);
-        }
+        }*/
 
         // Prediction time
     }
@@ -204,7 +203,7 @@ public class SRLCombinedModelExp {
             srlExp.init();
             srlExp.trainAndPredict();
             Thread.sleep(5000);
-            srlExp.evaluate();
+           // srlExp.evaluate();
             System.out.println("FINISH");
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
