@@ -35,26 +35,46 @@ public class SRLCombinedModelExp {
 
     ProcessFrameProcessor proc;
 
+    private ArrayList<String> blackList;
     @Option(name = "-f", usage = "process file", required = true, metaVar = "REQUIRED")
     private String processTsvFileName;
 
     @Option(name = "-o", usage = "output directory name", required = true, metaVar = "REQUIRED")
     private String outDirName;
 
+    @Option(name = "-n", usage = "number of processes to test", required = false, metaVar = "OPTIONAL")
+    private int nbProcess = 0;
+
+    boolean limitedProcess = false;
     private ArrayList<ProcessFrame> frameArr;
     private HashMap<String, Integer> processFold;
+    private ArrayList<String> processNames;
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
-
+    String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
+                                 "spearing"};
+    
     public SRLCombinedModelExp() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
         testFilePath = new ArrayList<String>();
         processFold = new HashMap<String, Integer>();
+        processNames = new ArrayList<String>();
+        blackList = new ArrayList<String>();
     }
 
     public void init() throws FileNotFoundException {
         proc = new ProcessFrameProcessor(processTsvFileName);
         proc.loadProcessData();
+        blackList = new ArrayList( Arrays.asList( blackListProcess ) );
+        if (nbProcess > 0) {
+            limitedProcess = true;
+            for (int i = 0; i < proc.getProcArr().size() && processNames.size() < nbProcess; i++) {
+                String normProcessName = ProcessFrameUtil.normalizeProcessName(proc.getProcArr().get(i).getProcessName());
+                if (!processNames.contains(normProcessName)) {
+                    processNames.add(normProcessName);
+                }
+            }
+        }
         frameArr = proc.getProcArr();
         for (int i = 0; i < frameArr.size(); i++) {
             String normName = ProcessFrameUtil.normalizeProcessName(frameArr.get(i).getProcessName());
@@ -78,41 +98,53 @@ public class SRLCombinedModelExp {
         for (int i = 0; i < frameArr.size(); i++) {
             ProcessFrame testFrame = frameArr.get(i);
             String normalizedProcessName = ProcessFrameUtil.normalizeProcessName(testFrame.getProcessName());
-            int fold = processFold.get(normalizedProcessName);
-            ProcessFrameUtil.toClearParserFormat(testFrame, outDirName + "/" + normalizedProcessName + ".test.cv." + fold);  // out to <process_frame_>.test.cv.<fold>
-            testFilePath.add(outDirName + "/" + normalizedProcessName + ".test.cv." + fold);
-            processFold.put(normalizedProcessName, fold + 1);
+            if (!limitedProcess || (limitedProcess && processNames.contains(normalizedProcessName)) ) {
+                int fold = processFold.get(normalizedProcessName);
+                ProcessFrameUtil.toClearParserFormat(testFrame, outDirName + "/" + normalizedProcessName + ".test.cv." + fold);  // out to <process_frame_>.test.cv.<fold>
+                testFilePath.add(outDirName + "/" + normalizedProcessName + ".test.cv." + fold);
+                processFold.put(normalizedProcessName, fold + 1);
 
-            // Get the testing data
-            ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>();
-            for (int j = 0; j < frameArr.size(); j++) {
-                if (i != j) {
-                    trainingFrames.add(frameArr.get(j));
+                // Get the testing data
+                ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>();
+                for (int j = 0; j < frameArr.size(); j++) {
+                    if (i != j) {
+                        String processName = ProcessFrameUtil.normalizeProcessName(frameArr.get(j).getProcessName());
+                        System.out.println(processName);
+                         //trainingFrames.add(frameArr.get(j));
+                        if (!blackList.contains(processName))
+                        {
+                            trainingFrames.add(frameArr.get(j));
+                        }
+                        else
+                        {
+                            System.out.println("BLACKLIST");
+                        }
+                    }
                 }
+                String trainingFileName = outDirName + "/" + normalizedProcessName + ".train.combined.cv." + fold;
+                trainingModelFilePath.add(outDirName + "/" + normalizedProcessName + ".combinedmodel.cv." + fold);
+                String modelName = outDirName + "/" + normalizedProcessName + ".combinedmodel.cv." + fold;
+                ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
+
+                // Train trainingFrames
+               SRLTrain train = new SRLTrain();
+                CmdLineParser cmd = new CmdLineParser(train);
+
+                try {
+                    ClearParserUtil.TRAIN_ARGS[3] = trainingFileName;
+                    ClearParserUtil.TRAIN_ARGS[7] = modelName;
+                    cmd.parseArgument(ClearParserUtil.TRAIN_ARGS);
+                    train.init();
+                    train.train();
+                } catch (CmdLineException e) {
+                    System.err.println(e.getMessage());
+                    cmd.printUsage(System.err);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.exit(0);
+                }
+
             }
-            String trainingFileName = outDirName + "/" + normalizedProcessName + ".train.combined.cv." + fold;
-            trainingModelFilePath.add(outDirName + "/" + normalizedProcessName + ".combinedmodel.cv." + fold);
-            String modelName = outDirName + "/" + normalizedProcessName + ".combinedmodel.cv." + fold;
-            ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
-
-            // Train trainingFrames
-            SRLTrain train = new SRLTrain();
-            CmdLineParser cmd = new CmdLineParser(train);
-
-            try {
-                ClearParserUtil.TRAIN_ARGS[3] = trainingFileName;
-                ClearParserUtil.TRAIN_ARGS[7] = modelName;
-                cmd.parseArgument(ClearParserUtil.TRAIN_ARGS);
-                train.init();
-                train.train();
-            } catch (CmdLineException e) {
-                System.err.println(e.getMessage());
-                cmd.printUsage(System.err);
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.exit(0);
-            }
-
             // Perform prediction
         }
         Thread.sleep(10000);
@@ -153,11 +185,11 @@ public class SRLCombinedModelExp {
         Runtime rt = Runtime.getRuntime();
         Process pr = rt.exec(cmd);
 
-// retrieve output from python script
+        // retrieve output from python script
         BufferedReader bfr = new BufferedReader(new InputStreamReader(pr.getInputStream()));
         String line = "";
         while ((line = bfr.readLine()) != null) {
-// display each output line form python script
+        // display each output line form python script
             System.out.println(line);
         }
         StdUtil.printError(pr);

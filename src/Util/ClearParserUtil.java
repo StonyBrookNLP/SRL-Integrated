@@ -18,7 +18,7 @@ public class ClearParserUtil {
 
     public static String[] TRAIN_ARGS = {"-c", "/Users/samuellouvan/NetBeansProjects/QA/config/config_srl_en.xml",
         "-i", "", //dirName + ds_ClearParser,
-        "-t", "/Users/samuellouvan/NetBeansProjects/QA/config/feature_srl_en_conll09_small.xml",
+        "-t", "/Users/samuellouvan/NetBeansProjects/QA/config/feature_srl_en_conll09.xml",
         "-m", ""}; //dirName + ds_model
 
     public static String[] PREDICT_ARGS = {"-c", "/Users/samuellouvan/NetBeansProjects/QA/config/config_srl_en.xml",
