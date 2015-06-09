@@ -16,6 +16,7 @@ import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.process.CoreLabelTokenFactory;
 import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.process.PTBTokenizer;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -24,12 +25,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
 import qa.dep.DependencyTree;
+import qa.util.FileUtil;
 
 public class ProcessFrameProcessor {
 
     private String fileName;
     private StanfordLemmatizer slem = new StanfordLemmatizer();
     private ArrayList<ProcessFrame> procArr;
+    private ArrayList<ProcessFrame> procArrA0;
+    private ArrayList<ProcessFrame> procArrA1;
+    private ArrayList<ProcessFrame> procArrA2;
     static final int PROCESS_NAME_IDX = 0;
     static final int UNDERGOER_IDX = 1;
     static final int ENABLER_IDX = 2;
@@ -43,6 +48,9 @@ public class ProcessFrameProcessor {
     public ProcessFrameProcessor(String fileName) {
         this.fileName = fileName;
         procArr = new ArrayList<ProcessFrame>();
+        procArrA0 = new ArrayList<ProcessFrame>();
+        procArrA1 = new ArrayList<ProcessFrame>();
+        procArrA2 = new ArrayList<ProcessFrame>();
         //slem = new StanfordLemmatizer();
     }
 
@@ -54,15 +62,13 @@ public class ProcessFrameProcessor {
         return false;
     }
 
-    public void loadProcessData() throws FileNotFoundException {
+    public void loadProcessData() throws FileNotFoundException, IOException, ClassNotFoundException {
         Scanner scanner = new Scanner(new File(this.fileName));
         procArr.clear();
         int cnt = 0;
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             if (!isHeader(line)) {
-                //System.out.println(cnt);
-                //System.out.println(line);
                 String[] columns = line.split("\t");
                 ProcessFrame procFrame = new ProcessFrame();
                 List<String> tokenized = slem.tokenize(columns[SENTENCE_IDX].trim());
@@ -84,16 +90,88 @@ public class ProcessFrameProcessor {
                 cnt++;
             }
         }
+        focusProcessOnRole();
         System.out.println("END OF LOAD SENTENCES");
     }
 
-    public int getDataCount(String processName) {
-        return processCountPair.get(processName);
+    public HashMap<String, Integer> getProcessCount() {
+        return processCountPair;
     }
+
+    public int getDataCount(String processName) {
+        return processCountPair.get(processName) == null ? 0 : processCountPair.get(processName);
+    }
+
+    public void focusProcessOnRole() throws IOException, ClassNotFoundException {
+        for (ProcessFrame frame : procArr) {
+            if (!frame.getUnderGoer().isEmpty()) {
+                byte[] data = FileUtil.serialize(frame);
+                ProcessFrame clone = (ProcessFrame) FileUtil.deserialize(data);
+                clone.setEnabler("");
+                clone.setResult("");
+                procArrA0.add(clone);
+            }
+            if (!frame.getEnabler().isEmpty()) {
+                byte[] data = FileUtil.serialize(frame);
+                ProcessFrame clone = (ProcessFrame) FileUtil.deserialize(data);
+                clone.setUnderGoer("");
+                clone.setResult("");
+                procArrA1.add(clone);
+            }
+            if (!frame.getResult().isEmpty()) {
+                byte[] data = FileUtil.serialize(frame);
+                ProcessFrame clone = (ProcessFrame) FileUtil.deserialize(data);
+                clone.setUnderGoer("");
+                clone.setEnabler("");
+                procArrA2.add(clone);
+            }
+        }
+    }
+
+    
 
     public void toClearParserFormat(String clearParserFileName) throws FileNotFoundException, IOException {
 
         ArrayList<ProcessFrame> processFrames = getProcArr();
+        PrintWriter writer = new PrintWriter(clearParserFileName);
+        for (ProcessFrame p : processFrames) {
+            String rawText = p.getRawText();
+
+            rawText = rawText.replace(".", " ");
+            rawText = rawText.replaceAll("\"", "");
+            rawText = rawText.trim();
+            rawText += ".";
+
+            // update tokenized text here
+            List<String> tokenized = slem.tokenize(rawText);
+            p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
+            try {
+                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+
+                String conLLStr = ClearParserUtil.toClearParserFormat(tree, p);
+                writer.println(conLLStr);
+                writer.println();
+            } catch (Exception e) {
+
+            }
+
+        }
+        writer.close();
+    }
+
+    public void toClearParserFormat(String clearParserFileName, String role) throws FileNotFoundException, IOException {
+
+        ArrayList<ProcessFrame> processFrames = new ArrayList<ProcessFrame>();
+        if (role.equalsIgnoreCase("A0")) {
+            processFrames = procArrA0;
+        }
+        if (role.equalsIgnoreCase("A1")) {
+            processFrames = procArrA1;
+        }
+        if (role.equalsIgnoreCase("A2")) {
+            processFrames = procArrA2;
+        }
+
         PrintWriter writer = new PrintWriter(clearParserFileName);
         for (ProcessFrame p : processFrames) {
             String rawText = p.getRawText();
@@ -255,10 +333,10 @@ public class ProcessFrameProcessor {
         return matchIdx;
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor("/Users/samuellouvan/NetBeansProjects/QA/data/sandbox/ds_combined.tsv");
+    public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
+        ProcessFrameProcessor proc = new ProcessFrameProcessor("/Users/samuellouvan/NetBeansProjects/QA/data/process_50.tsv");
         proc.loadProcessData();
-        proc.toClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/data/sandbox/ds_combined.clearparser");
+        proc.toClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/data/process_50.clearparser");
         //proc.loadSentences();
         //System.out.println(proc.getIdxMatches("samuel student".split("\\s+"),"samuel louvan is the most stupid phd samuel student".split("\\s+")));
     }

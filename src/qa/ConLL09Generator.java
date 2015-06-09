@@ -77,7 +77,7 @@ public class ConLL09Generator {
 
     StanfordLemmatizer slem = new StanfordLemmatizer();
 
-    public ConLL09Generator(String processFrameFileName, String conll06FileName) throws FileNotFoundException {
+    public ConLL09Generator(String processFrameFileName, String conll06FileName) throws FileNotFoundException, IOException, ClassNotFoundException {
         proc = new ProcessFrameProcessor(processFrameFileName);
         this.conll06FileName = conll06FileName;
         proc.loadProcessData();
@@ -363,7 +363,7 @@ public class ConLL09Generator {
 
     }
 
-    public void generateClearParserFilesFromDir(String dirName) throws FileNotFoundException {
+    public void generateClearParserFilesFromDir(String dirName) throws FileNotFoundException, IOException, ClassNotFoundException {
         File folder = new File(dirName);
         File[] listOfFiles = folder.listFiles();
 
@@ -378,7 +378,7 @@ public class ConLL09Generator {
         }
     }
 
-    public void generateClearParserFileFromFile(String fileName) throws FileNotFoundException {
+    public void generateClearParserFileFromFile(String fileName) throws FileNotFoundException, IOException, ClassNotFoundException {
         File folder = new File(fileName);
 
         proc = new ProcessFrameProcessor(fileName);
@@ -389,7 +389,7 @@ public class ConLL09Generator {
 
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException {
         //Scanner scanner = new Scanner(new File("conll06.txt"));
         ConLL09Generator gen = new ConLL09Generator("./data/all_question_frame.txt", "./data/processes_may/riding.conll06");
         //gen.generateSentenceFile("./data/processes/write.tsv", "./data/processes/write.sent");

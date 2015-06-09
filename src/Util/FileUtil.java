@@ -5,10 +5,16 @@
  */
 package qa.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -19,10 +25,11 @@ import java.util.Scanner;
 public class FileUtil {
 
     public static String getFileNameWoExt(String fileNameWithExt) {
-        
+
         int dotIdx = fileNameWithExt.indexOf(".");
-        if (dotIdx == -1)
+        if (dotIdx == -1) {
             return fileNameWithExt;
+        }
         return fileNameWithExt.substring(0, dotIdx);
     }
 
@@ -30,6 +37,24 @@ public class FileUtil {
         File folder = new File(dirName);
         File[] files = folder.listFiles();
         return files;
+    }
+
+    public static byte[] serialize(Object o) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(o);
+        oos.flush();
+        oos.close();
+        bos.close();
+        byte[] byteData = bos.toByteArray();
+        return byteData;
+    }
+
+    public static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(data);
+        Object object = (Object) new ObjectInputStream(bais).readObject();
+        
+        return object;
     }
 
     public static File[] getFilesFromDir(String dirName, String filter) {
@@ -73,22 +98,22 @@ public class FileUtil {
     public static void dumpToFile(ArrayList<String> text, String fileName, String sep) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         for (String line : text) {
-            writer.print(line+"\n");
+            writer.print(line + "\n");
         }
         writer.close();
     }
-    
+
     public static void dumpToFile(String text, String fileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         writer.println(text);
         writer.close();
     }
 
-    public static boolean mkDir(String dirName)
-    {
+    public static boolean mkDir(String dirName) {
         File file = new File(dirName);
         return file.mkdir();
     }
+
     public static String readCoNLLFormat(String fileName) throws FileNotFoundException {
         StringBuilder sb = new StringBuilder();
         Scanner scanner = new Scanner(new File(fileName));

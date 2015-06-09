@@ -47,7 +47,10 @@ class Test {
             writer.println(trigger+"\t"+correctUndergoer+"\t"+wrongUndergoer);
         }
         writer.close();*/
-        File file = new File(".");
-        System.out.println(file.getCanonicalPath());
+        /*File file = new File(".");
+        System.out.println(file.getCanonicalPath());*/
+        String str = "plants";
+        String tokens[] = str.split("\\|");
+        System.out.println(tokens[0]);
     }
 }

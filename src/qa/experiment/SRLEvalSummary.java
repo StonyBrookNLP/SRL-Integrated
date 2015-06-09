@@ -3,17 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Util;
+package qa.experiment;
 
 /**
  *
  * @author samuellouvan
  */
-public class GlobalVariable {
-    public static String PROJECT_DIR = System.getProperty("user.dir");
+public class SRLEvalSummary {
     
     public static void main(String[] args)
     {
-        System.out.println(PROJECT_DIR);
+        
     }
 }

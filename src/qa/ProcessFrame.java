@@ -5,12 +5,13 @@
  */
 package qa;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class ProcessFrame {
+public class ProcessFrame implements Serializable{
 
     private String processName;
     private String rawText;
@@ -26,20 +27,26 @@ public class ProcessFrame {
     private ArrayList<Integer> resultIndex = new ArrayList<Integer>();
 
     public ArrayList<Integer> getTriggerIdx() {
-        /*ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-         String[] triggerItem = trigger.split("\\|");
-         String[] tokenized = tokenizedText;
-         for (int i = 0; i < triggerItem.length; i++) {
-         List<String> ls = StanfordTokenizerSingleton.getInstance().tokenize(triggerItem[i].trim());
-         String[] triggerValues = ls.toArray(new String[ls.size()]);
-         if (getIdxMatches(triggerValues, tokenized) != null) {
-         matchIdx.addAll(getIdxMatches(triggerValues, tokenized));
-         }
-         }*/
+        
 
         return triggerIndex;
     }
 
+    public ArrayList<Integer> getAllLabeledIndex()
+    {
+        ArrayList<Integer> labeledIdxs = new ArrayList<Integer>();
+        processRoleFillers();
+        if (undergoerIndex.size() > 0)
+            labeledIdxs.addAll(undergoerIndex);
+        if (enablerIndex.size() > 0)
+            labeledIdxs.addAll(enablerIndex);
+        if (resultIndex.size() > 0)
+            labeledIdxs.addAll(resultIndex);
+        if (triggerIndex.size() > 0)
+            labeledIdxs.addAll(triggerIndex);
+        
+        return labeledIdxs;
+    }
     public void clearAllIndexes()
     {
         undergoerIndex.clear();
@@ -87,18 +94,23 @@ public class ProcessFrame {
             // Check type
             String type = roleFiller.split(":")[1];
             if (type.equalsIgnoreCase("A0")) {
-                undergoerIndex.addAll(matches);
+                if (matches != null)
+                    undergoerIndex.addAll(matches);
             }
             if (type.equalsIgnoreCase("A1")) {
-                enablerIndex.addAll(matches);
+                if (matches != null)
+                    enablerIndex.addAll(matches);
             }
             if (type.equalsIgnoreCase("T")) {
-                triggerIndex.addAll(matches);
+                if (matches != null)
+                    triggerIndex.addAll(matches);
             }
             if (type.equalsIgnoreCase("A2")) {
-                resultIndex.addAll(matches);
+                if (matches != null)
+                    resultIndex.addAll(matches);
             }
-            allIdx.addAll(matches);
+            if (matches!= null)
+                allIdx.addAll(matches);
         }
 
     }

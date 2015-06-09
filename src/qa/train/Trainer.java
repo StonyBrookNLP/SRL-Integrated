@@ -111,7 +111,7 @@ public class Trainer {
     }
 
     // This is actually can be used for per process model
-    public void crossValidation(String dirName, String tsvFileName, String modelName) throws FileNotFoundException, IOException {
+    public void crossValidation(String dirName, String tsvFileName, String modelName) throws FileNotFoundException, IOException, ClassNotFoundException {
         ProcessFrameProcessor proc = new ProcessFrameProcessor(dirName + tsvFileName);
         proc.loadProcessData();
         HashMap<String, Integer> processFold = new HashMap<String, Integer>();
@@ -156,7 +156,7 @@ public class Trainer {
 
     }
 
-    public void crossValidationPerProcessTrain(String dirName, String modelName) throws IOException {
+    public void crossValidationPerProcessTrain(String dirName, String modelName) throws IOException, FileNotFoundException, ClassNotFoundException {
         File dir = new File(dirName);
         File[] files = dir.listFiles(new FilenameFilter() {
             @Override

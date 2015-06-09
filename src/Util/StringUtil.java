@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
+import qa.StanfordLemmatizerSingleton;
 
 /**
  *
@@ -110,28 +111,43 @@ public class StringUtil {
         return combination;
     }
 
-    public static String toString(String strArr[])
-    {
+    public static String toString(String strArr[]) {
         StringBuffer res = new StringBuffer();
-        for (String s : strArr)
-        {
-            if (s.length() == 0)
-            {
+        for (String s : strArr) {
+            if (s.length() == 0) {
                 res.append("\n");
-            }
-            else
-            {
-                res.append(s+"\n");
+            } else {
+                res.append(s + "\n");
             }
         }
         return res.toString();
     }
+
     public static ArrayList<String> getMatch(List<String> tokens, ArrayList<String> targets) {
         ArrayList<String> results = new ArrayList<String>();
         Set<String> targetSet = new HashSet<String>(targets);
         for (String s : targetSet) {
             for (int j = 0; j < tokens.size(); j++) {
                 if (StringUtils.getLevenshteinDistance(s, tokens.get(j)) < 0.3 * s.length()) {
+                    if (!results.contains(tokens.get(j))) {
+                        results.add(tokens.get(j));
+                    }
+                }
+            }
+        }
+
+        return results;
+    }
+
+    public static ArrayList<String> getMatchStem(List<String> tokens, ArrayList<String> targets) {
+        StanfordLemmatizerSingleton stem = StanfordLemmatizerSingleton.getInstance();
+        ArrayList<String> results = new ArrayList<String>();
+        Set<String> targetSet = new HashSet<String>(targets);
+        for (String s : targetSet) {
+            for (int j = 0; j < tokens.size(); j++) {
+                String stemmedS = stem.lemmatize(s.toLowerCase()).get(0);
+                String stemmedToken = stem.lemmatize(tokens.get(j).toLowerCase()).get(0);
+                if (stemmedS.equalsIgnoreCase(stemmedToken)) {
                     if (!results.contains(tokens.get(j))) {
                         results.add(tokens.get(j));
                     }
@@ -229,9 +245,9 @@ public class StringUtil {
         //System.out.println(Arrays.toString(getTokenAsArr("absorption | absorp", "\\|")));
         ArrayList<String> str = new ArrayList<String>();
         str.add("obtain energy");
-        
+
         System.out.println(generateSubsetFromArr(str));
-        
+
     }
 
 }

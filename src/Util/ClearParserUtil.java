@@ -153,6 +153,7 @@ public class ClearParserUtil {
         return String.join("\n", conLLRows);
     }
 
+    
     public static void main(String[] args) throws IOException, InterruptedException {
         //System.out.println(System.getProperty("java.class.path"));
         clearParserPredict("/Users/samuellouvan/Downloads/clearparser-read-only/data/evaporate_evaporation.jointmodel.0",

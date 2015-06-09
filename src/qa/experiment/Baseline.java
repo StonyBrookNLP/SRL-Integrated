@@ -7,6 +7,7 @@ package qa.experiment;
 
 import Util.ArrUtil;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -77,7 +78,7 @@ public class Baseline {
         
     }
 
-    public void loadProcessData() throws FileNotFoundException {
+    public void loadProcessData() throws FileNotFoundException, IOException, ClassNotFoundException {
         proc.loadProcessData();
     }
 
@@ -98,6 +99,7 @@ public class Baseline {
 
     public void generateFeatureVectors() {
         ArrayList<ProcessFrame> processesData = proc.getProcArr();
+        HashMap<String, Integer> processCount = new HashMap<String,Integer>();
         bowFeature = new ArrayList<String>();
         for (int i = 0; i < processesData.size(); i++) {
             // Get the tokenized text
@@ -115,6 +117,7 @@ public class Baseline {
         arrProcessFeature = new ArrayList<ProcessFeatureVector>();
         ArrayList<String> featuresArr = new ArrayList<String>();
         for (int i = 0; i < processesData.size(); i++) {
+            System.out.println(i);
             String[] tokenizedText = processesData.get(i).getTokenizedText();
             if (!currentProcess.equalsIgnoreCase(processesData.get(i).getProcessName())) {
                 ProcessFeatureVector procFeatureVector = new ProcessFeatureVector(currentProcess, new ArrayList<>(featuresArr));
@@ -269,7 +272,7 @@ public class Baseline {
     }
 
     public static void main(String[] args) throws FileNotFoundException, Exception {
-        Baseline baseline = new Baseline("./data/process.tsv", "./data/question.tsv");
+        Baseline baseline = new Baseline("./data/all_process_ds.tsv", "./data/question.tsv");
         baseline.loadProcessData();
         baseline.generateFeatureVectors();
         baseline.loadQuestionData();
@@ -282,7 +285,7 @@ public class Baseline {
             String[] answers = qData.getAnswers();
             String correctAnswer = qData.getCorrectAnswer().trim();
             String[] filteredAnswer = baseline.filterAnswer(answers);
-            //System.out.println("Q :"+q);
+            System.out.println(i+" Q :"+q);
             String predictedAnswer = "";
             if (filteredAnswer.length == 0)
             {

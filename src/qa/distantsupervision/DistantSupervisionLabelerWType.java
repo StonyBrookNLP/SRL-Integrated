@@ -51,7 +51,7 @@ public class DistantSupervisionLabelerWType {
 
     // Initialize
     // Load the data from the process frame file
-    public void init() throws FileNotFoundException, IOException {
+    public void init() throws FileNotFoundException, IOException, ClassNotFoundException {
         proc = new ProcessFrameProcessor(this.processFrameFilename);
         proc.loadProcessData();
         relevantSentences = new ArrayList<String>();
@@ -165,7 +165,7 @@ public class DistantSupervisionLabelerWType {
         ProcessFrameUtil.dumpFramesToFile(newAnnotatedFrames, this.newAnnotatedFrameFileName);
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
         DistantSupervisionLabelerWType labeler = new DistantSupervisionLabelerWType("./data/all_process_frame.tsv", "./data/evaporation_trigger_larger.txt", "./data/evaporation_trigger_larger.tsv");
         labeler.init();
         labeler.loadRoleFillers("evaporation");

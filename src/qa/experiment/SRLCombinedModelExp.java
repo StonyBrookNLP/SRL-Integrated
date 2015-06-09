@@ -62,7 +62,7 @@ public class SRLCombinedModelExp {
         blackList = new ArrayList<String>();
     }
 
-    public void init() throws FileNotFoundException {
+    public void init() throws FileNotFoundException, IOException, ClassNotFoundException {
         proc = new ProcessFrameProcessor(processTsvFileName);
         proc.loadProcessData();
         blackList = new ArrayList(Arrays.asList(blackListProcess));

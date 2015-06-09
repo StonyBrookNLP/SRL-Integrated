@@ -63,7 +63,7 @@ public class SRLQA {
         return "";
     }
             
-    public void evaluate(String fileName) throws IOException, FileNotFoundException, InterruptedException {
+    public void evaluate(String fileName) throws IOException, FileNotFoundException, InterruptedException, ClassNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         ArrayList<QADeclarativeData> questionDatas = proc.getData();
         int nbCorrect = 0;
@@ -120,7 +120,7 @@ public class SRLQA {
         writer.close();
     }   
 
-    public void generateClearParserFileFromSentence(String sentence, String currentTrigger, String oldTrigger) throws FileNotFoundException, IOException, InterruptedException {
+    public void generateClearParserFileFromSentence(String sentence, String currentTrigger, String oldTrigger) throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException {
         PrintWriter writer = new PrintWriter("temp.sent");
         writer.println(sentence);
         writer.close();
@@ -137,7 +137,7 @@ public class SRLQA {
 
     }
 
-    public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException {
+    public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException, ClassNotFoundException {
         SRLQA srl = new SRLQA("./data/SRL_QA_Declarative_Data_Single_Sentence.tsv");
         srl.loadQuestionData();
         srl.evaluate("eval2.txt");

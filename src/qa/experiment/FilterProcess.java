@@ -7,6 +7,7 @@ package qa.experiment;
 
 import Util.ProcessFrameUtil;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,7 +19,7 @@ import qa.ProcessFrameProcessor;
  * @author samuellouvan
  */
 public class FilterProcess {
-    public static void main(String[] args) throws FileNotFoundException
+    public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException
     {
         ProcessFrameProcessor proc = new ProcessFrameProcessor("./data/process_frame_june.tsv");
         proc.loadProcessData();

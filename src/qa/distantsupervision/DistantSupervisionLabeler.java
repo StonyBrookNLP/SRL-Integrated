@@ -49,7 +49,7 @@ public class DistantSupervisionLabeler {
 
     // Initialize
     // Load the data from the process frame file
-    public void init() throws FileNotFoundException {
+    public void init() throws FileNotFoundException, IOException, ClassNotFoundException {
         proc = new ProcessFrameProcessor(this.processFrameFilename);
         proc.loadProcessData();
         relevantSentences = new ArrayList<String>();
@@ -162,7 +162,7 @@ public class DistantSupervisionLabeler {
         ProcessFrameUtil.dumpFramesToFile(newAnnotatedFrames, this.newAnnotatedFrameFileName);
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
         DistantSupervisionLabeler labeler = new DistantSupervisionLabeler("./data/all_process_may_18.tsv",
                 "./data/distant_supervision_other_processes/refract_out.txt",
                 "./data/distant_supervision_other_processes/refract_ds.tsv");

@@ -60,6 +60,7 @@ public class StanfordDepParser {
 
     public DependencyTree parse(String documentText) throws IOException
     {
+       
         // Create an empty Annotation just with the given text
         Annotation document = new Annotation(documentText);
         // run all Annotators on this text
@@ -72,7 +73,9 @@ public class StanfordDepParser {
         Collection<TypedDependency> dependencies = ccProcessed.typedDependencies();
         CoNLLOutputter.conllPrint(document, new FileOutputStream(new File("temp.dep")));
         String conllString = FileUtil.readCoNLLFormat("temp.dep");
+        //System.out.println(documentText);
         DependencyTree tree = DependencyTree.fromCoNLLFormatString(conllString);
+        
         return tree;
     } 
     

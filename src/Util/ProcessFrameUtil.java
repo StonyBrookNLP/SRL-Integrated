@@ -83,19 +83,29 @@ public class ProcessFrameUtil {
 
         writer.close();
     }
-    
-     public static void toClearParserFormat(ArrayList<ProcessFrame> processFrames, String clearParserFileName) throws FileNotFoundException, IOException {
+
+    public static void toClearParserFormat(ArrayList<ProcessFrame> processFrames, String clearParserFileName) throws FileNotFoundException, IOException {
 
         PrintWriter writer = new PrintWriter(clearParserFileName);
-         System.out.println("Converting to clear parser format, data size : "+processFrames.size()+" frames");
-         int cnt = 0;
+        System.out.println("Converting to clear parser format, data size : " + processFrames.size() + " frames");
+        int cnt = 0;
         for (ProcessFrame p : processFrames) {
+            
             String rawText = p.getRawText();
 
             rawText = rawText.replace(".", " ");
             rawText = rawText.replaceAll("\"", "");
             rawText = rawText.trim();
-            rawText += ".";
+            for (int j = rawText.length()-1 ; ; j--)
+            {
+                if (Character.isAlphabetic(rawText.charAt(j)))
+                {
+                    rawText = rawText.substring(0,j+1);
+                    rawText += ".";
+                    break;
+                }
+            }
+            
 
             // update tokenized text here
             List<String> tokenized = StanfordTokenizerSingleton.getInstance().tokenize(rawText);
@@ -109,14 +119,21 @@ public class ProcessFrameUtil {
                 String conLLStr = ClearParserUtil.toClearParserFormat(tree, p);
                 writer.println(conLLStr);
                 writer.println();
-            } catch (Exception e) {
+                System.out.print(++cnt + " ");
 
+            } catch (Exception e) {
+                System.out.println(rawText);
+                e.printStackTrace();
             }
-            System.out.print(++cnt+" ");
-            if (cnt % 100 == 0)
+            if (cnt % 100 == 0) {
                 System.out.println("");
+            }
         }
-         System.out.println("");
+        if (cnt == processFrames.size())
+            System.out.println("PERFECT !");
+        else
+            System.out.println("Not everything is converted to clear parser format");
+        System.out.println("");
         writer.close();
     }
 

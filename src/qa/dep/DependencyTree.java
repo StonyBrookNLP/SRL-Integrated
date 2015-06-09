@@ -319,6 +319,17 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         }
         return false;
     }
+    
+    public int getWordIdx(String word)
+    {
+        for (int i = firstKey(); i <= lastKey(); i++)
+        {
+            if (get(i).getForm().equalsIgnoreCase(word))
+                return i;
+        }
+        
+        return -1;
+    }
     public ArrayList<String> getWordMatchType(ArrayList<DependencyNode> trigger, String[] types, WordNet wn) {
         ArrayList<String> argMatches = new ArrayList<String>();
         for (DependencyNode node : trigger) {
@@ -335,4 +346,5 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         return argMatches;
     }
 
+    
 }
