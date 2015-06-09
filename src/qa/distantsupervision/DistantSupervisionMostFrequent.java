@@ -56,7 +56,7 @@ public class DistantSupervisionMostFrequent {
 
     // Initialize
     // Load the data from the process frame file
-    public void init() throws FileNotFoundException {
+    public void init() throws FileNotFoundException, IOException, ClassNotFoundException {
         proc = new ProcessFrameProcessor(this.processFrameFilename);
         proc.loadProcessData();
         relevantSentences = new ArrayList<String>();
@@ -84,6 +84,19 @@ public class DistantSupervisionMostFrequent {
             triggers.addAll(StringUtil.getTokenAsList(StringUtil.removeFunctionWordsFromRoleFillers(p.getTrigger()), ProcessFrameProcessor.SEPARATOR));
             enablers.addAll(StringUtil.getTokenAsList(StringUtil.removeFunctionWordsFromRoleFillers(p.getEnabler()), ProcessFrameProcessor.SEPARATOR));
             results.addAll(StringUtil.getTokenAsList(StringUtil.removeFunctionWordsFromRoleFillers(p.getResult()), ProcessFrameProcessor.SEPARATOR));
+            
+            if (undergoers.size() == 1 && undergoers.get(0).length() == 0)
+                undergoers.clear();
+                undergoers.addAll(StringUtil.getTokenAsList(p.getUnderGoer(), ProcessFrameProcessor.SEPARATOR));
+            if (triggers.size() == 1 && triggers.get(0).length() == 0)
+                triggers.clear();
+                triggers.addAll(StringUtil.getTokenAsList(p.getTrigger(), ProcessFrameProcessor.SEPARATOR));
+            if (enablers.size() == 1 && enablers.get(0).length() == 0)
+                enablers.clear();
+                enablers.addAll(StringUtil.getTokenAsList(p.getEnabler(), ProcessFrameProcessor.SEPARATOR));
+            if (results.size() == 1 && results.get(0).length() == 0)
+                results.clear();
+                results.addAll(StringUtil.getTokenAsList(p.getResult(), ProcessFrameProcessor.SEPARATOR));
         }
         System.out.println("END LOADING ROLE FILLERS");
 
@@ -112,7 +125,19 @@ public class DistantSupervisionMostFrequent {
                 cleanedSent = cleanedSent.replaceAll("-LSB", "(");
                 cleanedSent = cleanedSent.replaceAll("-RSB", ")");
                 cleanedSent = cleanedSent.replaceAll("-RRB-", ")");
-                if (!filteredSentence.contains(cleanedSent)) {
+                
+                cleanedSent = cleanedSent.replace(".", " ");
+                cleanedSent = cleanedSent.replaceAll("\"", "");
+                cleanedSent = cleanedSent.trim();
+                for (int j = cleanedSent.length() - 1; j > 0; j--) {
+                    if (Character.isAlphabetic(cleanedSent.charAt(j))) {
+                        cleanedSent = cleanedSent.substring(0, j + 1);
+                        cleanedSent += ".";
+                        break;
+                    }
+                }
+
+                if (!filteredSentence.contains(cleanedSent) && cleanedSent.length() > 5) {
                     filteredSentence.add(cleanedSent);
                 }
             }
@@ -145,7 +170,7 @@ public class DistantSupervisionMostFrequent {
             return idx;
         } else {
             if (targetPattern[0].length() > 0) {
-                //System.out.println(Arrays.toString(tokenizedSentence));
+                // System.out.println(Arrays.toString(tokenizedSentence));
                 //System.out.println("ERROR : CANNOT FIND \"" + Arrays.toString(targetPattern) + "\" IN THE SENTENCE");
             }
             return null;
@@ -196,24 +221,40 @@ public class DistantSupervisionMostFrequent {
         } else if (sortedSeq.get(0) == sortedSeq.get(1) && sortedSeq.get(1) > sortedSeq.get(2)) {
             int lastIdx = largestFromEach.indexOf(sortedSeq.get(2));
             if (lastIdx == 0) {
-                return new int[]{1, 2, 0};
+                return new int[]{1, 2, 0}; // enabler, result, undergoer
             } else if (lastIdx == 1) {
-                return new int[]{0, 1, 2};
+                return new int[]{0, 2, 1}; // undergoer, enabler, enaber
             } else {
-                return new int[]{2, 0, 1};
+                return new int[]{0, 1, 2}; // result, undergoer, result
             }
         } else {
+            if (sortedSeq.get(1) == sortedSeq.get(2)) {
+                int firstIdx = largestFromEach.indexOf(sortedSeq.get(0));
+                if (firstIdx == 0) {
+                    return new int[]{0, 1, 2};
+                }
+                if (firstIdx == 1) {
+                    return new int[]{1, 0, 2};
+                }
+                if (firstIdx == 2) {
+                    return new int[]{2, 0, 1};
+                }
+
+            }
             int firstIdx = largestFromEach.indexOf(sortedSeq.get(0));
             int midIdx = largestFromEach.indexOf(sortedSeq.get(1));
             int lastIdx = largestFromEach.indexOf(sortedSeq.get(2));
-            return new int[] {firstIdx, midIdx,lastIdx};
-                    
+            return new int[]{firstIdx, midIdx, lastIdx};
+
         }
 
     }
 
-    public ArrayList<ArrayList<String>> labelRoleFiller(String sentence, DependencyTree sentTree, ArrayList<String> undergoer, ArrayList<String> enabler, ArrayList<String> result) {
+    public ArrayList<ArrayList<String>> labelRoleFiller(String sentence, DependencyTree sentTree, ArrayList<String> undergoer, ArrayList<String> enabler, ArrayList<String> result, ArrayList<Integer> trigger) {
         ArrayList<Integer> labeledIdx = new ArrayList<Integer>();
+        if (trigger.size() > 0) {
+            labeledIdx.addAll(trigger);
+        }
         // Generate all possible role fillers
         // Sort them
         ArrayList<ArrayList<String>> roleFillers = new ArrayList<ArrayList<String>>(3);
@@ -245,8 +286,9 @@ public class DistantSupervisionMostFrequent {
                 }
             }
             count++;
-            if (count == 3)
+            if (count == 3) {
                 count = 0;
+            }
         }
         List<String> tokens = tokenizer.tokenize(sentence);
         ArrayList<ArrayList<String>> foundRoleFillers = new ArrayList<ArrayList<String>>();
@@ -286,16 +328,27 @@ public class DistantSupervisionMostFrequent {
         for (String sentence : sentences) {
             try {
                 // Dependency Parse
-
+                
                 //System.out.println(sentence);
                 DependencyTree depTree = depParser.parse(sentence);
+
                 // If the sentence is related to the target process then check for occurrence of the role fillers
-                ArrayList<String> matchesTrigger = StringUtil.getMatch(tokenizer.tokenize(sentence), triggers);
+                ArrayList<String> matchesTrigger = StringUtil.getMatchStem(tokenizer.tokenize(sentence), triggers);
+                ArrayList<Integer> triggerIdxs = new ArrayList<Integer>();
+                for (String s : matchesTrigger) {
+                    ArrayList<Integer> idsx = label(s, sentence, depTree);
+                    if (idsx != null) {
+                        triggerIdxs.addAll(idsx);
+                    }
+                }
                 if (!matchesTrigger.isEmpty() && sentence.length() <= SENT_LENGTH) {
-                    ArrayList<ArrayList<String>> labeledToken = labelRoleFiller(sentence, depTree, undergoers, enablers, results);
+
+                    ArrayList<ArrayList<String>> labeledToken = labelRoleFiller(sentence, depTree, undergoers, enablers, results, triggerIdxs);
+
                     ArrayList<String> matchesUndergoer = labeledToken.get(0);
                     ArrayList<String> matchesEnabler = labeledToken.get(1);
                     ArrayList<String> matchesResult = labeledToken.get(2);
+
                     boolean validUndergoer = PatternChecker.isValidArgument(matchesUndergoer, matchesTrigger, depTree);
                     boolean validEnabler = PatternChecker.isValidArgument(matchesEnabler, matchesTrigger, depTree);
                     boolean validResult = PatternChecker.isValidArgument(matchesResult, matchesTrigger, depTree);
@@ -330,19 +383,19 @@ public class DistantSupervisionMostFrequent {
         ProcessFrameUtil.dumpFramesToFile(newAnnotatedFrames, this.newAnnotatedFrameFileName);
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
 
-        File dir = new File(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent");
+        File dir = new File(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015");
         File[] files = dir.listFiles();
 
         for (int i = 0; i < files.length; i++) {
             String fileName = files[i].getName();
             String processName = fileName.substring(0, fileName.indexOf(".")).split("_")[0].toLowerCase();
-            if (fileName.contains("_out.txt")){
+            if (fileName.contains("_out.txt") ) {
                 System.out.println(processName.toLowerCase());
-                DistantSupervisionMostFrequent labeler = new DistantSupervisionMostFrequent("./data/most_frequent.tsv",
-                        "./data/ds_most_frequent/" + files[i].getName(),
-                        "./data/ds_most_frequent/" + fileName.substring(0, fileName.indexOf(".")) + "_ds.tsv");
+                DistantSupervisionMostFrequent labeler = new DistantSupervisionMostFrequent("./data/most_frequent_7_june.tsv",
+                        "./data/ds_most_frequent_7_06_2015/" + files[i].getName(),
+                        "./data/ds_most_frequent_7_06_2015/" + fileName.substring(0, fileName.indexOf(".")) + "_ds.tsv");
                 labeler.init();
                 labeler.loadRoleFillers(processName);
                 labeler.annotateSentence();
