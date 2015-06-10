@@ -79,7 +79,7 @@ public class SRLTrainPredict {
         }
         Thread.sleep(10000);
 
-        ClearParserUtil.PREDICT_ARGS[3] = outDir + FileUtil.getFileNameWoExt(testFileName) + ".clearparser";
+        ClearParserUtil.PREDICT_ARGS[3] = outDir + FileUtil.getFileNameWoExt(testFileName) + ".clearparser"; 
         ClearParserUtil.PREDICT_ARGS[5] = outDir + FileUtil.getFileNameWoExt(testFileName) + ".predict";
         ClearParserUtil.PREDICT_ARGS[7] = outDir + FileUtil.getFileNameWoExt(trainingFileName) + ".model";
         new SRLPredict(ClearParserUtil.PREDICT_ARGS);

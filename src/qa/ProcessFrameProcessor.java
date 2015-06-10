@@ -231,7 +231,8 @@ public class ProcessFrameProcessor {
         ArrayList<ProcessFrame> results = new ArrayList<ProcessFrame>();
         for (ProcessFrame p : this.getProcArr()) {
             String[] name = StringUtil.getTokenAsArr(p.getProcessName(), SEPARATOR);
-            if (StringUtil.contains(processName, name)) {
+            
+            if (StringUtil.contains(processName, name) ) {
                 results.add(p);
             }
         }

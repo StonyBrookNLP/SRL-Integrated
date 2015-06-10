@@ -33,7 +33,7 @@ import qa.ProcessFrameProcessor;
  */
 public class SRLDSPerProcessExp {
     ProcessFrameProcessor proc;
-
+    // -f <process file>  -o<outputDir> -d<dsDirectory>
     private ArrayList<String> blackList;
     @Option(name = "-f", usage = "process file", required = true, metaVar = "REQUIRED")
     private String processTsvFileName;
@@ -98,6 +98,7 @@ public class SRLDSPerProcessExp {
         testFilePath.clear();
         trainingModelFilePath.clear();
         for (int i = 0; i < frameArr.size(); i++) {
+            System.out.println(i);
             ProcessFrame testFrame = frameArr.get(i);
             String normalizedProcessName = ProcessFrameUtil.normalizeProcessName(testFrame.getProcessName());
             if ((!limitedProcess || (limitedProcess && processNames.contains(normalizedProcessName))) && !blackList.contains(normalizedProcessName)) {
@@ -130,7 +131,7 @@ public class SRLDSPerProcessExp {
                     cmd.printUsage(System.err);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.exit(0);
+                   // System.exit(0);
                 }
 
             }

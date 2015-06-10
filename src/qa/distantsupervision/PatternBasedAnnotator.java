@@ -270,7 +270,7 @@ public void labelA1(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOExc
                 ArrayList<Integer> resultIdxs = frames.get(i).getResultIdx();
 
                 if (enablerIdxs.size() == 0) {
-                    //labelA1(frames.get(i), labeledIdx);
+                    labelA1(frames.get(i), labeledIdx);
                 }
                 if (resultIdxs.size() == 0) {
                     labelA2(frames.get(i), labeledIdx);

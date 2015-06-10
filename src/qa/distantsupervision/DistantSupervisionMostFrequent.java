@@ -374,9 +374,14 @@ public class DistantSupervisionMostFrequent {
 
                         cnt++;
                     }
+                    else
+                    {
+                        System.out.println("Filtered out");
+                        System.out.println(sentence);
+                    }
                 }
             } catch (Exception e) {
-                e.printStackTrace();;
+                e.printStackTrace();
             }
         }
         System.out.println(cnt);
@@ -391,7 +396,7 @@ public class DistantSupervisionMostFrequent {
         for (int i = 0; i < files.length; i++) {
             String fileName = files[i].getName();
             String processName = fileName.substring(0, fileName.indexOf(".")).split("_")[0].toLowerCase();
-            if (fileName.contains("_out.txt") ) {
+            if (fileName.contains("_out.txt") && fileName.contains("continental")) {
                 System.out.println(processName.toLowerCase());
                 DistantSupervisionMostFrequent labeler = new DistantSupervisionMostFrequent("./data/most_frequent_7_june.tsv",
                         "./data/ds_most_frequent_7_06_2015/" + files[i].getName(),
