@@ -85,18 +85,18 @@ public class DistantSupervisionMostFrequent {
             enablers.addAll(StringUtil.getTokenAsList(StringUtil.removeFunctionWordsFromRoleFillers(p.getEnabler()), ProcessFrameProcessor.SEPARATOR));
             results.addAll(StringUtil.getTokenAsList(StringUtil.removeFunctionWordsFromRoleFillers(p.getResult()), ProcessFrameProcessor.SEPARATOR));
             
-            if (undergoers.size() == 1 && undergoers.get(0).length() == 0)
+            /*if (undergoers.size() == 1 && undergoers.get(0).length() == 0)
                 undergoers.clear();
-                undergoers.addAll(StringUtil.getTokenAsList(p.getUnderGoer(), ProcessFrameProcessor.SEPARATOR));
+                undergoers.addAll(StringUtil.getTokenAsList(p.getUnderGoer(), ProcessFrameProcessor.SEPARATOR));*/
             if (triggers.size() == 1 && triggers.get(0).length() == 0)
                 triggers.clear();
                 triggers.addAll(StringUtil.getTokenAsList(p.getTrigger(), ProcessFrameProcessor.SEPARATOR));
-            if (enablers.size() == 1 && enablers.get(0).length() == 0)
+            /*if (enablers.size() == 1 && enablers.get(0).length() == 0)
                 enablers.clear();
                 enablers.addAll(StringUtil.getTokenAsList(p.getEnabler(), ProcessFrameProcessor.SEPARATOR));
             if (results.size() == 1 && results.get(0).length() == 0)
                 results.clear();
-                results.addAll(StringUtil.getTokenAsList(p.getResult(), ProcessFrameProcessor.SEPARATOR));
+                results.addAll(StringUtil.getTokenAsList(p.getResult(), ProcessFrameProcessor.SEPARATOR));*/
         }
         System.out.println("END LOADING ROLE FILLERS");
 

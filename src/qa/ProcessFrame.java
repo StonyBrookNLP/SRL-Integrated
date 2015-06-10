@@ -221,7 +221,7 @@ public class ProcessFrame implements Serializable{
         } else {
             if (targetPattern[0].length() > 0) {
                 System.out.println(Arrays.toString(tokenizedSentence));
-                System.out.println("ERROR : CANNOT FIND \"" + Arrays.toString(targetPattern) + "\" IN THE SENTENCE");
+                //System.out.println("ERROR : CANNOT FIND \"" + Arrays.toString(targetPattern) + "\" IN THE SENTENCE");
             }
             return null;
         }

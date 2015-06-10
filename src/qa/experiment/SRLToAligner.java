@@ -45,7 +45,7 @@ public class SRLToAligner {
         System.out.println(trees.size());
         if (frames.size() != trees.size() )
         {
-            System.out.println("PROBLEM");
+            System.out.println("NIGHTMARE");
             System.exit(0);
         }
         for (int i = 0; i < frames.size(); i++)
@@ -60,6 +60,7 @@ public class SRLToAligner {
         }
         
         ProcessFrameUtil.dumpFramesToFile(frames, outTsvFile);
+        
     }
 
     public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException

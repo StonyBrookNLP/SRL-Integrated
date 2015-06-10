@@ -56,7 +56,7 @@ public class ProcessFrameProcessor {
 
     public boolean isHeader(String line) {
         String fields[] = line.split("\t");
-        if (fields[0].equalsIgnoreCase("process") && fields[1].equalsIgnoreCase("undergoer")) {
+        if ((fields[0].equalsIgnoreCase("process") && fields[1].equalsIgnoreCase("undergoer")) || (fields[0].equalsIgnoreCase("question") && fields[1].equalsIgnoreCase("undergoer"))) {
             return true;
         }
         return false;
@@ -140,7 +140,19 @@ public class ProcessFrameProcessor {
             rawText = rawText.replace(".", " ");
             rawText = rawText.replaceAll("\"", "");
             rawText = rawText.trim();
-            rawText += ".";
+            for (int j = rawText.length()-1 ; ; j--)
+            {
+                if (Character.isAlphabetic(rawText.charAt(j)))
+                {
+                    rawText = rawText.substring(0,j+1);
+                    rawText += ".";
+                    break;
+                }
+            }
+            /*rawText = rawText.replace(".", " ");
+            rawText = rawText.replaceAll("\"", "");
+            rawText = rawText.trim();
+            rawText += ".";**/
 
             // update tokenized text here
             List<String> tokenized = slem.tokenize(rawText);
@@ -152,7 +164,8 @@ public class ProcessFrameProcessor {
                 writer.println(conLLStr);
                 writer.println();
             } catch (Exception e) {
-
+                e.printStackTrace();
+                //System.out.println(rawText);
             }
 
         }
@@ -334,9 +347,9 @@ public class ProcessFrameProcessor {
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor("/Users/samuellouvan/NetBeansProjects/QA/data/process_50.tsv");
+        ProcessFrameProcessor proc = new ProcessFrameProcessor("/Users/samuellouvan/Downloads/QuestionFrames.tsv");
         proc.loadProcessData();
-        proc.toClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/data/process_50.clearparser");
+        proc.toClearParserFormat("/Users/samuellouvan/Downloads/QuestionFrames.clearparser");
         //proc.loadSentences();
         //System.out.println(proc.getIdxMatches("samuel student".split("\\s+"),"samuel louvan is the most stupid phd samuel student".split("\\s+")));
     }

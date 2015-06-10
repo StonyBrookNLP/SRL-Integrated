@@ -346,5 +346,24 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         return argMatches;
     }
 
+    public boolean isExistPath(ArrayList<DependencyNode> from, DependencyNode to)
+    {
+        for (int i = 0; i < from.size(); i++)
+        {
+            if (isExistPathFrom(from.get(i), to))
+                return true;
+        }
+        
+        return false;
+    }
+    public ArrayList<DependencyNode> getNodes(ArrayList<Integer> indexes)
+    {
+        ArrayList<DependencyNode> nodes = new ArrayList<DependencyNode>();
+        for (int i = 0; i < indexes.size(); i++)
+        {
+            nodes.add(get(indexes.get(i)));
+        }
+        return nodes;
+    }
     
 }
