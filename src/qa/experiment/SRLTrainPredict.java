@@ -58,7 +58,7 @@ public class SRLTrainPredict {
         // evaluate
     }
 
-    public void trainPredictClearParser(String trainingFileName, String testFileName, String outDir) throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException {
+        public void trainPredictClearParser(String trainingFileName, String testFileName, String outDir) throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException {
 
         SRLTrain train = new SRLTrain();
         CmdLineParser cmd = new CmdLineParser(train);

@@ -26,22 +26,22 @@ public class ProcessFrameUtil {
             ArrayList<String> result, String sentence) {
         ProcessFrame frame = new ProcessFrame();
         frame.setProcessName(processName);
-        if (!undergoer.isEmpty()) {
+        if (undergoer != null&&!undergoer.isEmpty()) {
             frame.setUnderGoer(StringUtil.getTokensWithSeparator(undergoer, ProcessFrameProcessor.SEPARATOR));
         } else {
             frame.setUnderGoer("");
         }
-        if (!enabler.isEmpty()) {
+        if (enabler != null&& !enabler.isEmpty()) {
             frame.setEnabler(StringUtil.getTokensWithSeparator(enabler, ProcessFrameProcessor.SEPARATOR));
         } else {
             frame.setEnabler("");
         }
-        if (!trigger.isEmpty()) {
+        if (trigger != null && !trigger.isEmpty()) {
             frame.setTrigger(StringUtil.getTokensWithSeparator(trigger, ProcessFrameProcessor.SEPARATOR));
         } else {
             frame.setTrigger("");
         }
-        if (!result.isEmpty()) {
+        if (result != null&& !result.isEmpty()) {
             frame.setResult(StringUtil.getTokensWithSeparator(result, ProcessFrameProcessor.SEPARATOR));
         } else {
             frame.setResult("");

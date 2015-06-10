@@ -324,6 +324,7 @@ public class DistantSupervisionMostFrequent {
         ArrayList<String> sentences = getSentencesFromCorpus();
         sentences = filterSentence(sentences);
         ArrayList<ProcessFrame> newAnnotatedFrames = new ArrayList<ProcessFrame>();
+        ArrayList<ProcessFrame> filteredOutFrames = new ArrayList<ProcessFrame>();
         int cnt = 0;
         for (String sentence : sentences) {
             try {
@@ -378,14 +379,20 @@ public class DistantSupervisionMostFrequent {
                     {
                         System.out.println("Filtered out");
                         System.out.println(sentence);
+                        ProcessFrame frame = ProcessFrameUtil.createProcessFrame(targetProcessName, null, null, matchesTrigger, null, sentence);
+                        filteredOutFrames.add(frame);
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+        // Additional Preprocessing ?
+        
         System.out.println(cnt);
         ProcessFrameUtil.dumpFramesToFile(newAnnotatedFrames, this.newAnnotatedFrameFileName);
+        if (newAnnotatedFrames.size() == 0)
+            ProcessFrameUtil.dumpFramesToFile(filteredOutFrames, this.newAnnotatedFrameFileName+".filtered.out");
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
