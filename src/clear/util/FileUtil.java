@@ -21,7 +21,9 @@ import java.util.Scanner;
 public class FileUtil {
 
     public static String getFileNameWoExt(String fileNameWithExt) {
-        int dotIdx = fileNameWithExt.indexOf(".");
+        int slashidx = fileNameWithExt.lastIndexOf("/");
+        fileNameWithExt = fileNameWithExt.substring(slashidx+1);
+        int dotIdx = fileNameWithExt.lastIndexOf(".");
         return fileNameWithExt.substring(0, dotIdx);
     }
 
@@ -62,6 +64,12 @@ public class FileUtil {
         return lines.toArray(new String[lines.size()]);
     }
     
+    public static void dumpToFile(String[] text, PrintWriter writer ) throws FileNotFoundException
+    {
+        for (String line : text)
+            writer.println(line);
+        writer.close();
+    }
     public static void dumpToFile(ArrayList<String> text, String fileName ) throws FileNotFoundException
     {
         PrintWriter writer = new PrintWriter(fileName);
