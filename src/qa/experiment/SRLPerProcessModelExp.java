@@ -52,7 +52,9 @@ public class SRLPerProcessModelExp {
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-        "spear_spearing", "retract"};
+        "spear_spearing", "retract", "distillation", "Feelsleepy","filtering", "revising", "fertilization",
+        "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
+        "upwelling", "write", "work", "vibrates_vibration_vibrations", "warming", "watercycle_thewatercycle", "weather_weathering", "whiten_becomewhiter", "windbreaking"};
 
     public SRLPerProcessModelExp() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
@@ -113,9 +115,13 @@ public class SRLPerProcessModelExp {
                         if (!blackList.contains(processName) && processName.equalsIgnoreCase(normalizedProcessName)) {
                             trainingFrames.add(frameArr.get(j));
                         } else {
-                            System.out.println("BLACKLIST OR IT'S NOT A CORRECT TRAINING INSTANCE");
+                            //System.out.println("BLACKLIST OR IT'S NOT A CORRECT TRAINING INSTANCE");
                         }
                     }
+                }
+                if (trainingFrames.size() == 0) {
+                    System.out.println("PROBLEM " + normalizedProcessName);
+                    System.exit(0);
                 }
                 String trainingFileName = outDirName + "/" + normalizedProcessName + ".train.perprocess.cv." + fold;
                 trainingModelFilePath.add(outDirName + "/" + normalizedProcessName + ".perprocessmodel.cv." + fold);
@@ -137,9 +143,11 @@ public class SRLPerProcessModelExp {
                     cmd.printUsage(System.err);
                 } catch (Exception e) {
                     e.printStackTrace();
+                    System.out.println("Training file PROBLEMMMM : "+train.s_trainFile);
+                    
                     System.exit(0);
+                    
                 }
-
             }
             // Perform prediction
         }
@@ -165,13 +173,10 @@ public class SRLPerProcessModelExp {
         for (int i = 0; i < testFilePath.size(); i++) {
             String[] gsTxt = FileUtil.readLinesFromFile(testFilePath.get(i));
             String[] srlTxt = FileUtil.readLinesFromFile(testFilePath.get(i).replace(".test.", ".perprocess.predict."));
-            if (gsTxt.length != srlTxt.length)
-            {
+            if (gsTxt.length != srlTxt.length) {
                 System.out.println(testFilePath.get(i));
                 System.out.println("MISMATCH DUE TO CLEARPARSER ERROR");
-            }
-            else
-            {
+            } else {
                 gs_writer.print(StringUtil.toString(gsTxt));
                 srl_writer.print(StringUtil.toString(srlTxt));
             }

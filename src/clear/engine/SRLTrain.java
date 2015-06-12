@@ -59,7 +59,7 @@ public class SRLTrain extends AbstractTrain
 	@Option(name="-t", usage="feature template file", required=true, metaVar="REQUIRED")
 	private String s_featureXml = null;
 	@Option(name="-i", usage="training file", required=true, metaVar="REQUIRED")
-	private String s_trainFile  = null;
+	public String s_trainFile  = null;
 	@Option(name="-n", usage="bootstrapping level (default = 1)", required=false, metaVar="OPTIONAL")
 	private int    n_boot       = 1;
 	

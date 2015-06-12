@@ -54,6 +54,11 @@ public class ProcessFrame implements Serializable{
         resultIndex.clear();
         triggerIndex.clear();
     }
+    
+    public void updateTrigger()
+    {
+        
+    }
     public void processRoleFillers() {
         //System.out.println("PROCESSING");
         clearAllIndexes();

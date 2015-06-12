@@ -92,14 +92,51 @@ public class ClearParserUtil {
         String conLLRows[] = tree.toString().split("\n");
         if (triggerIdx.size() > 0) {
             // Update trigger
+            boolean triggerDone = false;
             for (Integer id : triggerIdx) {
                 String field[] = conLLRows[id - 1].split("\\s+");
-                field[7] = field[2] + ".01";
-                // update 
-                conLLRows[id - 1] = String.join("\t", field);
-
+                if (field[3].startsWith("VB")) {
+                    field[7] = field[2] + ".01";
+                    // update 
+                    conLLRows[id - 1] = String.join("\t", field);
+                    triggerDone = true;
+                    break;
+                }
+            }
+            if (!triggerDone) {
+                for (Integer id : triggerIdx) {
+                    String field[] = conLLRows[id - 1].split("\\s+");
+                    if (field[3].startsWith("NN")) {
+                        field[7] = field[2] + ".01";
+                        // update 
+                        conLLRows[id - 1] = String.join("\t", field);
+                        triggerDone = true;
+                        break;
+                    }
+                }
             }
 
+            if (!triggerDone) {
+                for (Integer id : triggerIdx) {
+                    String field[] = conLLRows[id - 1].split("\\s+");
+                    if (StringUtil.contains(field[1], procFrame.getProcessName().split("\\s+"))) {
+                        field[7] = field[2] + ".01";
+                        // update 
+                        conLLRows[id - 1] = String.join("\t", field);
+                        triggerDone = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!triggerDone) {
+                for (Integer id : triggerIdx) {
+                    String field[] = conLLRows[id - 1].split("\\s+");
+                        field[7] = field[2] + ".01";
+                        // update 
+                        conLLRows[id - 1] = String.join("\t", field);
+                }
+            }
             // Update undergoer
             for (Integer id : undergoerIdx) {
                 String field[] = conLLRows[id - 1].split("\\s+");
@@ -153,7 +190,6 @@ public class ClearParserUtil {
         return String.join("\n", conLLRows);
     }
 
-    
     public static void main(String[] args) throws IOException, InterruptedException {
         //System.out.println(System.getProperty("java.class.path"));
         clearParserPredict("/Users/samuellouvan/Downloads/clearparser-read-only/data/evaporate_evaporation.jointmodel.0",

@@ -306,38 +306,39 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         tree.remove(root.getId(), root);
     }
 
-    public boolean isNounModifier(DependencyNode node)
-    {
-        if (node.isRoot())
+    public boolean isNounModifier(DependencyNode node) {
+        if (node.isRoot()) {
             return false;
-        
-        if (node.getPos().contains("NN"))
-        {
+        }
+
+        if (node.getPos().contains("NN")) {
             DependencyNode parent = this.get(node.getHeadID());
-            if (parent.getPos().contains("NN"))
+            if (parent.getPos().contains("NN")) {
                 return true;
+            }
         }
         return false;
     }
-    
-    public int getWordIdx(String word)
-    {
-        for (int i = firstKey(); i <= lastKey(); i++)
-        {
-            if (get(i).getForm().equalsIgnoreCase(word))
+
+    public int getWordIdx(String word) {
+        for (int i = firstKey(); i <= lastKey(); i++) {
+            if (get(i).getForm().equalsIgnoreCase(word)) {
                 return i;
+            }
         }
-        
+
         return -1;
     }
+
     public ArrayList<String> getWordMatchType(ArrayList<DependencyNode> trigger, String[] types, WordNet wn) {
         ArrayList<String> argMatches = new ArrayList<String>();
         for (DependencyNode node : trigger) {
             for (Map.Entry<Integer, DependencyNode> entry : this.entrySet()) {
                 if (!entry.getValue().getForm().equalsIgnoreCase(node.getForm())) {
-                    if (!entry.getValue().isRoot() && !isNounModifier(entry.getValue()) &&isExistPathFrom(entry.getValue(), node) &&  wn.isMatchType(entry.getValue().getLemma().toLowerCase(), types)) {
-                        if (!argMatches.contains(entry.getValue().getForm()))
+                    if (!entry.getValue().isRoot() && !isNounModifier(entry.getValue()) && isExistPathFrom(entry.getValue(), node) && wn.isMatchType(entry.getValue().getLemma().toLowerCase(), types)) {
+                        if (!argMatches.contains(entry.getValue().getForm())) {
                             argMatches.add(entry.getValue().getForm());
+                        }
                     }
                 }
 
@@ -346,24 +347,45 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         return argMatches;
     }
 
-    public boolean isExistPath(ArrayList<DependencyNode> from, DependencyNode to)
-    {
-        for (int i = 0; i < from.size(); i++)
-        {
-            if (isExistPathFrom(from.get(i), to))
+    
+    public boolean isExistPath(ArrayList<DependencyNode> from, DependencyNode to) {
+        for (int i = 0; i < from.size(); i++) {
+            if (isExistPathFrom(from.get(i), to)) {
                 return true;
+            }
         }
-        
+
         return false;
     }
-    public ArrayList<DependencyNode> getNodes(ArrayList<Integer> indexes)
-    {
+
+  public boolean isExistPath(DependencyNode from, ArrayList<DependencyNode> to) {
+        for (int i = 0; i < to.size(); i++) {
+            if (isExistPathFrom(from, to.get(i))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean isExistPath(ArrayList<DependencyNode> from, ArrayList<DependencyNode> to) {
+        for (int i = 0; i < from.size(); i++) {
+            for (int j = 0; j < to.size(); j++) {
+                if (isExistPathFrom(from.get(i), to.get(j)) || isExistPathFrom(to.get(j), from.get(i))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public ArrayList<DependencyNode> getNodes(ArrayList<Integer> indexes) {
         ArrayList<DependencyNode> nodes = new ArrayList<DependencyNode>();
-        for (int i = 0; i < indexes.size(); i++)
-        {
+        for (int i = 0; i < indexes.size(); i++) {
             nodes.add(get(indexes.get(i)));
         }
         return nodes;
     }
-    
+
 }

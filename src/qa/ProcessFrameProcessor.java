@@ -77,6 +77,7 @@ public class ProcessFrameProcessor {
                 procFrame.setUnderGoer(columns[UNDERGOER_IDX]);
                 procFrame.setEnabler(columns[ENABLER_IDX]);
                 procFrame.setTrigger(columns[TRIGGER_IDX]);
+                
                 procFrame.setResult(columns[RESULT_IDX]);
                 procFrame.setUnderSpecified(columns[UNDERSPECIFIED_IDX]);
                 procFrame.setRawText(columns[SENTENCE_IDX].trim());
@@ -85,7 +86,7 @@ public class ProcessFrameProcessor {
                 } else {
                     processCountPair.put(procFrame.getProcessName(), processCountPair.get(procFrame.getProcessName().trim()) + 1);
                 }
-
+                procFrame.processRoleFillers();
                 procArr.add(procFrame);
                 cnt++;
             }
@@ -94,6 +95,10 @@ public class ProcessFrameProcessor {
         System.out.println("END OF LOAD SENTENCES");
     }
 
+    public void updateTrigger()
+    {
+        
+    }
     public HashMap<String, Integer> getProcessCount() {
         return processCountPair;
     }
@@ -238,6 +243,18 @@ public class ProcessFrameProcessor {
         }
         return results;
     }
+    
+    public ArrayList<ProcessFrame> getProcessFrameByNormalizedName(String normalizedProcessName) {
+        ArrayList<ProcessFrame> results = new ArrayList<ProcessFrame>();
+        for (ProcessFrame p : this.getProcArr()) {
+            String[] name = StringUtil.getTokenAsArr(p.getProcessName(), SEPARATOR);
+            String[] normalizedProcessNameTokens = normalizedProcessName.split("_");
+            if (StringUtil.containsNormalized(normalizedProcessNameTokens, name) ) {
+                results.add(p);
+            }
+        }
+        return results;
+    }
 
     public ArrayList<Integer> getIdxMatches(String[] targetPattern, String[] tokenizedSentence) {
         boolean inRegion = false;
@@ -348,9 +365,9 @@ public class ProcessFrameProcessor {
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor("/Users/samuellouvan/Downloads/QuestionFrames.tsv");
+        ProcessFrameProcessor proc = new ProcessFrameProcessor("/Users/samuellouvan/NetBeansProjects/QA/data/process_frame_june.tsv");
         proc.loadProcessData();
-        proc.toClearParserFormat("/Users/samuellouvan/Downloads/QuestionFrames.clearparser");
+        proc.toClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/data/process_frame_june.clearparser");
         //proc.loadSentences();
         //System.out.println(proc.getIdxMatches("samuel student".split("\\s+"),"samuel louvan is the most stupid phd samuel student".split("\\s+")));
     }

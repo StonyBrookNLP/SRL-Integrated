@@ -8,6 +8,7 @@ package qa.distantsupervision;
 import Util.ArrUtil;
 import Util.GlobalVariable;
 import Util.ProcessFrameUtil;
+import com.google.common.collect.Lists;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -81,8 +82,7 @@ public class PatternBasedAnnotator {
                 DependencyNode resultLexNode = tree.get(resultLexIdx + 1);
                 ArrayList<DependencyNode> triggerNodes = tree.getNodes(triggerIdxs);
 
-                if (tree.isExistPath(triggerNodes, resultLexNode)) {
-                    System.out.println("This sentence may contain A2 :" + rawText);
+                if (tree.isExistPath(triggerNodes, resultLexNode) || tree.isExistPath(resultLexNode, triggerNodes)) { //|| triggerIdxs.contains(idxHeadOfEnabler)) {
                     ArrayList<DependencyNode> rootSubTree = new ArrayList<DependencyNode>(tree.dependentsOf(resultLexNode));
                     if (rootSubTree.size() > 0) {
                         ArrayList<DependencyNode> childs = new ArrayList<DependencyNode>();
@@ -105,37 +105,197 @@ public class PatternBasedAnnotator {
                                 childs.add(rootBaseResults.get(i));
                             }
                         }
-                    
-                    fixGap(childs, tree);
-                    Collections.sort(childs);
-                    Collections.sort(allIdxs);
-                    ArrayList<Integer> candidateIdxs = getIdxs(childs);
-                    ArrayList<Integer> intersections = ArrUtil.intersection(candidateIdxs, allIdxs);
-                    Collections.sort(intersections);
 
-                    //updateChildDueToIntersection(childs, intersections); //
-                    if (intersections.size() == 0) {
-                        String finalResult = "";
-                        for (int i = 0; i < childs.size(); i++) {
-                            System.out.print(childs.get(i).getForm() + " ");
-                            finalResult = finalResult.concat(childs.get(i).getForm() + " ");
+                        fixGap(childs, tree);
+                        Collections.sort(childs);
+                        Collections.sort(allIdxs);
+                        ArrayList<Integer> candidateIdxs = getIdxs(childs);
+                        ArrayList<Integer> intersections = ArrUtil.intersection(candidateIdxs, allIdxs);
+                        Collections.sort(intersections);
+
+                        //updateChildDueToIntersection(childs, intersections); //
+                        if (intersections.size() == 0) {
+                            String finalResult = "";
+                            for (int i = 0; i < childs.size(); i++) {
+                                System.out.print(childs.get(i).getForm() + " ");
+                                finalResult = finalResult.concat(childs.get(i).getForm() + " ");
+                            }
+                            finalResult = finalResult.trim();
+                            frame.setResult(finalResult);
+                            frame.processRoleFillers();
+                            if (frame.getResultIdx().size() != 0) {
+                                System.out.println("This sentence may contain A2 :" + rawText);
+                                System.out.println(frame.getResultIdx());
+                            }
+                            else
+                            {
+                                frame.setResult("");
+                            }
+                            System.out.println("");
                         }
-                        finalResult = finalResult.trim();
-                        frame.setResult(finalResult);
-                        frame.processRoleFillers();
-                        System.out.println(frame.getResultIdx());
-                        System.out.println("");
                     }
+
                 }
+            } else {
 
             }
-        } else {
+        }
+    }
+
+    public void labelA0Pattern1(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOException {
+        String rawText = frame.getRawText();
+        DependencyTree tree = depParser.parse(rawText);
+        List<String> tokens = tokenizer.tokenize(rawText);
+        String[] lexPattern = {"is", "are", "was", "were"};
+        int undergoerLexIdx = -1;
+        boolean stop = false;
+        for (int i = 0; i < lexPattern.length && !stop; i++) {
+            for (int j = 0; j < tokens.size() && !stop; j++) {
+                String token = tokens.get(j);
+                if (token.equalsIgnoreCase(lexPattern[i])) {
+                    undergoerLexIdx = j;
+                    stop = true;
+                }
+            }
+        }
+        if (stop) {
+            ArrayList<Integer> triggerIdxs = frame.getTriggerIdx();
+            //Collections.sort(triggerIdxs);
+            boolean right = true;
+            for (Integer idx : triggerIdxs) {
+                if (idx < undergoerLexIdx) {
+                    right = false;
+                    break;
+                }
+            }
+            if (right) {
+                // get the ID of the trigger Lex in dependency parse
+                // check if the trigger word is the parent of trigger Lex
+                // if yes then follow PMOD, NMOD, PMOD, NMOD
+                DependencyNode undergoerLexNode = tree.get(undergoerLexIdx + 1);
+                ArrayList<DependencyNode> triggerNodes = tree.getNodes(triggerIdxs);
+                if (tree.isExistPath(triggerNodes, undergoerLexNode)) {
+
+                    System.out.println("This sentence may contain A0 :" + rawText + " Label " + undergoerLexNode.getRelationLabel());
+
+                    //ArrayList<DependencyNode> rootSubTree = new ArrayList<DependencyNode>(tree.dependentsOf(undergoerLexNode));
+                    /*if (rootSubTree.size() > 0) {
+                     ArrayList<DependencyNode> childs = getLimitedChilds(tree, rootSubTree.get(0));
+                     Collections.sort(childs);
+                     fixGap(childs, tree);
+                     if (!childs.contains(rootSubTree.get(0))) {
+                     childs.add(rootSubTree.get(0));
+                     }
+                     fixGap(childs, tree);
+                     Collections.sort(childs);
+                     Collections.sort(allIdxs);
+                     ArrayList<Integer> candidateIdxs = getIdxs(childs);
+                     ArrayList<Integer> intersections = ArrUtil.intersection(candidateIdxs, allIdxs);
+                     Collections.sort(intersections);
+                     //updateChildDueToIntersection(childs, intersections); //
+                     if (intersections.size() == 0) {
+                     String finalEnabler = "";
+                     for (int i = 0; i < childs.size(); i++) {
+                     System.out.print(childs.get(i).getForm() + " ");
+                     finalEnabler = finalEnabler.concat(childs.get(i).getForm() + " ");
+                     }
+                     finalEnabler = finalEnabler.trim();
+                     frame.setEnabler(finalEnabler);
+                     frame.processRoleFillers();
+                     System.out.println(frame.getEnablerIdx());
+                     System.out.println("");
+                     }
+                     }*/
+                }
+            }
 
         }
     }
-}
 
-public void labelA1(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOException {
+    public void labelA0Pattern2(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOException {
+        String rawText = frame.getRawText();
+        DependencyTree tree = depParser.parse(rawText);
+        List<String> tokens = tokenizer.tokenize(rawText);
+        String[] lexPattern = {"of"};
+        int undergoerLexIdx = -1;
+        boolean stop = false;
+        for (int i = 0; i < lexPattern.length && !stop; i++) {
+            for (int j = 0; j < tokens.size() && !stop; j++) {
+                String token = tokens.get(j);
+                if (token.equalsIgnoreCase(lexPattern[i])) {
+                    undergoerLexIdx = j + 1;
+                    stop = true;
+                }
+            }
+        }
+        if (stop) {
+            ArrayList<Integer> triggerIdxs = frame.getTriggerIdx();
+            //Collections.sort(triggerIdxs);
+            boolean valid = false;
+            for (Integer idx : triggerIdxs) {
+                if (idx == undergoerLexIdx - 1) {
+                    valid = true;
+                    break;
+                }
+            }
+            if (valid) {
+                DependencyNode undergoerLexNode = tree.get(undergoerLexIdx);
+
+                Set<DependencyNode> undergoerNodeCandidates = tree.dependentsOf(undergoerLexNode);
+                if (undergoerNodeCandidates.size() > 0) {
+                    ArrayList<DependencyNode> nodeList = Lists.newArrayList(undergoerNodeCandidates);
+                    boolean NNFound = false;
+                    DependencyNode rootSubTree = null;
+                    for (int i = 0; i < nodeList.size(); i++) {
+                        if (nodeList.get(i).getCpos().startsWith("NN")) {
+                            NNFound = true;
+                            rootSubTree = nodeList.get(i);
+                        }
+                    }
+                    if (NNFound) {
+
+                        ArrayList<DependencyNode> childs = getLimitedChilds(tree, rootSubTree);
+                        Collections.sort(childs);
+                        fixGap(childs, tree);
+                        if (!childs.contains(rootSubTree)) {
+                            childs.add(rootSubTree);
+                        }
+
+                        fixGap(childs, tree);
+                        Collections.sort(childs);
+                        Collections.sort(allIdxs);
+                        ArrayList<Integer> candidateIdxs = getIdxs(childs);
+                        ArrayList<Integer> intersections = ArrUtil.intersection(candidateIdxs, allIdxs);
+                        Collections.sort(intersections);
+                        //updateChildDueToIntersection(childs, intersections); //
+                        if (intersections.size() == 0) {
+                            String finalUndergoer = "";
+
+                            for (int i = 0; i < childs.size(); i++) {
+                                System.out.print(childs.get(i).getForm() + " ");
+                                finalUndergoer = finalUndergoer.concat(childs.get(i).getForm() + " ");
+                            }
+                            finalUndergoer = finalUndergoer.trim();
+                            frame.setUnderGoer(finalUndergoer);
+                            frame.processRoleFillers();
+                            if (frame.getUndergoerIdx().size() != 0) {
+                                System.out.println("This sentence may contain A0 :" + rawText + "trigger : " + frame.getTrigger() + " Process : " + frame.getProcessName());
+                                System.out.println(frame.getUndergoerIdx());
+                            } else {
+                                frame.setUnderGoer("");
+                            }
+
+                            System.out.println("");
+                        }
+                    }
+                }
+            }
+
+        }
+
+    }
+
+    public void labelA1(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOException {
         String rawText = frame.getRawText();
         DependencyTree tree = depParser.parse(rawText);
         List<String> tokens = tokenizer.tokenize(rawText);
@@ -170,7 +330,6 @@ public void labelA1(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOExc
                 int idxHeadOfEnabler = enablerLexNode.getHeadID();
                 if (triggerIdxs.contains(idxHeadOfEnabler)) {
 
-                    System.out.println("This sentence may contain A1 :" + rawText);
                     ArrayList<DependencyNode> rootSubTree = new ArrayList<DependencyNode>(tree.dependentsOf(enablerLexNode));
                     if (rootSubTree.size() > 0) {
                         ArrayList<DependencyNode> childs = getLimitedChilds(tree, rootSubTree.get(0));
@@ -189,14 +348,22 @@ public void labelA1(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOExc
                         //updateChildDueToIntersection(childs, intersections); //
                         if (intersections.size() == 0) {
                             String finalEnabler = "";
+
                             for (int i = 0; i < childs.size(); i++) {
-                                System.out.print(childs.get(i).getForm() + " ");
+                                //System.out.print(childs.get(i).getForm() + " ");
                                 finalEnabler = finalEnabler.concat(childs.get(i).getForm() + " ");
                             }
                             finalEnabler = finalEnabler.trim();
                             frame.setEnabler(finalEnabler);
                             frame.processRoleFillers();
-                            System.out.println(frame.getEnablerIdx());
+                            //System.out.println(frame.getEnablerIdx());
+                            if (frame.getEnablerIdx().size() > 0) {
+                                System.out.println("This sentence may contain A1 :" + rawText);
+                                frame.setEnabler(finalEnabler);
+                                System.out.println(frame.getEnablerIdx());
+                            } else {
+                                frame.setEnabler("");
+                            }
                             System.out.println("");
                         }
                     }
@@ -268,12 +435,20 @@ public void labelA1(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOExc
                 ArrayList<Integer> labeledIdx = frames.get(i).getAllLabeledIndex();
                 ArrayList<Integer> enablerIdxs = frames.get(i).getEnablerIdx();
                 ArrayList<Integer> resultIdxs = frames.get(i).getResultIdx();
-
-                if (enablerIdxs.size() == 0) {
+                ArrayList<Integer> undergoerIdxs = frames.get(i).getUndergoerIdx();
+                if (enablerIdxs.size() == 0 ) {
                     labelA1(frames.get(i), labeledIdx);
+
                 }
-                if (resultIdxs.size() == 0) {
+                if (resultIdxs.size() == 0  ) {
                     labelA2(frames.get(i), labeledIdx);
+
+                }
+                if (undergoerIdxs.size() == 0 ) {
+                    //labelA0Pattern1(frames.get(i), labeledIdx);
+                    //labeledIdx = frames.get(i).getAllLabeledIndex();
+                    labelA0Pattern2(frames.get(i), labeledIdx);
+
                 }
             } catch (Exception e) {
 
@@ -286,6 +461,9 @@ public void labelA1(ProcessFrame frame, ArrayList<Integer> allIdxs) throws IOExc
     public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException {
 
         PatternBasedAnnotator annotator = new PatternBasedAnnotator(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes.tsv");
-        annotator.annotate(GlobalVariable.PROJECT_DIR + "/data/ds_all_processes_pattern.tsv");
+        annotator.annotate(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
+
+        //PatternBasedAnnotator annotator = new PatternBasedAnnotator(GlobalVariable.PROJECT_DIR + "/data/smallA0.tsv");
+        //annotator.annotate(GlobalVariable.PROJECT_DIR + "/data/smallA0Annotated.tsv");
     }
 }

@@ -56,6 +56,18 @@ public class StringUtil {
         return false;
     }
 
+    public static boolean containsNormalized(String str[], String[] strArr) {
+        for (String s : strArr) {
+            for (String ss : str) {
+                if (s.trim().equalsIgnoreCase(ss) || s.replaceAll("\\s+", "").equalsIgnoreCase(ss)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public static boolean contains(String str, String regex) {
         return true;
     }
