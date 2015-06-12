@@ -16,12 +16,12 @@ import qa.dep.DependencyTree;
  */
 public class ClearParserUtil {
 
-    public static String[] TRAIN_ARGS = {"-c", "/Users/samuellouvan/NetBeansProjects/QA/config/config_srl_en.xml",
+    public static String[] TRAIN_ARGS = {"-c", GlobalVariable.PROJECT_DIR+"/config/config_srl_en.xml",
         "-i", "", //dirName + ds_ClearParser,
         "-t", "/Users/samuellouvan/NetBeansProjects/QA/config/feature_srl_en_conll09.xml",
         "-m", ""}; //dirName + ds_model
 
-    public static String[] PREDICT_ARGS = {"-c", "/Users/samuellouvan/NetBeansProjects/QA/config/config_srl_en.xml",
+    public static String[] PREDICT_ARGS = {"-c", GlobalVariable.PROJECT_DIR+"/config/config_srl_en.xml",
         "-i", "", //  testDirName + testingFile
         "-o", "", // testDirName + predictionFile
         "-m", ""}; // modelDirName + ds_model}
