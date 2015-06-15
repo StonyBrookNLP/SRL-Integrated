@@ -46,9 +46,16 @@ public class SRLDSPerProcessExp {
     @Option(name = "-d", usage = "directory where the ds files located", required = true, metaVar = "REQUIRED")
     private String dsDirName;
 
+    @Option(name = "-df", usage = "ds file name", required = false, metaVar = "REQUIRED")
+    private String dsFileName = "ds_all_processes_w_pattern.tsv";
+    
     @Option(name = "-n", usage = "number of processes to test", required = false, metaVar = "OPTIONAL")
     private int nbProcess = 0;
 
+    @Option(name = "-p", usage = "specific process to test", required = false, metaVar = "OPTIONAL")
+    private String processToTest = "";
+
+    
     boolean limitedProcess = false;
     private ArrayList<ProcessFrame> frameArr;
     private HashMap<String, Integer> processFold;
@@ -56,10 +63,10 @@ public class SRLDSPerProcessExp {
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-        "spear_spearing", "retract", "distillation", "Feelsleepy","filtering", "revising", "fertilization",
+        "spear_spearing", "retract", "distillation", "Feelsleepy", "filtering", "revising", "fertilization",
         "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
         "upwelling", "write", "work", "vibrates_vibration_vibrations", "warming", "watercycle_thewatercycle", "weather_weathering", "whiten_becomewhiter", "windbreaking"};
-    
+
     public SRLDSPerProcessExp() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
         testFilePath = new ArrayList<String>();
@@ -82,9 +89,25 @@ public class SRLDSPerProcessExp {
             }
         }
         frameArr = proc.getProcArr();
-        for (int i = 0; i < frameArr.size(); i++) {
-            String normName = ProcessFrameUtil.normalizeProcessName(frameArr.get(i).getProcessName());
-            processFold.put(normName, 0);
+        if (processToTest.isEmpty()) {
+            for (int i = 0; i < frameArr.size(); i++) {
+                String normName = ProcessFrameUtil.normalizeProcessName(frameArr.get(i).getProcessName());
+                processFold.put(normName, 0);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < frameArr.size(); i++) {
+                String normName = ProcessFrameUtil.normalizeProcessName(frameArr.get(i).getProcessName());
+                String[] normNames = normName.split("_");
+                if (StringUtil.contains(processToTest, normNames))
+                    processFold.put(normName, 0);
+            }
+            if (processFold.size() == 0)
+            {
+                System.out.println("Cannot find the process to test!");
+                System.exit(0);
+            }
         }
         File outDirHandler = new File(outDirName);
         if (outDirHandler.exists()) {
@@ -101,7 +124,7 @@ public class SRLDSPerProcessExp {
     public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException {
         testFilePath.clear();
         trainingModelFilePath.clear();
-        ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/" + "ds_all_processes_w_pattern.tsv");
+        ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/" + dsFileName);
         dsProc.loadProcessData();
         for (int i = 0; i < frameArr.size(); i++) {
             //System.out.println(i);
@@ -117,19 +140,12 @@ public class SRLDSPerProcessExp {
                 trainingModelFilePath.add(outDirName + "/" + normalizedProcessName + ".dsperprocessmodel.cv." + fold);
                 String modelName = outDirName + "/" + normalizedProcessName + ".dsperprocessmodel.cv." + fold;
 
-                // Get the corresponding ds !
-                //ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/" + normalizedProcessName + "_ds.tsv");
-                //dsProc.loadProcessData();
-                //dsProc.toClearParserFormat(trainingFileName);
                 ArrayList<ProcessFrame> trainingFrames = dsProc.getProcessFrameByNormalizedName(normalizedProcessName);
-                if (trainingFrames == null || trainingFrames.size() == 0)
-                {
-                    System.out.print("PROBLEM :");
+                if (trainingFrames == null || trainingFrames.size() == 0) {
+                    System.out.print("PROBLEM, CANNOT FIND THE TEST PROCESS IN THE DS DATA : ");
                     System.out.println(testFrame.getProcessName());
                     //System.exit(0);
-                }
-                else
-                {
+                } else {
                     //System.out.println("FOUND");
                 }
                 ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
