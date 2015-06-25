@@ -10,6 +10,7 @@ import Util.GlobalVariable;
 import Util.ProcessFrameUtil;
 import clear.engine.SRLPredict;
 import clear.engine.SRLTrain;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 import qa.ProcessFrame;
 import qa.ProcessFrameProcessor;
 import qa.QuestionData;
@@ -29,18 +31,36 @@ import qa.util.FileUtil;
  */
 public class SRLToAlignerCrossValidation {
 
-    private String questionFileTsv;
+    @Option(name = "-f", usage = "process file", required = true, metaVar = "REQUIRED")
     private String processFileTsv;
+
+    @Option(name = "-q", usage = "question file", required = true, metaVar = "REQUIRED")
+    private String questionFileTsv;
+
+    @Option(name = "-qF", usage = "question frame file", required = true, metaVar = "REQUIRED")
+    private String questionFrameFileTsv;
+    
+    @Option(name = "-ds", usage = "dsfile", required = false, metaVar = "OPTIONAL")
     private String dsFileTsv;
-    private boolean dsMode;
+
+    @Option(name = "-k", usage = "number of fold", required = true, metaVar = "REQUIRED")
+    private int fold;
+
+    @Option(name = "-o", usage = "output directory name", required = true, metaVar = "REQUIRED")
+    private String outDir;
+
+    @Option(name = "-mx", usage = "the training data is mixed between annotated data and DS", required = false, metaVar = "OPTIONAL")
+    private boolean dsMode = false;
+
+    @Option(name = "-mxt", usage = "the training data is mixed between annotated data and DS", required = false, metaVar = "OPTIONAL")
+    private boolean dsModeTest = false;
+    
     QuestionDataProcessor qProc;
     ProcessFrameProcessor manualData;
     ProcessFrameProcessor dsData;
 
-    public SRLToAlignerCrossValidation(String questionFileTsv, String processFileTsv, String dsFileTsv) {
-        this.questionFileTsv = questionFileTsv;
-        this.processFileTsv = processFileTsv;
-        this.dsFileTsv = dsFileTsv;
+    public SRLToAlignerCrossValidation() {
+
     }
 
     public ArrayList<QuestionData> getTrainingData(int startIdx, int endIdxTest, ArrayList<QuestionData> questions) {
@@ -55,7 +75,20 @@ public class SRLToAlignerCrossValidation {
         return trainingData;
     }
 
-    public ArrayList<ProcessFrame> extractProcessFromQuestions(ArrayList<QuestionData> questions) {
+    public void init() {
+        File outDirHandler = new File(outDir);
+        if (outDirHandler.exists()) {
+            return;
+        }
+        boolean success = outDirHandler.mkdir();
+
+        if (!success) {
+            System.out.println("FAILED to create output directory");
+            System.exit(0);
+        }
+    }
+
+    public ArrayList<ProcessFrame> extractProcessFromQuestions(ArrayList<QuestionData> questions, String mode) {
         ArrayList<String> processNames = new ArrayList<String>();
         ArrayList<ProcessFrame> extractedProcessFrame = new ArrayList<ProcessFrame>();
 
@@ -75,10 +108,12 @@ public class SRLToAlignerCrossValidation {
             }
         }
         if (dsMode) {
-            for (int i = 0; i < processNames.size(); i++) {
-                ArrayList<ProcessFrame> selectedProcess = dsData.getProcessFrameByName(processNames.get(i));
-                if (selectedProcess.size() > 0) {
-                    extractedProcessFrame.addAll(selectedProcess);
+            if (mode.equalsIgnoreCase("training") || (mode.equalsIgnoreCase("testing") && dsModeTest)) {
+                for (int i = 0; i < processNames.size(); i++) {
+                    ArrayList<ProcessFrame> selectedProcess = dsData.getProcessFrameByName(processNames.get(i));
+                    if (selectedProcess.size() > 0) {
+                        extractedProcessFrame.addAll(selectedProcess);
+                    }
                 }
             }
         }
@@ -95,42 +130,51 @@ public class SRLToAlignerCrossValidation {
         writer.close();
     }
 
-    public void produceCrossValidation(int fold, String outDir, boolean ds) throws FileNotFoundException, IOException, ClassNotFoundException {
+    public void produceCrossValidation() throws FileNotFoundException, IOException, ClassNotFoundException {
         qProc = new QuestionDataProcessor(questionFileTsv);
         qProc.loadQuestionData();
         manualData = new ProcessFrameProcessor(processFileTsv);
         manualData.loadProcessData();
-        dsData = new ProcessFrameProcessor(dsFileTsv);
-        dsData.loadProcessData();
+        if (dsMode) {
+            dsData = new ProcessFrameProcessor(dsFileTsv);
+            dsData.loadProcessData();
+        }
+        ProcessFrameProcessor qFrames = new ProcessFrameProcessor(questionFrameFileTsv);
+        //ProcessFrameProcessor qFrames = new ProcessFrameProcessor("./data/question_frame_23_june.tsv");
+        qFrames.setQuestionFrame(true);
+        qFrames.loadProcessData();
         String[] masterQuestions = FileUtil.readLinesFromFile(questionFileTsv);
-        dsMode = ds;
         ArrayList<QuestionData> questionsData = qProc.getQuestionData();
         int testSize = questionsData.size() / fold;
         int startIdxTest = 0;
         int endIdxTest = startIdxTest + testSize;
         for (int i = 0; i < fold; i++) {
-
+            // Get the test question
             List<QuestionData> testingDataList = questionsData.subList(startIdxTest, endIdxTest);
             ArrayList<QuestionData> testQuestion = new ArrayList<QuestionData>(testingDataList.size());
-            dumpTestQuestions(masterQuestions, outDir + "question.list.cv." + i + ".tsv", startIdxTest, endIdxTest);
+            // Convert the test question to tsv
+            dumpTestQuestions(masterQuestions, outDir + "/question.list.cv." + i + ".tsv", startIdxTest, endIdxTest);
+            
             testQuestion.addAll(testingDataList);
+
+            // Get the training question
             ArrayList<QuestionData> trainingQuestion = getTrainingData(startIdxTest, endIdxTest, questionsData);
-            // extract processes for training
-            ArrayList<ProcessFrame> trainingProcesses = extractProcessFromQuestions(trainingQuestion);
-            // extract processes for testing
-            ArrayList<ProcessFrame> testingProcesses = extractProcessFromQuestions(testQuestion);
+            ArrayList<ProcessFrame> trainingProcesses = extractProcessFromQuestions(trainingQuestion, "training");
+            ArrayList<ProcessFrame> testingProcesses = extractProcessFromQuestions(testQuestion, "testing");
+            
 
-            String trainingFileName = outDir + "question.train.cv." + i + ".clearparser";
-            String testFileName = outDir + "question.test.cv." + i + ".clearparser";
-            String modelName = outDir + "question.model.cv." + i + ".model";
+            String trainingFileName = outDir + "/question.train.cv." + i + ".clearparser";
+            String testFileName = outDir + "/question.test.cv." + i + ".clearparser";
+            String modelName = outDir + "/question.model.cv." + i + ".model";
 
+            // Convert to clearparser format
             ProcessFrameUtil.toClearParserFormat(trainingProcesses, trainingFileName);
             ProcessFrameUtil.toClearParserFormat(testingProcesses, testFileName);
 
             //System.exit(0);
             SRLTrain train = new SRLTrain();
             CmdLineParser cmd = new CmdLineParser(train);
-            // build model
+            // build model  
             try {
                 ClearParserUtil.TRAIN_ARGS[3] = trainingFileName;
                 ClearParserUtil.TRAIN_ARGS[7] = modelName;
@@ -144,30 +188,91 @@ public class SRLToAlignerCrossValidation {
                 e.printStackTrace();
                 System.exit(0);
             }
-
-            String predictionFileName = outDir + "question.predict.cv." + i + ".clearparser";
+            
+            ArrayList<ProcessFrame> arrQFrames = new ArrayList<ProcessFrame>();
+            // Get the gold frame of the question (tsv)
+            for (int j = 0; j < testQuestion.size(); j++)
+            {
+                QuestionData qData = testQuestion.get(j);
+                String rawQuestionSentences = qData.getQuestionSentence();
+                String[] sents = rawQuestionSentences.split("\\.");
+                
+                for (String sent : sents)
+                {
+                        arrQFrames.addAll(qFrames.getQuestionFrame(sent));
+                }
+                if (arrQFrames.size() == 0)
+                {
+                    System.out.println("PROBLEM");
+                    System.exit(0);
+                }
+            }
+            
+            // Convert it to clearparser  question.list.cv.i.clearparser
+            ProcessFrameUtil.toClearParserFormat(arrQFrames, outDir + "/question.list.cv." + i + ".clearparser");
+            // apply SRL model to the question.list.cv.i.clearparser save it to question.list.cv.i.predict.clearparser
+            String questionFramepredictionFileName = outDir + "/question.list.predict.cv." + i + ".clearparser";
+            String labeledQuestionFramesFileName = outDir + "/question.framepredict.cv." + i + ".tsv";
+            ClearParserUtil.PREDICT_ARGS[3] = outDir + "/question.list.cv." + i + ".clearparser";
+            ClearParserUtil.PREDICT_ARGS[5] = questionFramepredictionFileName;  //PREDICT.CLEARPARSER
+            ClearParserUtil.PREDICT_ARGS[7] = modelName;
+            new SRLPredict(ClearParserUtil.PREDICT_ARGS);
+            
+             
+            
+            String predictionFileName = outDir + "/question.predict.cv." + i + ".clearparser";
             ClearParserUtil.PREDICT_ARGS[3] = testFileName;
             ClearParserUtil.PREDICT_ARGS[5] = predictionFileName;  //PREDICT.CLEARPARSER
             ClearParserUtil.PREDICT_ARGS[7] = modelName;
             new SRLPredict(ClearParserUtil.PREDICT_ARGS);
 
-            String predictionTSV = outDir + "question.predict.cv." + i + ".tsv"; // PREDICT.TSV
+            String predictionTSV = outDir + "/question.predict.cv." + i + ".tsv"; // PREDICT.TSV
             ProcessFrameUtil.dumpFramesToFile(testingProcesses, predictionTSV);
-            String labeledFramesFileName = outDir + "frames.cv." + i + ".tsv";
+            String labeledFramesFileName = outDir + "/frames.cv." + i + ".tsv";
             new SRLToAligner().generateTsvForAligner(predictionTSV, predictionFileName, labeledFramesFileName);
+            
+            //Convert question.list.cv.i.predict.clearparser to question.frame.cv.0.tsv
+            String questionFrameGoldTSV = outDir + "/question.framegold.cv." + i + ".tsv"; // PREDICT.TSV
+            ProcessFrameUtil.dumpFramesToFile(arrQFrames, questionFrameGoldTSV);
+            new SRLToAligner().generateTsvForAligner(questionFrameGoldTSV, questionFramepredictionFileName, labeledQuestionFramesFileName);
+            
+            
+            
+            
             startIdxTest = endIdxTest;
             endIdxTest = startIdxTest + testSize;
-            if (endIdxTest > questionsData.size()) {
+            
+            if (i  == fold - 2 )
+            {
                 endIdxTest = questionsData.size();
             }
-
         }
     }
 
-    public static void main(String[] arg) throws IOException, FileNotFoundException, ClassNotFoundException {
-        SRLToAlignerCrossValidation crossVal = new SRLToAlignerCrossValidation(GlobalVariable.PROJECT_DIR + "/data/questions_10_june.tsv",
-                GlobalVariable.PROJECT_DIR + "/data/process_frame_june.tsv",
-                GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
-        crossVal.produceCrossValidation(5, GlobalVariable.PROJECT_DIR + "/data/SRLQAPipe/", false);
+    public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException {
+
+        SRLToAlignerCrossValidation srlExp = new SRLToAlignerCrossValidation();
+        CmdLineParser cmd = new CmdLineParser(srlExp);
+
+        try {
+            cmd.parseArgument(args);
+            srlExp.init();
+            srlExp.produceCrossValidation();
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            cmd.printUsage(System.err);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        /*SRLToAlignerCrossValidation crossVal = new SRLToAlignerCrossValidation(GlobalVariable.PROJECT_DIR + "/data/questions_10_june.tsv",
+         GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
+         crossVal.produceCrossValidation();*/
+
+        /*
+         SRLToAlignerCrossValidation crossVal = new SRLToAlignerCrossValidation(GlobalVariable.PROJECT_DIR + "/data/questions_10_june.tsv",
+         GlobalVariable.PROJECT_DIR + "/data/process_frame_june.tsv",
+         GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
+         crossVal.produceCrossValidation( GlobalVariable.PROJECT_DIR + "/data/SRLQAPipe/", false);
+         */
     }
 }

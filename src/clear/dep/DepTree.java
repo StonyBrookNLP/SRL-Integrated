@@ -939,4 +939,28 @@ public class DepTree extends ArrayList<DepNode> implements ITree<DepNode> {
         System.out.println(tokens);
         return tokens;
     }
+    
+    public ArrayList<String> getAllPredicateForm() {
+        ArrayList<String> predForms = new ArrayList<String>();
+        for (int id = 1; id < size(); id++) {
+            if (get(id).isPredicate()) {
+                predForms.add(get(id).form);
+            }
+        }
+
+        return predForms;
+    }
+    
+    public String getRawText()
+    {
+        String sent = "";
+        sent += get(1).form;
+        for (int i = 2; i < this.size() ;i++)
+        {
+            sent += " "+get(i).form;
+        }
+        
+        return sent;
+    }
+
 }

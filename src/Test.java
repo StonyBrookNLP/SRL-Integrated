@@ -15,13 +15,8 @@ import java.util.Scanner;
 public class Test {
 
     public static void main(String[] args) throws FileNotFoundException {
-
-        Scanner scanner = new Scanner(new File("./data/frequent.tsv"));
-
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine();
-            String[] fields = line.split("\t");
-            System.out.println(fields.length);
-        }
+        String str = "As. Tiny drops of liquid form clouds in this process called";
+        String [] strs = str.split("\\.");
+        System.out.println(strs.length);
     }
 }

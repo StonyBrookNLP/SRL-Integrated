@@ -1,0 +1,24 @@
+<!--Default English feature set -->
+<feature_template>
+	<cutoff label="0" ngram="3" extra="3"/>
+
+	<ngram n="1" f0="l:f"/> <!--lambda form -->
+	<ngram n="1" f0="l:m"/> <!--lambda lemma --> 
+	<ngram n="1" f0="l:p"/> <!--lambda POS tag -->
+	<ngram n="1" f0="b:f"/> <!-- beta form -->
+	<ngram n="1" f0="b:m"/> <!-- beta lemma -->
+	<ngram n="1" f0="b:p"/> <!-- beta POS tag -->
+
+
+	<ngram n="1" f0="l-1:m"  note="+0.17"/>
+	<ngram n="1" f0="l+1:m"  note="+0.13"/>
+	<ngram n="1" f0="l_hd:m" note="+0.27"/>
+	<ngram n="1" f0="l_rm:m" note="+0.09"/>
+	<ngram n="1" f0="l_ls:m" note="+0.05"/>
+	<ngram n="1" f0="l_rs:m" note="+0.06"/>
+	<ngram n="1" f0="l_lm:m" note="-0.06" visible="false"/>
+
+
+	<ngram n="2" t="xmm" f0="l:m"    f1="b:m"/>
+
+</feature_template>

@@ -49,6 +49,9 @@ public class SRLDSCombinedExp {
     @Option(name = "-d", usage = "directory where the ds files located", required = true, metaVar = "REQUIRED")
     private String dsDirName;
 
+    @Option(name = "-df", usage = "ds file name", required = false, metaVar = "OPTIONAL")
+    private String dsFileName = "ds_all_processes_w_pattern.tsv";
+
     @Option(name = "-n", usage = "number of processes to test", required = false, metaVar = "OPTIONAL")
     private int nbProcess = 0;
 
@@ -100,18 +103,9 @@ public class SRLDSCombinedExp {
     }
 
     public void buildDSCombinedTrainingData() throws FileNotFoundException, IOException, ClassNotFoundException {
-        File[] processTsvFiles = new File(dsDirName).listFiles();
+        
         ArrayList<ProcessFrame> trainingData = new ArrayList<ProcessFrame>();
-        PrintWriter writer = new PrintWriter(dsDirName + "/ds_combined.tsv");
-        for (int i = 0; i < processTsvFiles.length; i++) {
-            if (processTsvFiles[i].getName().contains("_ds.tsv")) {
-                String[] contents = FileUtil.readLinesFromFile(dsDirName + "/" + processTsvFiles[i].getName());
-                for (String content : contents)
-                    writer.println(content);
-            }
-        }
-        writer.close();
-        ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/ds_combined.tsv");
+        ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/" + dsFileName);
         dsProc.loadProcessData();
         ArrayList<ProcessFrame> allFrames = dsProc.getProcArr();
 
@@ -123,38 +117,15 @@ public class SRLDSCombinedExp {
             }
         }
 
-        writer = new PrintWriter(outDirName + "/ds_combined.clearparser");
-        for (ProcessFrame p : trainingData) {
-            String rawText = p.getRawText();
-
-            rawText = rawText.replace(".", " ");
-            rawText = rawText.replaceAll("\"", "");
-            rawText = rawText.trim();
-            rawText += ".";
-
-            // update tokenized text here
-            List<String> tokenized = StanfordTokenizerSingleton.getInstance().tokenize(rawText);
-            p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
-            try {
-                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
-
-                String conLLStr = ClearParserUtil.toClearParserFormat(tree, p);
-                writer.println(conLLStr);
-                writer.println();
-            } catch (Exception e) {
-
-            }
-
-        }
-        writer.close();
 
     }
 
     public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException {
         testFilePath.clear();
         trainingModelFilePath.clear();
-        buildDSCombinedTrainingData();
-
+        //buildDSCombinedTrainingData();
+        ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/" + dsFileName);
+        dsProc.loadProcessData();
         for (int i = 0; i < frameArr.size(); i++) {
             ProcessFrame testFrame = frameArr.get(i);
             String normalizedProcessName = ProcessFrameUtil.normalizeProcessName(testFrame.getProcessName());
@@ -163,29 +134,48 @@ public class SRLDSCombinedExp {
                 ProcessFrameUtil.toClearParserFormat(testFrame, outDirName + "/" + normalizedProcessName + ".test.cv." + fold);
                 testFilePath.add(outDirName + "/" + normalizedProcessName + ".test.cv." + fold);
                 processFold.put(normalizedProcessName, fold + 1);
+
+                String trainingFileName = outDirName + "/" + normalizedProcessName + ".train.dscombined.cv." + fold;
+                trainingModelFilePath.add(outDirName + "/" + normalizedProcessName + ".dscombinedmodel.cv." + fold);
+                String modelName = outDirName + "/" + normalizedProcessName + ".dscombinedmodel.cv." + fold;
+
+                ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>();
+                // Get the training data from manually annotatedData
+                for (int j = 0; j < frameArr.size(); j++) {
+                    if (i != j) {
+                        ProcessFrame frame = frameArr.get(j);
+                        //System.out.println("From annotated data");
+                        trainingFrames.add(frame);
+                    }
+                }
+                System.out.println(trainingFrames.size());
+                trainingFrames.addAll(dsProc.getProcArr());
+                System.out.println(trainingFrames.size());
+                ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
+                SRLTrain train = new SRLTrain();
+                CmdLineParser cmd = new CmdLineParser(train);
+
+                try {
+                    ClearParserUtil.TRAIN_ARGS[3] = trainingFileName;
+                    ClearParserUtil.TRAIN_ARGS[7] = modelName;
+                    cmd.parseArgument(ClearParserUtil.TRAIN_ARGS);
+                    train.init();
+                    train.train();
+                } catch (CmdLineException e) {
+                    System.err.println(e.getMessage());
+                    cmd.printUsage(System.err);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.exit(0);
+                }
             }
         }
-        SRLTrain train = new SRLTrain();
-        CmdLineParser cmd = new CmdLineParser(train);
 
-        try {
-            ClearParserUtil.TRAIN_ARGS[3] = outDirName + "/ds_combined.clearparser";
-            ClearParserUtil.TRAIN_ARGS[7] = outDirName + "/ds_combined.model";
-            cmd.parseArgument(ClearParserUtil.TRAIN_ARGS);
-            train.init();
-            train.train();
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            cmd.printUsage(System.err);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(0);
-        }
         Thread.sleep(10000);
         for (int i = 0; i < testFilePath.size(); i++) {
             ClearParserUtil.PREDICT_ARGS[3] = testFilePath.get(i);
             ClearParserUtil.PREDICT_ARGS[5] = testFilePath.get(i).replace(".test.", ".dscombined.predict.");
-            ClearParserUtil.PREDICT_ARGS[7] = outDirName + "/ds_combined.model";
+            ClearParserUtil.PREDICT_ARGS[7] = trainingModelFilePath.get(i);
             new SRLPredict(ClearParserUtil.PREDICT_ARGS);
         }
 

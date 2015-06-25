@@ -12,6 +12,7 @@ import Util.StringUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -84,19 +85,20 @@ public class DistantSupervisionMostFrequent {
             triggers.addAll(StringUtil.getTokenAsList(StringUtil.removeFunctionWordsFromRoleFillers(p.getTrigger()), ProcessFrameProcessor.SEPARATOR));
             enablers.addAll(StringUtil.getTokenAsList(StringUtil.removeFunctionWordsFromRoleFillers(p.getEnabler()), ProcessFrameProcessor.SEPARATOR));
             results.addAll(StringUtil.getTokenAsList(StringUtil.removeFunctionWordsFromRoleFillers(p.getResult()), ProcessFrameProcessor.SEPARATOR));
-            
+
             /*if (undergoers.size() == 1 && undergoers.get(0).length() == 0)
-                undergoers.clear();
-                undergoers.addAll(StringUtil.getTokenAsList(p.getUnderGoer(), ProcessFrameProcessor.SEPARATOR));*/
-            if (triggers.size() == 1 && triggers.get(0).length() == 0)
+             undergoers.clear();
+             undergoers.addAll(StringUtil.getTokenAsList(p.getUnderGoer(), ProcessFrameProcessor.SEPARATOR));*/
+            if (triggers.size() == 1 && triggers.get(0).length() == 0) {
                 triggers.clear();
-                triggers.addAll(StringUtil.getTokenAsList(p.getTrigger(), ProcessFrameProcessor.SEPARATOR));
+            }
+            triggers.addAll(StringUtil.getTokenAsList(p.getTrigger(), ProcessFrameProcessor.SEPARATOR));
             /*if (enablers.size() == 1 && enablers.get(0).length() == 0)
-                enablers.clear();
-                enablers.addAll(StringUtil.getTokenAsList(p.getEnabler(), ProcessFrameProcessor.SEPARATOR));
-            if (results.size() == 1 && results.get(0).length() == 0)
-                results.clear();
-                results.addAll(StringUtil.getTokenAsList(p.getResult(), ProcessFrameProcessor.SEPARATOR));*/
+             enablers.clear();
+             enablers.addAll(StringUtil.getTokenAsList(p.getEnabler(), ProcessFrameProcessor.SEPARATOR));
+             if (results.size() == 1 && results.get(0).length() == 0)
+             results.clear();
+             results.addAll(StringUtil.getTokenAsList(p.getResult(), ProcessFrameProcessor.SEPARATOR));*/
         }
         System.out.println("END LOADING ROLE FILLERS");
 
@@ -125,7 +127,7 @@ public class DistantSupervisionMostFrequent {
                 cleanedSent = cleanedSent.replaceAll("-LSB", "(");
                 cleanedSent = cleanedSent.replaceAll("-RSB", ")");
                 cleanedSent = cleanedSent.replaceAll("-RRB-", ")");
-                
+
                 cleanedSent = cleanedSent.replace(".", " ");
                 cleanedSent = cleanedSent.replaceAll("\"", "");
                 cleanedSent = cleanedSent.trim();
@@ -320,17 +322,14 @@ public class DistantSupervisionMostFrequent {
         return foundRoleFillers;
     }
 
-    public void annotateSentence() throws FileNotFoundException, IOException {
+    public void extractSentence() throws FileNotFoundException, IOException {
         ArrayList<String> sentences = getSentencesFromCorpus();
         sentences = filterSentence(sentences);
-        ArrayList<ProcessFrame> newAnnotatedFrames = new ArrayList<ProcessFrame>();
-        ArrayList<ProcessFrame> filteredOutFrames = new ArrayList<ProcessFrame>();
-        int cnt = 0;
+        PrintWriter writer = new PrintWriter(this.newAnnotatedFrameFileName.replaceAll("_ds.tsv", "_sent"));
         for (String sentence : sentences) {
-            try {
-                // Dependency Parse
-                
-                //System.out.println(sentence);
+            writer.println(sentence);
+            //System.out.println(sentence);
+            /*try {
                 DependencyTree depTree = depParser.parse(sentence);
 
                 // If the sentence is related to the target process then check for occurrence of the role fillers
@@ -344,6 +343,42 @@ public class DistantSupervisionMostFrequent {
                 }
                 if (!matchesTrigger.isEmpty() && sentence.length() <= SENT_LENGTH) {
 
+                    writer.println(sentence);
+                }
+            } catch (Exception e) {
+                System.out.println("IGNORE BAD SENTENCE");
+            }*/
+        }
+        writer.close();
+
+    }
+
+    public void annotateSentence() throws FileNotFoundException, IOException {
+        ArrayList<String> sentences = getSentencesFromCorpus();
+        sentences = filterSentence(sentences);
+        ArrayList<ProcessFrame> newAnnotatedFrames = new ArrayList<ProcessFrame>();
+        ArrayList<ProcessFrame> filteredOutFrames = new ArrayList<ProcessFrame>();
+        PrintWriter writer = new PrintWriter(this.newAnnotatedFrameFileName.replaceAll("_ds.tsv", "_sent"));
+
+        int cnt = 0;
+        for (String sentence : sentences) {
+            try {
+                // Dependency Parse
+
+                //System.out.println(sentence);
+                DependencyTree depTree = depParser.parse(sentence);
+
+                // If the sentence is related to the target process then check for occurrence of the role fillers
+                ArrayList<String> matchesTrigger = StringUtil.getMatchStem(tokenizer.tokenize(sentence), triggers);
+                ArrayList<Integer> triggerIdxs = new ArrayList<Integer>();
+                for (String s : matchesTrigger) {
+                    ArrayList<Integer> idsx = label(s, sentence, depTree);
+                    if (idsx != null) {
+                        triggerIdxs.addAll(idsx);
+                    }
+                }
+                if (!matchesTrigger.isEmpty() && sentence.length() <= SENT_LENGTH) {
+                    writer.println(sentence);
                     ArrayList<ArrayList<String>> labeledToken = labelRoleFiller(sentence, depTree, undergoers, enablers, results, triggerIdxs);
 
                     ArrayList<String> matchesUndergoer = labeledToken.get(0);
@@ -374,9 +409,7 @@ public class DistantSupervisionMostFrequent {
                         newAnnotatedFrames.add(frame);
 
                         cnt++;
-                    }
-                    else
-                    {
+                    } else {
                         System.out.println("Filtered out");
                         System.out.println(sentence);
                         ProcessFrame frame = ProcessFrameUtil.createProcessFrame(targetProcessName, null, null, matchesTrigger, null, sentence);
@@ -388,29 +421,32 @@ public class DistantSupervisionMostFrequent {
             }
         }
         // Additional Preprocessing ?
-        
+        writer.close();
         System.out.println(cnt);
         ProcessFrameUtil.dumpFramesToFile(newAnnotatedFrames, this.newAnnotatedFrameFileName);
-        if (newAnnotatedFrames.size() == 0)
-            ProcessFrameUtil.dumpFramesToFile(filteredOutFrames, this.newAnnotatedFrameFileName+".filtered.out");
+        if (newAnnotatedFrames.size() == 0) {
+            ProcessFrameUtil.dumpFramesToFile(filteredOutFrames, this.newAnnotatedFrameFileName + ".filtered.out");
+        }
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
 
-        File dir = new File(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015");
+        File dir = new File(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015_copy");
         File[] files = dir.listFiles();
 
         for (int i = 0; i < files.length; i++) {
             String fileName = files[i].getName();
+            System.out.println(fileName);
             String processName = fileName.substring(0, fileName.indexOf(".")).split("_")[0].toLowerCase();
-            if (fileName.contains("_out.txt") && fileName.contains("continental")) {
+            if (fileName.contains("_out.txt")) {
                 System.out.println(processName.toLowerCase());
                 DistantSupervisionMostFrequent labeler = new DistantSupervisionMostFrequent("./data/most_frequent_7_june.tsv",
-                        "./data/ds_most_frequent_7_06_2015/" + files[i].getName(),
-                        "./data/ds_most_frequent_7_06_2015/" + fileName.substring(0, fileName.indexOf(".")) + "_ds.tsv");
+                        "./data/ds_most_frequent_7_06_2015_copy/" + files[i].getName(),
+                        "./data/ds_most_frequent_7_06_2015_copy/" + fileName.substring(0, fileName.indexOf(".")) + "_ds.tsv");
                 labeler.init();
-                labeler.loadRoleFillers(processName);
-                labeler.annotateSentence();
+                //labeler.loadRoleFillers(processName);
+                labeler.extractSentence();
+                //labeler.annotateSentence();
             }
         }
 

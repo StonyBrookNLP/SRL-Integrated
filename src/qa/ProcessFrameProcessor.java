@@ -6,6 +6,8 @@
 package qa;
 
 import Util.ClearParserUtil;
+import Util.GlobalVariable;
+import Util.ProcessFrameUtil;
 import Util.StringUtil;
 import java.io.FileReader;
 import java.io.IOException;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
+import org.apache.commons.lang3.StringUtils;
 import qa.dep.DependencyTree;
 import qa.util.FileUtil;
 
@@ -44,6 +47,7 @@ public class ProcessFrameProcessor {
     static final int SENTENCE_IDX = 6;
     public static final String SEPARATOR = "\\|";
     private HashMap<String, Integer> processCountPair = new HashMap<String, Integer>();
+    private boolean questionFrame = false;
 
     public ProcessFrameProcessor(String fileName) {
         this.fileName = fileName;
@@ -71,22 +75,27 @@ public class ProcessFrameProcessor {
             if (!isHeader(line)) {
                 String[] columns = line.split("\t");
                 ProcessFrame procFrame = new ProcessFrame();
+                //System.out.println(cnt+" "+columns.length +" "+columns[0] + " "+columns[1]+" "+columns[2]);
                 List<String> tokenized = slem.tokenize(columns[SENTENCE_IDX].trim());
                 procFrame.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
                 procFrame.setProcessName(columns[PROCESS_NAME_IDX]);
                 procFrame.setUnderGoer(columns[UNDERGOER_IDX]);
                 procFrame.setEnabler(columns[ENABLER_IDX]);
                 procFrame.setTrigger(columns[TRIGGER_IDX]);
-                
+
                 procFrame.setResult(columns[RESULT_IDX]);
                 procFrame.setUnderSpecified(columns[UNDERSPECIFIED_IDX]);
                 procFrame.setRawText(columns[SENTENCE_IDX].trim());
-                if (!processCountPair.containsKey(procFrame.getProcessName())) {
-                    processCountPair.put(procFrame.getProcessName(), 1);
-                } else {
-                    processCountPair.put(procFrame.getProcessName(), processCountPair.get(procFrame.getProcessName().trim()) + 1);
+                if (!questionFrame) {
+                    if (!processCountPair.containsKey(procFrame.getProcessName())) {
+                        processCountPair.put(procFrame.getProcessName(), 1);
+                    } else {
+                        System.out.println(procFrame.getProcessName());
+                        processCountPair.put(procFrame.getProcessName(), processCountPair.get(procFrame.getProcessName().trim()) + 1);
+                    }
                 }
                 procFrame.processRoleFillers();
+
                 procArr.add(procFrame);
                 cnt++;
             }
@@ -95,9 +104,13 @@ public class ProcessFrameProcessor {
         System.out.println("END OF LOAD SENTENCES");
     }
 
-    public void updateTrigger()
+    public void updateTrigger() {
+
+    }
+
+    public void setQuestionFrame(boolean val)
     {
-        
+        questionFrame = val;
     }
     public HashMap<String, Integer> getProcessCount() {
         return processCountPair;
@@ -133,8 +146,6 @@ public class ProcessFrameProcessor {
         }
     }
 
-    
-
     public void toClearParserFormat(String clearParserFileName) throws FileNotFoundException, IOException {
 
         ArrayList<ProcessFrame> processFrames = getProcArr();
@@ -145,29 +156,65 @@ public class ProcessFrameProcessor {
             rawText = rawText.replace(".", " ");
             rawText = rawText.replaceAll("\"", "");
             rawText = rawText.trim();
-            for (int j = rawText.length()-1 ; ; j--)
-            {
-                if (Character.isAlphabetic(rawText.charAt(j)))
-                {
-                    rawText = rawText.substring(0,j+1);
+            for (int j = rawText.length() - 1;; j--) {
+                if (Character.isAlphabetic(rawText.charAt(j))) {
+                    rawText = rawText.substring(0, j + 1);
                     rawText += ".";
                     break;
                 }
             }
             /*rawText = rawText.replace(".", " ");
-            rawText = rawText.replaceAll("\"", "");
-            rawText = rawText.trim();
-            rawText += ".";**/
+             rawText = rawText.replaceAll("\"", "");
+             rawText = rawText.trim();
+             rawText += ".";**/
 
             // update tokenized text here
             List<String> tokenized = slem.tokenize(rawText);
             p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
             try {
                 DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
-
                 String conLLStr = ClearParserUtil.toClearParserFormat(tree, p);
                 writer.println(conLLStr);
                 writer.println();
+            } catch (Exception e) {
+                e.printStackTrace();
+                //System.out.println(rawText);
+            }
+
+        }
+        writer.close();
+    }
+
+    public void toConLL2009Format(String conll2009FileName) throws FileNotFoundException, IOException {
+
+        ArrayList<ProcessFrame> processFrames = getProcArr();
+        PrintWriter writer = new PrintWriter(conll2009FileName);
+        for (ProcessFrame p : processFrames) {
+            String rawText = p.getRawText();
+
+            rawText = rawText.replace(".", " ");
+            rawText = rawText.replaceAll("\"", "");
+            rawText = rawText.trim();
+            for (int j = rawText.length() - 1;; j--) {
+                if (Character.isAlphabetic(rawText.charAt(j))) {
+                    rawText = rawText.substring(0, j + 1);
+                    rawText += ".";
+                    break;
+                }
+            }
+            /*rawText = rawText.replace(".", " ");
+             rawText = rawText.replaceAll("\"", "");
+             rawText = rawText.trim();
+             rawText += ".";**/
+
+            // update tokenized text here
+            List<String> tokenized = slem.tokenize(rawText);
+            p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
+            try {
+                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+                String conLLStr = ClearParserUtil.toCONLL2009Format(tree, p);
+                writer.println(conLLStr);
+                //writer.println();
             } catch (Exception e) {
                 e.printStackTrace();
                 //System.out.println(rawText);
@@ -236,20 +283,42 @@ public class ProcessFrameProcessor {
         ArrayList<ProcessFrame> results = new ArrayList<ProcessFrame>();
         for (ProcessFrame p : this.getProcArr()) {
             String[] name = StringUtil.getTokenAsArr(p.getProcessName(), SEPARATOR);
-            
-            if (StringUtil.contains(processName, name) ) {
+
+            if (StringUtil.contains(processName, name)) {
                 results.add(p);
             }
         }
         return results;
     }
-    
+
     public ArrayList<ProcessFrame> getProcessFrameByNormalizedName(String normalizedProcessName) {
         ArrayList<ProcessFrame> results = new ArrayList<ProcessFrame>();
         for (ProcessFrame p : this.getProcArr()) {
             String[] name = StringUtil.getTokenAsArr(p.getProcessName(), SEPARATOR);
             String[] normalizedProcessNameTokens = normalizedProcessName.split("_");
-            if (StringUtil.containsNormalized(normalizedProcessNameTokens, name) ) {
+            if (StringUtil.containsNormalized(normalizedProcessNameTokens, name)) {
+                results.add(p);
+            }
+        }
+        return results;
+    }
+
+    public ArrayList<ProcessFrame> getInverseProcessFrameByNormalizedName(String normalizedProcessName) {
+        ArrayList<ProcessFrame> results = new ArrayList<ProcessFrame>();
+        for (ProcessFrame p : this.getProcArr()) {
+            String[] name = StringUtil.getTokenAsArr(p.getProcessName(), SEPARATOR);
+            String[] normalizedProcessNameTokens = normalizedProcessName.split("_");
+            if (!StringUtil.containsNormalized(normalizedProcessNameTokens, name)) {
+                results.add(p);
+            }
+        }
+        return results;
+    }
+
+    public ArrayList<ProcessFrame> getQuestionFrame(String questionTxt) {
+        ArrayList<ProcessFrame> results = new ArrayList<ProcessFrame>();
+        for (ProcessFrame p : this.getProcArr()) {
+            if (p.getQuestionText().trim().equalsIgnoreCase(questionTxt.trim()) || StringUtils.getLevenshteinDistance(p.getQuestionText().trim(), questionTxt.trim()) < 0.3 * questionTxt.length()) {
                 results.add(p);
             }
         }
@@ -364,11 +433,76 @@ public class ProcessFrameProcessor {
         return matchIdx;
     }
 
+    public boolean isValidFrameFile() {
+        /*for (String process : processCountPair.keySet())
+         {
+         if (processCountPair.get(process) == 1)
+         System.out.println(process);
+         }*/
+
+        for (int i = 0; i < procArr.size(); i++) {
+            ProcessFrame frame = procArr.get(i);
+            ArrayList<Integer> idx = frame.getTriggerIdx();
+            if (idx.size() > 0) {
+                if (idx.get(0) == 1) {
+                    System.out.println(frame.getProcessName());
+                }
+            }
+        }
+
+        return false;
+
+    }
+
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor("/Users/samuellouvan/NetBeansProjects/QA/data/process_frame_june.tsv");
+        ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/process_frame_june.tsv");
         proc.loadProcessData();
-        proc.toClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/data/process_frame_june.clearparser");
+        proc.toConLL2009Format(GlobalVariable.PROJECT_DIR + "/data/process_frame_june.conll09");
+        //ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
+        //proc.loadProcessData();
+        //System.out.println(proc.procArr.size());
+        //proc.isValidFrameFile();
+        //proc.toClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/data/process_frame_small.clearparser");
+        //proc.toConLL2009Format("/Users/samuellouvan/NetBeansProjects/QA/data/process_frame_small.conll2009");
         //proc.loadSentences();
         //System.out.println(proc.getIdxMatches("samuel student".split("\\s+"),"samuel louvan is the most stupid phd samuel student".split("\\s+")));
+
+        //QuestionDataProcessor qProc = new QuestionDataProcessor("./data/questions_23_june.tsv");
+        //qProc.loadQuestionData();
+        //ProcessFrameProcessor qFrame = new ProcessFrameProcessor("./data/question_frame_23_june.tsv");
+        //qFrame.loadProcessData();
+        /*ArrayList<QuestionData> qData = qProc.getQuestionData();
+         ArrayList<ProcessFrame> frame = new ArrayList<ProcessFrame>();
+         int nbQ  = 0;
+         for (int i = 0; i < qData.size(); i++)
+         {
+         String questionSent = qData.get(i).getQuestionSentence().trim();
+         String[] sentSplit = questionSent.split("\\.");
+         if (sentSplit.length == 1)
+         {
+         frame.addAll(qFrame.getQuestionFrame(questionSent));
+         if (frame.size() == 0)
+         {
+         //System.out.println("PROBLEM :"+questionSent);
+         }
+         nbQ++;
+         }
+         else
+         {
+         //System.out.println(questionSent);
+         for (String s : sentSplit)
+         {
+         frame.addAll(qFrame.getQuestionFrame(s));
+         if (frame.size() == 0)
+         {
+         System.out.println("PROBLEM :"+s);
+         }
+         }
+         nbQ++;
+         }
+         }*/
+        //ProcessFrameUtil.toClearParserFormat(qFrame.procArr, "./data/questionFrame.clearparser");
+        //System.out.println(nbQ);
+
     }
 }

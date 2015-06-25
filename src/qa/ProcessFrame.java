@@ -108,7 +108,10 @@ public class ProcessFrame implements Serializable{
             }
             if (type.equalsIgnoreCase("T")) {
                 if (matches != null)
+                {
                     triggerIndex.addAll(matches);
+                    // Check if VB or process name or NN
+                }
             }
             if (type.equalsIgnoreCase("A2")) {
                 if (matches != null)
@@ -117,7 +120,7 @@ public class ProcessFrame implements Serializable{
             if (matches!= null)
                 allIdx.addAll(matches);
         }
-
+        
     }
 
     public ArrayList<Integer> getEnablerIdx() {
@@ -197,6 +200,10 @@ public class ProcessFrame implements Serializable{
         return tokenizedText;
     }
 
+    public String getQuestionText()
+    {
+        return processName;
+    }
     public void setTokenizedText(String[] tokenizedText) {
         this.tokenizedText = tokenizedText;
     }

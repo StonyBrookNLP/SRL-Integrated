@@ -20,7 +20,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -31,8 +34,8 @@ import qa.ProcessFrameProcessor;
  *
  * @author samuellouvan
  */
-public class SRLPerProcessModelExp {
-    
+public class SRLDSCombinedModelCrossValidation {
+
     ProcessFrameProcessor proc;
 
     private ArrayList<String> blackList;
@@ -41,6 +44,18 @@ public class SRLPerProcessModelExp {
 
     @Option(name = "-o", usage = "output directory name", required = true, metaVar = "REQUIRED")
     private String outDirName;
+
+    @Option(name = "-d", usage = "directory where the ds files located", required = true, metaVar = "REQUIRED")
+    private String dsDirName;
+
+    @Option(name = "-srl", usage = "Process to test", required = false, metaVar = "OPTIONAL")
+    private String srl;
+    
+    @Option(name = "-df", usage = "ds file name", required = false, metaVar = "OPTIONAL")
+    private String dsFileName = "ds_all_processes_w_pattern.tsv";
+
+    @Option(name = "-k", usage = "number of fold", required = true, metaVar = "REQUIRED")
+    private int fold;
 
     @Option(name = "-n", usage = "number of processes to test", required = false, metaVar = "OPTIONAL")
     private int nbProcess = 0;
@@ -54,14 +69,14 @@ public class SRLPerProcessModelExp {
     private ArrayList<String> processNames;
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
-   /* String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-        "spear_spearing", "retract", "distillation", "Feelsleepy", "filtering", "revising" "fertilization",
-        "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
-        "upwelling", "write", "work", "vibrates_vibration_vibrations", "warming", "watercycle_thewatercycle", "weather_weathering", "whiten_becomewhiter", "windbreaking"};*/
+    /* String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
+     "spear_spearing", "retract", "distillation", "Feelsleepy", "filtering", "revising" "fertilization",
+     "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
+     "upwelling", "write", "work", "vibrates_vibration_vibrations", "warming", "watercycle_thewatercycle", "weather_weathering", "whiten_becomewhiter", "windbreaking"};*/
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
         "spear_spearing", "retract"};
 
-    public SRLPerProcessModelExp() throws FileNotFoundException {
+    public SRLDSCombinedModelCrossValidation() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
         testFilePath = new ArrayList<String>();
         processFold = new HashMap<String, Integer>();
@@ -88,6 +103,9 @@ public class SRLPerProcessModelExp {
             frameArr = proc.getProcArr();
             for (int i = 0; i < frameArr.size(); i++) {
                 String normName = ProcessFrameUtil.normalizeProcessName(frameArr.get(i).getProcessName());
+                if (!processNames.contains(normName)) {
+                    processNames.add(normName);
+                }
                 processFold.put(normName, 0);
             }
         } else {
@@ -96,6 +114,9 @@ public class SRLPerProcessModelExp {
                 String[] normNames = normName.split("_");
                 if (StringUtil.contains(processToTest, normNames)) {
                     frameArr.add(proc.getProcArr().get(i));
+                    if (!processNames.contains(normName)) {
+                        processNames.add(normName);
+                    }
                     processFold.put(normName, 0);
                 }
             }
@@ -116,72 +137,72 @@ public class SRLPerProcessModelExp {
         }
     }
 
-    public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException {
-        testFilePath.clear();
-        trainingModelFilePath.clear();
-        for (int i = 0; i < frameArr.size(); i++) {
-            ProcessFrame testFrame = frameArr.get(i);
-            String normalizedProcessName = ProcessFrameUtil.normalizeProcessName(testFrame.getProcessName());
-            if ((!limitedProcess || (limitedProcess && processNames.contains(normalizedProcessName))) && !blackList.contains(normalizedProcessName)) {
-                int fold = processFold.get(normalizedProcessName);
-                ProcessFrameUtil.toClearParserFormat(testFrame, outDirName + "/" + normalizedProcessName + ".test.cv." + fold);  // out to <process_frame_>.test.cv.<fold>
-                testFilePath.add(outDirName + "/" + normalizedProcessName + ".test.cv." + fold);
-                processFold.put(normalizedProcessName, fold + 1);
+    public void doTrain(String trainingFileName, String modelFileName) {
+        // Train trainingFrames
+        SRLTrain train = new SRLTrain();
+        CmdLineParser cmd = new CmdLineParser(train);
+        try {
+            ClearParserUtil.TRAIN_ARGS[3] = trainingFileName;
+            ClearParserUtil.TRAIN_ARGS[7] = modelFileName;
+            cmd.parseArgument(ClearParserUtil.TRAIN_ARGS);
+            train.init();
+            train.train();
+        } catch (CmdLineException e) {
+            System.err.println(e.getMessage());
+            cmd.printUsage(System.err);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Training file PROBLEMMMM : " + train.s_trainFile);
 
-                // Get the testing data
-                ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>();
-                for (int j = 0; j < frameArr.size(); j++) {
-                    if (i != j) {
-                        String processName = ProcessFrameUtil.normalizeProcessName(frameArr.get(j).getProcessName());
-                        //trainingFrames.add(frameArr.get(j));
-                        if (!blackList.contains(processName) && processName.equalsIgnoreCase(normalizedProcessName)) {
-                            trainingFrames.add(frameArr.get(j));
-                        } else {
-                            //System.out.println("BLACKLIST OR IT'S NOT A CORRECT TRAINING INSTANCE");
-                        }
-                    }
-                }
-                if (trainingFrames.size() == 0) {
-                    System.out.println("PROBLEM " + normalizedProcessName);
-                    System.exit(0);
-                }
-                String trainingFileName = outDirName + "/" + normalizedProcessName + ".train.perprocess.cv." + fold;
-                trainingModelFilePath.add(outDirName + "/" + normalizedProcessName + ".perprocessmodel.cv." + fold);
-                String modelName = outDirName + "/" + normalizedProcessName + ".perprocessmodel.cv." + fold;
-                ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
+            System.exit(0);
 
-                // Train trainingFrames
-                SRLTrain train = new SRLTrain();
-                CmdLineParser cmd = new CmdLineParser(train);
-
-                try {
-                    ClearParserUtil.TRAIN_ARGS[3] = trainingFileName;
-                    ClearParserUtil.TRAIN_ARGS[7] = modelName;
-                    cmd.parseArgument(ClearParserUtil.TRAIN_ARGS);
-                    train.init();
-                    train.train();
-                } catch (CmdLineException e) {
-                    System.err.println(e.getMessage());
-                    cmd.printUsage(System.err);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    System.out.println("Training file PROBLEMMMM : " + train.s_trainFile);
-
-                    System.exit(0);
-
-                }
-            }
-            // Perform prediction
         }
-        Thread.sleep(10000);
+    }
+
+    public void doPredict() {
         for (int i = 0; i < testFilePath.size(); i++) {
             ClearParserUtil.PREDICT_ARGS[3] = testFilePath.get(i);
-            ClearParserUtil.PREDICT_ARGS[5] = testFilePath.get(i).replace(".test.", ".perprocess.predict.");
+            ClearParserUtil.PREDICT_ARGS[5] = testFilePath.get(i).replace("test.", "dscombined.predict.");
             ClearParserUtil.PREDICT_ARGS[7] = trainingModelFilePath.get(i);
             new SRLPredict(ClearParserUtil.PREDICT_ARGS);
         }
+    }
 
-        // Prediction time
+    public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException {
+        testFilePath.clear();
+        trainingModelFilePath.clear();
+        int startIdx = 0;
+        int testSize = frameArr.size() / fold;
+        int endIdx = startIdx + testSize;
+        Collections.shuffle(frameArr);
+        ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/" + dsFileName);
+        dsProc.loadProcessData();
+        for (int currentFold = 0; currentFold < fold; currentFold++) {
+            ArrayList<ProcessFrame> testingFrames = new ArrayList<ProcessFrame>(frameArr.subList(startIdx, endIdx));
+            ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>(frameArr.subList(0, startIdx));
+            trainingFrames.addAll(new ArrayList<ProcessFrame>(frameArr.subList(endIdx, frameArr.size())));
+            trainingFrames.addAll(dsProc.getProcArr());
+
+            String trainingFileName = outDirName + "/train.combined.cv." + currentFold;
+            String testingFileName = outDirName + "/test.cv." + currentFold;
+            String modelName = outDirName + "/combinedmodel.cv." + currentFold;
+
+            testFilePath.add(testingFileName);
+            trainingModelFilePath.add(modelName);
+
+            ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
+            ProcessFrameUtil.toClearParserFormat(testingFrames, testingFileName);  // out to <process_frame_>.test.cv.<fold
+
+            doTrain(trainingFileName, modelName);
+            startIdx = endIdx;
+            if (currentFold == fold - 2) {
+                endIdx = frameArr.size();
+            } else {
+                endIdx = startIdx + testSize;
+            }
+        }
+
+        doPredict();
     }
 
     /**
@@ -194,7 +215,7 @@ public class SRLPerProcessModelExp {
         PrintWriter srl_writer = new PrintWriter("srl.txt");
         for (int i = 0; i < testFilePath.size(); i++) {
             String[] gsTxt = FileUtil.readLinesFromFile(testFilePath.get(i));
-            String[] srlTxt = FileUtil.readLinesFromFile(testFilePath.get(i).replace(".test.", ".perprocess.predict."));
+            String[] srlTxt = FileUtil.readLinesFromFile(testFilePath.get(i).replace("test.", "dscombined.predict."));
             if (gsTxt.length != srlTxt.length) {
                 System.out.println(testFilePath.get(i));
                 System.out.println("MISMATCH DUE TO CLEARPARSER ERROR");
@@ -227,7 +248,7 @@ public class SRLPerProcessModelExp {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        SRLPerProcessModelExp srlExp = new SRLPerProcessModelExp();
+        SRLDSCombinedModelCrossValidation srlExp = new SRLDSCombinedModelCrossValidation();
         CmdLineParser cmd = new CmdLineParser(srlExp);
 
         try {
