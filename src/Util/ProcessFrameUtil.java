@@ -115,7 +115,7 @@ public class ProcessFrameUtil {
                 //System.out.println("END OF DEP TREE");
                 String conLLStr = ClearParserUtil.toCONLL2009Format(tree, p);
                 writer.println(conLLStr);
-                writer.println();
+                //writer.println();
                 ++cnt;
                 //System.out.print(++cnt + " ");
 

@@ -90,7 +90,7 @@ public class ProcessFrameProcessor {
                     if (!processCountPair.containsKey(procFrame.getProcessName())) {
                         processCountPair.put(procFrame.getProcessName(), 1);
                     } else {
-                        System.out.println(procFrame.getProcessName());
+                        //System.out.println(procFrame.getProcessName());
                         processCountPair.put(procFrame.getProcessName(), processCountPair.get(procFrame.getProcessName().trim()) + 1);
                     }
                 }

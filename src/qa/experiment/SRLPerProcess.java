@@ -33,55 +33,49 @@ import qa.ProcessFrame;
 import qa.ProcessFrameProcessor;
 import qa.srl.SRLEvaluate;
 import qa.srl.SRLWrapper;
-import org.apache.commons.io.FileUtils;
 
 /**
  *
  * @author samuellouvan
  */
-public class SRLPerProcessModelCrossValidation {
-
+public class SRLPerProcess extends SRLExperiment {
     ProcessFrameProcessor proc;
-
-    private ArrayList<String> blackList;
+    protected ArrayList<String> blackList;
     @Option(name = "-f", usage = "process file", required = true, metaVar = "REQUIRED")
-    private String processTsvFileName;
+    protected String processTsvFileName;
 
     @Option(name = "-o", usage = "output directory name", required = true, metaVar = "REQUIRED")
-    private String outDirName;
+    protected String outDirName;
 
     @Option(name = "-k", usage = "number of fold", required = true, metaVar = "REQUIRED")
-    private int fold;
+    protected int fold;
 
     @Option(name = "-n", usage = "number of processes to test", required = false, metaVar = "OPTIONAL")
-    private int nbProcess = 0;
+    protected int nbProcess = 0;
 
+    @Option(name = "-d", usage = "directory where the ds files located", required = false, metaVar = "REQUIRED")
+    private String dsDirName;
+    
     @Option(name = "-p", usage = "Process to test", required = false, metaVar = "OPTIONAL")
-    private String processToTest = "";
+    protected String processToTest = "";
+
+    @Option(name = "-ds", usage = "enabled ds", required = false, metaVar = "OPTIONAL")
+    protected boolean dsEnabled = false;
+    
+    @Option(name = "-df", usage = "ds file name", required = false, metaVar = "OPTIONAL")
+    protected String dsFileName = "ds_all_processes_w_pattern.tsv";
 
     @Option(name = "-srl", usage = "SRL type", required = true, metaVar = "REQUIRED")
-    private int srlType;
-
-    @Option(name = "-pi", usage = "predicate/trigger identification", required = false, metaVar = "OPTIONAL")
-    private boolean pi = false;
-    
+    protected int srlType;
     boolean limitedProcess = false;
+
     private ArrayList<ProcessFrame> frameArr;
     private HashMap<String, Integer> processFold;
     private ArrayList<String> processNames;
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
-    /* String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-     "spear_spearing", "retract", "distillation", "Feelsleepy", "filtering", "revising" "fertilization",
-     "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
-     "upwelling", "write", "work", "vibrates_vibration_vibrations", "warming", "watercycle_thewatercycle", "weather_weathering", "whiten_becomewhiter", "windbreaking"};*/
-    String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-        "spear_spearing", "retract", 
-        "drop_dropping","Feelsleepy", "harden", "positivetropism", "Resting", "separated",
-        "revising"}; 
 
-   
-    public SRLPerProcessModelCrossValidation() throws FileNotFoundException {
+    public SRLPerProcess() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
         testFilePath = new ArrayList<String>();
         processFold = new HashMap<String, Integer>();
@@ -132,13 +126,13 @@ public class SRLPerProcessModelCrossValidation {
         }
         File outDirHandler = new File(outDirName);
         if (outDirHandler.exists()) {
-            FileUtils.cleanDirectory(outDirHandler);
-        } else {
-            boolean success = outDirHandler.mkdir();
-            if (!success) {
-                System.out.println("FAILED to create output directory");
-                System.exit(0);
-            }
+            return;
+        }
+        boolean success = outDirHandler.mkdir();
+
+        if (!success) {
+            System.out.println("FAILED to create output directory");
+            System.exit(0);
         }
     }
 
@@ -149,7 +143,7 @@ public class SRLPerProcessModelCrossValidation {
 
     public void doPredict() throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         for (int i = 0; i < testFilePath.size(); i++) {
-            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace(".test.", ".perprocess.predict."), trainingModelFilePath.get(i), srlType, pi);
+            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace(".test.", ".perprocess.predict."), trainingModelFilePath.get(i), srlType);
         }
     }
 
@@ -209,7 +203,7 @@ public class SRLPerProcessModelCrossValidation {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        SRLPerProcessModelCrossValidation srlExp = new SRLPerProcessModelCrossValidation();
+        SRLPerProcess srlExp = new SRLPerProcess();
         CmdLineParser cmd = new CmdLineParser(srlExp);
 
         try {

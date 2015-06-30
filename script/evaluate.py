@@ -32,7 +32,7 @@ def compress_sent(sentence, head_only=False):
         head = sent[5]
         labels = sent[-1]
         for label in labels:
-            if head_only and label in sentence[head - 1][3]:
+            if (head_only and label in sentence[head - 1][3]) :
                 continue
             l_head, role = label.split(":")
             l_head = int(l_head)

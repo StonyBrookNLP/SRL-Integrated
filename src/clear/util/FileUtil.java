@@ -33,6 +33,10 @@ public class FileUtil {
         return files;
     }
 
+    public void fromConll2009ToClearParserFormat(String conllFile, String clearParserFile)
+    {
+        
+    }
     public static File[] getFilesFromDir(String dirName, final String filter) {
         // create new filename filter
         FilenameFilter fileNameFilter = new FilenameFilter() {

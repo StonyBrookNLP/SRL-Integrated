@@ -18,6 +18,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,6 +29,8 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import qa.ProcessFrame;
 import qa.ProcessFrameProcessor;
+import qa.srl.SRLEvaluate;
+import qa.srl.SRLWrapper;
 
 /**
  *
@@ -56,6 +59,12 @@ public class SRLDSPerProcessModelCrossValidation {
     @Option(name = "-n", usage = "number of processes to test", required = false, metaVar = "OPTIONAL")
     private int nbProcess = 0;
 
+    @Option(name = "-srl", usage = "SRL type", required = true, metaVar = "REQUIRED")
+    private int srlType;
+
+    @Option(name = "-pi", usage = "predicate/trigger identification", required = false, metaVar = "OPTIONAL")
+    private boolean pi = false;
+
     @Option(name = "-p", usage = "Process to test", required = false, metaVar = "OPTIONAL")
     private String processToTest = "";
 
@@ -70,7 +79,9 @@ public class SRLDSPerProcessModelCrossValidation {
      "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
      "upwelling", "write", "work", "vibrates_vibration_vibrations", "warming", "watercycle_thewatercycle", "weather_weathering", "whiten_becomewhiter", "windbreaking"};*/
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-        "spear_spearing", "retract"};
+        "spear_spearing", "retract", 
+        "drop_dropping","Feelsleepy", "harden", "positivetropism", "Resting", "separated",
+        "revising"}; 
 
     public SRLDSPerProcessModelCrossValidation() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
@@ -133,38 +144,18 @@ public class SRLDSPerProcessModelCrossValidation {
         }
     }
 
-    public void doTrain(String trainingFileName, String modelFileName) {
-        // Train trainingFrames
-        SRLTrain train = new SRLTrain();
-        CmdLineParser cmd = new CmdLineParser(train);
-        try {
-            ClearParserUtil.TRAIN_ARGS[3] = trainingFileName;
-            ClearParserUtil.TRAIN_ARGS[7] = modelFileName;
-            cmd.parseArgument(ClearParserUtil.TRAIN_ARGS);
-            train.init();
-            train.train();
-        } catch (CmdLineException e) {
-            System.err.println(e.getMessage());
-            cmd.printUsage(System.err);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Training file PROBLEMMMM : " + train.s_trainFile);
+    public void doTrain(String trainingFileName, String modelFileName) throws IOException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 
-            System.exit(0);
-
-        }
+        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType);
     }
 
-    public void doPredict() {
+    public void doPredict() throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         for (int i = 0; i < testFilePath.size(); i++) {
-            ClearParserUtil.PREDICT_ARGS[3] = testFilePath.get(i);
-            ClearParserUtil.PREDICT_ARGS[5] = testFilePath.get(i).replace(".test.", ".dsperprocess.predict.");
-            ClearParserUtil.PREDICT_ARGS[7] = trainingModelFilePath.get(i);
-            new SRLPredict(ClearParserUtil.PREDICT_ARGS);
+            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace(".test.", ".dsperprocess.predict."), trainingModelFilePath.get(i), srlType, pi);
         }
     }
 
-    public void doCrossValidation(String processName, ArrayList<ProcessFrame> selectedProcessFrame, ArrayList<ProcessFrame> dsFrames, int foldSize) throws IOException, InterruptedException {
+    public void doCrossValidation(String processName, ArrayList<ProcessFrame> selectedProcessFrame, ArrayList<ProcessFrame> dsFrames, int foldSize) throws IOException, InterruptedException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         int startIdx = 0;
         int testSize = selectedProcessFrame.size() / foldSize;
         int endIdx = testSize;
@@ -181,8 +172,8 @@ public class SRLDSPerProcessModelCrossValidation {
             testFilePath.add(testingFileName);
             trainingModelFilePath.add(modelName);
 
-            ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
-            ProcessFrameUtil.toClearParserFormat(testingFrames, testingFileName);  // out to <process_frame_>.test.cv.<fold
+            ProcessFrameUtil.toParserFormat(trainingFrames, trainingFileName, srlType);
+            ProcessFrameUtil.toParserFormat(testingFrames, testingFileName, srlType);
 
             doTrain(trainingFileName, modelName);
             startIdx = endIdx;
@@ -195,7 +186,7 @@ public class SRLDSPerProcessModelCrossValidation {
 
     }
 
-    public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException {
+    public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         testFilePath.clear();
         trainingModelFilePath.clear();
         ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/" + dsFileName);
@@ -220,41 +211,7 @@ public class SRLDSPerProcessModelCrossValidation {
      * combine.py and evaluate.py
      */
     public void evaluate() throws FileNotFoundException, IOException {
-        System.out.println("Evaluating");
-        PrintWriter gs_writer = new PrintWriter("gs.txt");
-        PrintWriter srl_writer = new PrintWriter("srl.txt");
-        for (int i = 0; i < testFilePath.size(); i++) {
-            String[] gsTxt = FileUtil.readLinesFromFile(testFilePath.get(i));
-            String[] srlTxt = FileUtil.readLinesFromFile(testFilePath.get(i).replace(".test.", ".dsperprocess.predict."));
-            if (gsTxt.length != srlTxt.length) {
-                System.out.println(testFilePath.get(i));
-                System.out.println("MISMATCH DUE TO CLEARPARSER ERROR");
-            } else {
-                gs_writer.print(StringUtil.toString(gsTxt));
-                srl_writer.print(StringUtil.toString(srlTxt));
-            }
-        }
-        gs_writer.close();
-        srl_writer.close();
-
-        // create runtime to execute external command
-        String pythonScriptPath = "./script/evaluate.py";
-        String[] cmd = new String[4];
-        cmd[0] = "python";
-        cmd[1] = pythonScriptPath;
-        cmd[2] = "gs.txt";
-        cmd[3] = "srl.txt";
-        Runtime rt = Runtime.getRuntime();
-        Process pr = rt.exec(cmd);
-
-        // retrieve output from python script
-        BufferedReader bfr = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-        String line = "";
-        while ((line = bfr.readLine()) != null) {
-            // display each output line form python script
-            System.out.println(line);
-        }
-        StdUtil.printError(pr);
+        new SRLEvaluate().evaluate(testFilePath, ".test.", ".dsperprocess.predict.", srlType);
     }
 
     public static void main(String[] args) throws FileNotFoundException {

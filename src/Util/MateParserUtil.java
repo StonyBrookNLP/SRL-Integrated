@@ -13,16 +13,22 @@ public class MateParserUtil {
 
     public static String[] TRAIN_ARGS = {"eng",
         "", // TRAINING FILE INPUT
-        "", // MODEL NAME
-        "" // RERANKER
-};
+        ""// MODEL NAME
 
-    public static String[] PREDICT_ARGS = {"eng",
+    };
+
+    public static String[] PREDICT_ARGS_NOPI = {"eng",
         "", // TEST FILE INPUT
         "", // MODEL NAME
-        "", // RERANKER
-        "", // NOPI
-        ""// OUTPUT FILE
+        "-nopi",// OUTPUT FILE
+        ""
+     //"-nopi", // NOPI
+    };
+    
+    public static String[] PREDICT_ARGS_PI = {"eng",
+        "", // TEST FILE INPUT
+        "", // MODEL NAME
+        ""
     };
 
 }
