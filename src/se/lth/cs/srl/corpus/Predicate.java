@@ -1,5 +1,6 @@
 package se.lth.cs.srl.corpus;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -64,6 +65,22 @@ public class Predicate extends Word {
 	public String getArgumentTag(Word w) {
 		return argmap.get(w);
 	}
+        
+        public ArrayList<Integer> getRoleFillersIdxs(String roleType)
+        {
+            ArrayList<Integer> result = new ArrayList<Integer>();
+            for (Word word : argmap.keySet())
+            {
+                String currentRoleType = argmap.get(word);
+                if (currentRoleType.equalsIgnoreCase(roleType))
+                {
+                    if (!result.contains(word.getIdx()))
+                        result.add(word.getIdx());
+                }
+            }
+            
+            return result;
+        }
 	public String toString(){
 		return super.toString()+"\tY\t"+sense;
 	}

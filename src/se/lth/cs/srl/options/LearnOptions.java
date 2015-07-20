@@ -39,7 +39,8 @@ public class LearnOptions extends Options {
 
     public boolean global_insertGoldMapForTrain = true;
     public int global_numberOfCrossTrain = 5;
-
+    public int sourceIdxStart = -1;
+    
     private Map<Step, File> featureFiles;
 
     public File brownClusterFile;
@@ -91,6 +92,8 @@ public class LearnOptions extends Options {
         } else if (args[ai].equals("-da")) {
             ai++;
             domainAdaptation = true;
+            sourceIdxStart = Integer.parseInt(args[ai]);
+            ai++;
         }
         return ai;
     }

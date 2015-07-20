@@ -17,6 +17,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import se.lth.cs.srl.Learn;
 
 import se.lth.cs.srl.SemanticRoleLabeler;
 import se.lth.cs.srl.corpus.Predicate;
@@ -31,6 +32,8 @@ import se.lth.cs.srl.util.BrownCluster;
 
 public class Pipeline extends SemanticRoleLabeler {
 
+    public static int currentSentIdx = 0;
+    public static boolean isSRC = false;
     private PredicateReference predicateReference;
     private List<String> argLabels;
     private FeatureGenerator fg;
@@ -135,19 +138,31 @@ public class Pipeline extends SemanticRoleLabeler {
         System.out.println("Extracting training instances from corpus.");
         int senCount = 0;
         for (Sentence s : sentences) {
+            if (Learn.learnOptions.domainAdaptation && senCount == Learn.learnOptions.sourceIdxStart) {
+                isSRC = true;
+            }
+
             senCount++;
             if (senCount % 1000 == 0) {
                 System.out.println("Processing sentence " + senCount);
             }
             for (PipelineStep step : steps) {
+                if (step instanceof ArgumentClassifier) {
+                    System.out.println("\n===========Argument Classifier instance ===========");
+                }
                 step.extractInstances(s);
+                if (step instanceof ArgumentClassifier) {
+                    System.out.println("\n===================================================");
+                }
             }
+            currentSentIdx++;
         }
         for (PipelineStep step : steps) {
             step.done();
         }
         System.out.println("Starting training.");
         for (PipelineStep step : steps) {
+
             step.train();
         }
         if (zos != null) {
@@ -177,7 +192,7 @@ public class Pipeline extends SemanticRoleLabeler {
             ObjectOutputStream oos = new ObjectOutputStream(zos);
             oos.writeObject(fg);
             oos.writeObject(pipeline.predicateReference);
-            System.out.println("ARG LABELS: "+pipeline.argLabels);
+            System.out.println("ARG LABELS: " + pipeline.argLabels);
             oos.writeObject(pipeline.argLabels);
             oos.flush();
             zos.closeEntry();

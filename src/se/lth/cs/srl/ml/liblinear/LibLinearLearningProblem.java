@@ -39,14 +39,14 @@ public class LibLinearLearningProblem implements LearningProblem {
 
     @Override
     public void addInstance(int label, Collection<Integer> indices) {
-        System.out.print("LABEL : "+label+" ");
+        //System.out.print("LABEL : " + label + " ");
         // Here we need to know the feature size AND whether the current instance is SOURCE or TARGET
 
         out.print(label);
         out.print(' ');
         problemWriter.writeIndices(indices);
         out.println();
-        System.out.println("");
+        //System.out.println("");
     }
 
     @Override
@@ -84,6 +84,7 @@ public class LibLinearLearningProblem implements LearningProblem {
         //System.out.print("LABEL : "+label+" ");
         // Here we need to know the feature size AND whether the current instance is SOURCE or TARGET
         if (isSRC) {
+            //System.out.print("LABEL : " + label + " ");
             out.print(label);
             out.print(' ');
             problemWriter.writeIndices(indices);
@@ -93,7 +94,9 @@ public class LibLinearLearningProblem implements LearningProblem {
             }
             problemWriter.writeIndices(duplicatedIndices);
             out.println();
+            //System.out.println("");
         } else {
+            //System.out.print("LABEL : " + label + " ");
             out.print(label);
             out.print(' ');
             problemWriter.writeIndices(indices);
@@ -103,6 +106,7 @@ public class LibLinearLearningProblem implements LearningProblem {
             }
             problemWriter.writeIndices(duplicatedIndices);
             out.println();
+           // System.out.println("");
         }
         //System.out.println("");
     }
@@ -164,8 +168,8 @@ public class LibLinearLearningProblem implements LearningProblem {
         @Override
         public void writeIndices(Collection<Integer> indices) {
             for (Integer index : indices) {
-                System.out.print(index);
-                System.out.print(":1 ");
+               // System.out.print(index);
+                //System.out.print(":1 ");
                 out.print(index);
                 out.print(":1 ");
             }

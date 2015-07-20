@@ -1,16 +1,19 @@
 package se.lth.cs.srl.pipeline;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
 
 import se.lth.cs.srl.Learn;
+import se.lth.cs.srl.Parse;
 import se.lth.cs.srl.corpus.Predicate;
 import se.lth.cs.srl.corpus.Word;
 import se.lth.cs.srl.features.Feature;
 import se.lth.cs.srl.features.FeatureSet;
 import se.lth.cs.srl.ml.LearningProblem;
 import se.lth.cs.srl.ml.Model;
+import se.lth.cs.srl.ml.liblinear.Label;
 
 public abstract class ArgumentStep extends AbstractStep {
 
@@ -41,17 +44,10 @@ public abstract class ArgumentStep extends AbstractStep {
         }
         LearningProblem lp = learningProblems.get(POSPrefix);
         Collection<Integer> indices = collectIndices(pred, arg, POSPrefix, new TreeSet<Integer>());
-        List<Feature> features = featureSet.get(POSPrefix);
-        int featureSize  = 0;
-        for (Feature f : features)
-            featureSize += f.size(false);
-        if (indices != null && !Learn.learnOptions.domainAdaptation) {
+        if (indices != null) {
             lp.addInstance(getLabel(pred, arg), indices);
         }
-        else if (indices != null && Learn.learnOptions.domainAdaptation)
-        {
-            lp.addInstance(getLabel(pred, arg), indices, featureSize, true);
-        }
+
     }
 
     protected Collection<Integer> collectIndices(Predicate pred, Word arg, String POSPrefix, Collection<Integer> indices) {
@@ -63,6 +59,37 @@ public abstract class ArgumentStep extends AbstractStep {
             f.addFeatures(indices, pred, arg, offset, false);
             offset += f.size(false);
         }
+
+        List<Feature> features = featureSet.get(POSPrefix);
+        int featureSize = 0;
+        for (Feature f : features) {
+            featureSize += f.size(false);
+        }
+        if (!Learn.learnOptions.domainAdaptation) {
+            return indices;
+        } else if (Learn.learnOptions.domainAdaptation) {
+            if (Pipeline.isSRC) {
+                ArrayList<Integer> modIdx = new ArrayList<Integer>();
+                for (Integer i : indices) {
+                    modIdx.add(i + featureSize);
+                }
+                indices.addAll(modIdx);
+            } else { // Target 
+                ArrayList<Integer> modIdx = new ArrayList<Integer>();
+                for (Integer i : indices) {
+                    modIdx.add(2 * featureSize + i);
+                }
+                indices.addAll(modIdx);
+            }
+
+        } else if (Parse.parseOptions.domainAdaptation) {
+            ArrayList<Integer> modIdx = new ArrayList<Integer>();
+            for (Integer i : indices) {
+                modIdx.add(2 * featureSize + i);
+            }
+            indices.addAll(modIdx);
+        }
+
         return indices;
     }
 
@@ -74,7 +101,21 @@ public abstract class ArgumentStep extends AbstractStep {
             System.out.println("Unknown POS-tag for predicate '" + pred.getForm() + "', falling back to " + POSPrefix);
         }
         Model m = models.get(POSPrefix);
+
         Collection<Integer> indices = collectIndices(pred, arg, POSPrefix, new TreeSet<Integer>());
         return m.classify(indices);
+    }
+
+    // s.louvan
+    public List<Label> classifyAllProbs(Predicate pred, Word arg) {
+        String POSPrefix = getPOSPrefix(pred.getPOS());
+        if (POSPrefix == null) {
+            POSPrefix = featureSet.POSPrefixes[0];
+            System.out.println("Unknown POS-tag for predicate '" + pred.getForm() + "', falling back to " + POSPrefix);
+        }
+        Model m = models.get(POSPrefix);
+
+        Collection<Integer> indices = collectIndices(pred, arg, POSPrefix, new TreeSet<Integer>());
+        return  m.classifyProb(indices);
     }
 }

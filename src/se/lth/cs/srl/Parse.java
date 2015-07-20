@@ -1,9 +1,12 @@
 package se.lth.cs.srl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import se.lth.cs.srl.corpus.Sentence;
+import se.lth.cs.srl.corpus.WordProbsPair;
 import se.lth.cs.srl.io.CoNLL09Writer;
 import se.lth.cs.srl.io.DepsOnlyCoNLL09Reader;
 import se.lth.cs.srl.io.SRLOnlyCoNLL09Reader;
@@ -50,6 +53,7 @@ public class Parse {
                 System.out.println("Parsing sentence " + senCount);
             }
             srl.parseSentence(s);
+            HashMap<String, ArrayList<WordProbsPair>> argProb = s.argProbs;
             writer.write(s);
         }
         writer.close();

@@ -31,4 +31,9 @@ public class Label implements Comparable<Label> {
 		}
 		return 0;
 	}
+        
+        public String toString()
+        {
+            return "[ "+cl+":"+prob+"]";
+        }
 }
