@@ -51,6 +51,7 @@ class Test {
         System.out.println(file.getCanonicalPath());*/
         String str = "plants";
         String tokens[] = str.split("\\|");
-        System.out.println(tokens[0]);
+        System.out.println(tokens[0]);  
+        
     }
 }

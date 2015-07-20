@@ -26,12 +26,12 @@ public class ProcessFrameUtil {
             ArrayList<String> result, String sentence) {
         ProcessFrame frame = new ProcessFrame();
         frame.setProcessName(processName);
-        if (undergoer != null&&!undergoer.isEmpty()) {
+        if (undergoer != null && !undergoer.isEmpty()) {
             frame.setUnderGoer(StringUtil.getTokensWithSeparator(undergoer, ProcessFrameProcessor.SEPARATOR));
         } else {
             frame.setUnderGoer("");
         }
-        if (enabler != null&& !enabler.isEmpty()) {
+        if (enabler != null && !enabler.isEmpty()) {
             frame.setEnabler(StringUtil.getTokensWithSeparator(enabler, ProcessFrameProcessor.SEPARATOR));
         } else {
             frame.setEnabler("");
@@ -41,7 +41,7 @@ public class ProcessFrameUtil {
         } else {
             frame.setTrigger("");
         }
-        if (result != null&& !result.isEmpty()) {
+        if (result != null && !result.isEmpty()) {
             frame.setResult(StringUtil.getTokensWithSeparator(result, ProcessFrameProcessor.SEPARATOR));
         } else {
             frame.setResult("");
@@ -85,8 +85,8 @@ public class ProcessFrameUtil {
     }
 
     public static void toConll2009Format(ArrayList<ProcessFrame> processFrames, String mateParserFileName) throws FileNotFoundException, IOException {
-         PrintWriter writer = new PrintWriter(mateParserFileName);
-        System.out.println("Converting to clear parser format, data size : " + processFrames.size() + " frames");
+        PrintWriter writer = new PrintWriter(mateParserFileName);
+        System.out.println("Converting to  parser format, data size : " + processFrames.size() + " frames");
         int cnt = 0;
         for (ProcessFrame p : processFrames) {
             String rawText = p.getRawText();
@@ -94,16 +94,14 @@ public class ProcessFrameUtil {
             rawText = rawText.replace(".", " ");
             rawText = rawText.replaceAll("\"", "");
             rawText = rawText.trim();
-            for (int j = rawText.length()-1 ; ; j--)
-            {
-                if (Character.isAlphabetic(rawText.charAt(j)))
-                {
-                    rawText = rawText.substring(0,j+1);
+            for (int j = rawText.length() - 1;; j--) {
+                if (Character.isAlphabetic(rawText.charAt(j))) {
+                    rawText = rawText.substring(0, j + 1);
                     rawText += ".";
                     break;
                 }
             }
-            
+
             // update tokenized text here
             List<String> tokenized = StanfordTokenizerSingleton.getInstance().tokenize(rawText);
             //System.out.println(tokenized.size());
@@ -127,48 +125,41 @@ public class ProcessFrameUtil {
                 //System.out.println("");
             }
         }
-        if (cnt == processFrames.size())
+        if (cnt == processFrames.size()) {
             System.out.println("PERFECT !");
-        else
-        {
-            System.out.println("Not everything is converted to clear parser format : "+cnt+"/"+processFrames.size());
+        } else {
+            System.out.println("Not everything is converted to clear parser format : " + cnt + "/" + processFrames.size());
         }
         System.out.println("");
         writer.close();
     }
-    
-    public static void toParserFormat(ArrayList<ProcessFrame> processFrames, String parserFileName, int parserType) throws IOException
-    {
-        if (parserType == Constant.SRL_CLEARPARSER)
-        {
+
+    public static void toParserFormat(ArrayList<ProcessFrame> processFrames, String parserFileName, int parserType) throws IOException {
+        if (parserType == Constant.SRL_CLEARPARSER) {
             toClearParserFormat(processFrames, parserFileName);
-        }
-        else if (parserType == Constant.SRL_MATE)
-        {
+        } else if (parserType == Constant.SRL_MATE) {
             toConll2009Format(processFrames, parserFileName);
         }
     }
+
     public static void toClearParserFormat(ArrayList<ProcessFrame> processFrames, String clearParserFileName) throws FileNotFoundException, IOException {
         PrintWriter writer = new PrintWriter(clearParserFileName);
         System.out.println("Converting to clear parser format, data size : " + processFrames.size() + " frames");
         int cnt = 0;
         for (ProcessFrame p : processFrames) {
-            
+
             String rawText = p.getRawText();
 
             rawText = rawText.replace(".", " ");
             rawText = rawText.replaceAll("\"", "");
             rawText = rawText.trim();
-            for (int j = rawText.length()-1 ; ; j--)
-            {
-                if (Character.isAlphabetic(rawText.charAt(j)))
-                {
-                    rawText = rawText.substring(0,j+1);
+            for (int j = rawText.length() - 1;; j--) {
+                if (Character.isAlphabetic(rawText.charAt(j))) {
+                    rawText = rawText.substring(0, j + 1);
                     rawText += ".";
                     break;
                 }
             }
-            
 
             // update tokenized text here
             List<String> tokenized = StanfordTokenizerSingleton.getInstance().tokenize(rawText);
@@ -193,20 +184,40 @@ public class ProcessFrameUtil {
                 //System.out.println("");
             }
         }
-        if (cnt == processFrames.size())
+        if (cnt == processFrames.size()) {
             System.out.println("PERFECT !");
-        else
-        {
-            System.out.println("Not everything is converted to clear parser format : "+cnt+"/"+processFrames.size());
+        } else {
+            System.out.println("Not everything is converted to clear parser format : " + cnt + "/" + processFrames.size());
         }
         System.out.println("");
         writer.close();
+    }
+
+    public static ArrayList<ProcessFrame> getProcessFrameByRawName(String name, ArrayList<ProcessFrame> frames) {
+        ArrayList<ProcessFrame> result = new ArrayList<ProcessFrame>();
+        for (int i = 0; i < frames.size(); i++) {
+            if (frames.get(i).getProcessName().equalsIgnoreCase(name)) {
+                result.add(frames.get(i));
+            }
+        }
+
+        return result;
     }
 
     public static void dumpFramesToFile(ArrayList<ProcessFrame> arr, String fileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         for (ProcessFrame p : arr) {
             writer.println(p.getProcessName() + "\t" + p.getUnderGoer() + "\t" + p.getEnabler() + "\t" + p.getTrigger() + "\t" + p.getResult() + "\t" + p.getUnderSpecified() + "\t" + p.getRawText());
+        }
+        writer.close();
+
+    }
+    
+    public static void dumpFramesToFileWScore(ArrayList<ProcessFrame> arr, String fileName) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter(fileName);
+        for (ProcessFrame p : arr) {
+            System.out.println("Writing "+p.toStringWScore());
+            writer.println(p.toStringWScore());
         }
         writer.close();
 

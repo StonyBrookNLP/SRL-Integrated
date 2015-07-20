@@ -43,7 +43,7 @@ import se.lth.cs.srl.util.Util;
  */
 public class SRLWrapper {
 
-    public void doTrain(String trainingFileName, String modelFileName, int srlType) throws FileNotFoundException, IOException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    public void doTrain(String trainingFileName, String modelFileName, int srlType, boolean domainAdaptation) throws FileNotFoundException, IOException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (srlType == Constant.SRL_CLEARPARSER) {
             // Train trainingFrames
             SRLTrain train = new SRLTrain();
@@ -72,23 +72,45 @@ public class SRLWrapper {
                 //MateParserUtil.TRAIN_ARGS[0] = "eng-v";
                 //new File(GlobalVariable.PROJECT_DIR.concat("/featuresets/eng")).renameTo(new File(GlobalVariable.PROJECT_DIR.concat("/featuresets/eng-temp")));
                 //new File(GlobalVariable.PROJECT_DIR.concat("/featuresets/eng")).renameTo(new File(GlobalVariable.PROJECT_DIR.concat("/featuresets/eng-temp")));
-
-                trainArgs = new String[MateParserUtil.TRAIN_ARGS.length + 2];
+                if (!domainAdaptation) {
+                    trainArgs = new String[MateParserUtil.TRAIN_ARGS.length + 2];
+                } else {
+                    trainArgs = new String[MateParserUtil.TRAIN_ARGS.length + 4];
+                }
                 System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, trainArgs, 0, MateParserUtil.TRAIN_ARGS.length);
                 trainArgs[MateParserUtil.TRAIN_ARGS.length] = "-fdir";
                 trainArgs[MateParserUtil.TRAIN_ARGS.length + 1] = GlobalVariable.PROJECT_DIR.concat("/featuresets/eng-v");
+                if (domainAdaptation) {
+                    trainArgs[MateParserUtil.TRAIN_ARGS.length + 2] = "-da";
+                    trainArgs[MateParserUtil.TRAIN_ARGS.length + 3] = GlobalVariable.sourceIdxStart + "";
+                }
             } else if (triggerType == Constant.TRIGGER_NN_ONLY) {
                 //MateParserUtil.TRAIN_ARGS[0] = "eng-n";
                 System.out.println("NOUN ONLY");
-                trainArgs = new String[MateParserUtil.TRAIN_ARGS.length + 2];
+                if (!domainAdaptation) {
+                    trainArgs = new String[MateParserUtil.TRAIN_ARGS.length + 2];
+                } else {
+                    trainArgs = new String[MateParserUtil.TRAIN_ARGS.length + 4];
+                }
                 System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, trainArgs, 0, MateParserUtil.TRAIN_ARGS.length);
                 trainArgs[MateParserUtil.TRAIN_ARGS.length] = "-fdir";
                 trainArgs[MateParserUtil.TRAIN_ARGS.length + 1] = GlobalVariable.PROJECT_DIR.concat("/featuresets/eng-n");
+                if (domainAdaptation) {
+                    trainArgs[MateParserUtil.TRAIN_ARGS.length + 2] = "-da";
+                    trainArgs[MateParserUtil.TRAIN_ARGS.length + 3] = GlobalVariable.sourceIdxStart + "";
+                }
             }
             if (trainArgs == null) {
                 MateParserUtil.TRAIN_ARGS[1] = trainingFileName;
                 MateParserUtil.TRAIN_ARGS[2] = modelFileName;
                 String params[] = MateParserUtil.TRAIN_ARGS;
+                if (domainAdaptation) {
+                    params = new String[MateParserUtil.TRAIN_ARGS.length + 2];
+                    System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, params, 0, MateParserUtil.TRAIN_ARGS.length);
+                    params[params.length - 2] = "-da";
+                    params[params.length - 1] = GlobalVariable.sourceIdxStart + "";
+                    System.out.println(Arrays.toString(params));
+                }
                 try {
                     Method onLoaded = Learn.class.getMethod("main", String[].class);
                     onLoaded.invoke(null, (Object) params);
@@ -99,6 +121,7 @@ public class SRLWrapper {
                 trainArgs[1] = trainingFileName;
                 trainArgs[2] = modelFileName;
                 String params[] = trainArgs;
+                System.out.println(Arrays.toString(params));
                 try {
                     Method onLoaded = Learn.class.getMethod("main", String[].class);
                     onLoaded.invoke(null, (Object) params);
@@ -112,7 +135,7 @@ public class SRLWrapper {
         }
     }
 
-    public void doPredict(String testInputFileName, String predictionFileName, String modelFileName, int srlType, boolean autoPi) throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    public void doPredict(String testInputFileName, String predictionFileName, String modelFileName, int srlType, boolean autoPi, boolean domainAdaptation) throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (srlType == Constant.SRL_CLEARPARSER) {
             ClearParserUtil.PREDICT_ARGS[3] = testInputFileName;
             ClearParserUtil.PREDICT_ARGS[5] = predictionFileName;
@@ -124,17 +147,34 @@ public class SRLWrapper {
                 MateParserUtil.PREDICT_ARGS_NOPI[1] = testInputFileName;
                 MateParserUtil.PREDICT_ARGS_NOPI[2] = modelFileName;
                 MateParserUtil.PREDICT_ARGS_NOPI[4] = predictionFileName;
-                params = MateParserUtil.PREDICT_ARGS_NOPI;
+                if (domainAdaptation) {
+                    params = new String[MateParserUtil.PREDICT_ARGS_NOPI.length + 1];
+                    //System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, params, 0, MateParserUtil.TRAIN_ARGS.length);
+                    System.arraycopy(MateParserUtil.PREDICT_ARGS_NOPI, 0, params, 0, MateParserUtil.PREDICT_ARGS_NOPI.length);
+                    params[MateParserUtil.PREDICT_ARGS_NOPI.length-1] = "-da";
+                    params[MateParserUtil.PREDICT_ARGS_NOPI.length] = predictionFileName;
+                } else {
+                    params = MateParserUtil.PREDICT_ARGS_NOPI;
+                }
                 System.out.println("MATEEEE NO AUTO PI");
-            }
-            else
-            {
+            } else {
                 MateParserUtil.PREDICT_ARGS_PI[1] = testInputFileName;
                 MateParserUtil.PREDICT_ARGS_PI[2] = modelFileName;
+                //MateParserUtil.PREDICT_ARGS_PI[3] = "-da";
                 MateParserUtil.PREDICT_ARGS_PI[3] = predictionFileName;
-                params = MateParserUtil.PREDICT_ARGS_PI;
-                System.out.println("MATEEEE AUTO PI");
+                if (domainAdaptation) {
+                    params = new String[MateParserUtil.PREDICT_ARGS_PI.length + 1];
+                    //System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, params, 0, MateParserUtil.TRAIN_ARGS.length);
+                    System.arraycopy(MateParserUtil.PREDICT_ARGS_PI, 0, params, 0, MateParserUtil.PREDICT_ARGS_PI.length);
+                    params[MateParserUtil.PREDICT_ARGS_PI.length-1] = "-da";
+                    params[MateParserUtil.PREDICT_ARGS_PI.length] = predictionFileName;
+                } else {
+                    params = MateParserUtil.PREDICT_ARGS_PI;
+                }
+
+                System.out.println("MATE AUTO PI "+Arrays.toString(params));
             }
+
             try {
                 Method onLoaded = Parse.class.getMethod("main", String[].class);
                 onLoaded.invoke(null, (Object) params);

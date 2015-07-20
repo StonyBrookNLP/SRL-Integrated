@@ -7,6 +7,7 @@ package qa.experiment;
 
 import Util.ClearParserUtil;
 import Util.Constant;
+import Util.GlobalVariable;
 import Util.ProcessFrameUtil;
 import Util.StdUtil;
 import Util.StringUtil;
@@ -63,16 +64,22 @@ public class SRLCombinedModelCrossValidation {
 
     @Option(name = "-pi", usage = "predicate/trigger identification", required = false, metaVar = "OPTIONAL")
     private boolean pi = false;
-    
+
     boolean limitedProcess = false;
     private ArrayList<ProcessFrame> frameArr;
+    ArrayList<ProcessFrame> inverseData;
+
     private HashMap<String, Integer> processFold;
     private ArrayList<String> processNames;
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
 
+    /*String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
+     "spear_spearing", "retract"}*/
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-        "spear_spearing", "retract"};
+        "spear_spearing", "retract",
+        "drop_dropping", "Feelsleepy", "harden", "positivetropism", "Resting", "separated",
+        "revising", "sight"};
 
     public SRLCombinedModelCrossValidation() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
@@ -136,30 +143,80 @@ public class SRLCombinedModelCrossValidation {
     }
 
     public void doTrain(String trainingFileName, String modelFileName) throws IOException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType);
+        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType, false);
     }
 
     public void doPredict() throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         for (int i = 0; i < testFilePath.size(); i++) {
-            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace("test.", "combined.predict."), trainingModelFilePath.get(i), srlType,pi);
+            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace("test.", "combined.predict."), trainingModelFilePath.get(i), srlType, pi, false);
         }
     }
 
     public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+       
+        /*testFilePath.clear();
+         trainingModelFilePath.clear();
+         int startIdx = 0;
+         int testSize = frameArr.size() / fold;
+         int endIdx = startIdx + testSize;
+         Collections.shuffle(frameArr);
+         for (int currentFold = 0; currentFold < fold; currentFold++) {
+         ArrayList<ProcessFrame> testingFrames = new ArrayList<ProcessFrame>(frameArr.subList(startIdx, endIdx));
+         ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>(frameArr.subList(0, startIdx));
+         trainingFrames.addAll(new ArrayList<ProcessFrame>(frameArr.subList(endIdx, frameArr.size())));
+
+         String trainingFileName = outDirName + "/train.combined.cv." + currentFold;
+         String testingFileName = outDirName + "/test.cv." + currentFold;
+         String modelName = outDirName + "/combinedmodel.cv." + currentFold;
+
+         testFilePath.add(testingFileName);
+         trainingModelFilePath.add(modelName);
+
+         ProcessFrameUtil.toParserFormat(trainingFrames, trainingFileName, srlType);
+         ProcessFrameUtil.toParserFormat(testingFrames, testingFileName, srlType);
+
+         doTrain(trainingFileName, modelName);
+         startIdx = endIdx;
+         if (currentFold == fold - 2) {
+         endIdx = frameArr.size();
+         } else {
+         endIdx = startIdx + testSize;
+         }
+         }
+
+         doPredict();*/
         testFilePath.clear();
         trainingModelFilePath.clear();
-        int startIdx = 0;
-        int testSize = frameArr.size() / fold;
-        int endIdx = startIdx + testSize;
-        Collections.shuffle(frameArr);
-        for (int currentFold = 0; currentFold < fold; currentFold++) {
-            ArrayList<ProcessFrame> testingFrames = new ArrayList<ProcessFrame>(frameArr.subList(startIdx, endIdx));
-            ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>(frameArr.subList(0, startIdx));
-            trainingFrames.addAll(new ArrayList<ProcessFrame>(frameArr.subList(endIdx, frameArr.size())));
+        for (String processName : processNames) {
+            if (!blackList.contains(processName)) {
+                ArrayList<ProcessFrame> processData = proc.getProcessFrameByNormalizedName(processName);
+                Collections.shuffle(processData);
+                inverseData = proc.getInverseProcessFrameByNormalizedName(processName);
+                if (processData.size() < 5) // Special case
+                {
+                    System.out.println("Less than 5 " + processName + " size " + processData.size());
+                    doCrossValidation(processName, processData, processData.size());
+                } else {
+                    doCrossValidation(processName, processData, fold);
+                }
+            }
+        }
+        doPredict();
+    }
 
-            String trainingFileName = outDirName + "/train.combined.cv." + currentFold;
-            String testingFileName = outDirName + "/test.cv." + currentFold;
-            String modelName = outDirName + "/combinedmodel.cv." + currentFold;
+    public void doCrossValidation(String processName, ArrayList<ProcessFrame> selectedProcessFrame, int foldSize) throws IOException, InterruptedException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        int startIdx = 0;
+        int testSize = selectedProcessFrame.size() / foldSize;
+        int endIdx = testSize;
+        for (int currentFold = 0; currentFold < foldSize; currentFold++) {
+            ArrayList<ProcessFrame> testingFrames = new ArrayList<ProcessFrame>(selectedProcessFrame.subList(startIdx, endIdx));
+            ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>(selectedProcessFrame.subList(0, startIdx));
+            trainingFrames.addAll(new ArrayList<ProcessFrame>(selectedProcessFrame.subList(endIdx, selectedProcessFrame.size())));
+            trainingFrames.addAll(inverseData);
+            
+            String trainingFileName = outDirName + "/" + processName + ".train.combined.cv." + currentFold;
+            String testingFileName = outDirName + "/" + processName + ".test.cv." + currentFold;
+            String modelName = outDirName + "/" + processName + ".combinedmodel.cv." + currentFold;
 
             testFilePath.add(testingFileName);
             trainingModelFilePath.add(modelName);
@@ -169,14 +226,12 @@ public class SRLCombinedModelCrossValidation {
 
             doTrain(trainingFileName, modelName);
             startIdx = endIdx;
-            if (currentFold == fold - 2) {
-                endIdx = frameArr.size();
+            if (currentFold == foldSize - 2) {
+                endIdx = selectedProcessFrame.size();
             } else {
                 endIdx = startIdx + testSize;
             }
         }
-
-        doPredict();
     }
 
     /**
@@ -188,16 +243,19 @@ public class SRLCombinedModelCrossValidation {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        SRLCombinedModelCrossValidation srlExp = new SRLCombinedModelCrossValidation();
-        CmdLineParser cmd = new CmdLineParser(srlExp);
 
+        CmdLineParser cmd = null;
         try {
+
+            SRLCombinedModelCrossValidation srlExp = new SRLCombinedModelCrossValidation();
+            cmd = new CmdLineParser(srlExp);
             cmd.parseArgument(args);
             srlExp.init();
             srlExp.trainAndPredict();
             Thread.sleep(5000);
             srlExp.evaluate();
             System.out.println("FINISH");
+
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
             cmd.printUsage(System.err);

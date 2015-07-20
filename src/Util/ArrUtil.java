@@ -54,6 +54,14 @@ public class ArrUtil {
         return result;
     }
     
+    public static void addIfNotExist(ArrayList<String> target, ArrayList<String> source)
+    {
+        for (int i = 0; i < source.size(); i++)
+        {
+            if (!target.contains(source.get(i)))
+                target.add(source.get(i));
+        }
+    }
     public static void main(String[] args)
     {
         ArrayList<Integer> arr1 = new ArrayList<>();

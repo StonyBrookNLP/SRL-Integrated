@@ -5,13 +5,16 @@
  */
 package qa;
 
+import com.google.common.collect.Lists;
+import com.google.common.primitives.Doubles;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
-public class ProcessFrame implements Serializable{
+public class ProcessFrame implements Serializable {
 
     private String processName;
     private String rawText;
@@ -25,40 +28,61 @@ public class ProcessFrame implements Serializable{
     private ArrayList<Integer> enablerIndex = new ArrayList<Integer>();
     private ArrayList<Integer> triggerIndex = new ArrayList<Integer>();
     private ArrayList<Integer> resultIndex = new ArrayList<Integer>();
+    private ArrayList<List<Double>> scores = new ArrayList<List<Double>>(4);
+
+    public ProcessFrame() {
+        scores.add(new ArrayList<Double>());
+        scores.add(new ArrayList<Double>());
+        scores.add(new ArrayList<Double>());
+        scores.add(new ArrayList<Double>());
+        processName = "";
+        rawText = "";
+        underGoer = "";
+        enabler = "";
+        trigger = "";
+        underSpecified = "";
+        result = "";
+    }
+
+    public void setScores(int idx, double[] scoresArr) {
+        scores.set(idx, Lists.newArrayList(Doubles.asList(scoresArr)));
+    }
 
     public ArrayList<Integer> getTriggerIdx() {
-        
 
         return triggerIndex;
     }
 
-    public ArrayList<Integer> getAllLabeledIndex()
-    {
+    public ArrayList<Integer> getAllLabeledIndex() {
         ArrayList<Integer> labeledIdxs = new ArrayList<Integer>();
         processRoleFillers();
-        if (undergoerIndex.size() > 0)
+        if (undergoerIndex.size() > 0) {
             labeledIdxs.addAll(undergoerIndex);
-        if (enablerIndex.size() > 0)
+        }
+        if (enablerIndex.size() > 0) {
             labeledIdxs.addAll(enablerIndex);
-        if (resultIndex.size() > 0)
+        }
+        if (resultIndex.size() > 0) {
             labeledIdxs.addAll(resultIndex);
-        if (triggerIndex.size() > 0)
+        }
+        if (triggerIndex.size() > 0) {
             labeledIdxs.addAll(triggerIndex);
-        
+        }
+
         return labeledIdxs;
     }
-    public void clearAllIndexes()
-    {
+
+    public void clearAllIndexes() {
         undergoerIndex.clear();
         enablerIndex.clear();
         resultIndex.clear();
         triggerIndex.clear();
     }
-    
-    public void updateTrigger()
-    {
-        
+
+    public void updateTrigger() {
+
     }
+
     public void processRoleFillers() {
         //System.out.println("PROCESSING");
         clearAllIndexes();
@@ -99,28 +123,31 @@ public class ProcessFrame implements Serializable{
             // Check type
             String type = roleFiller.split(":")[1];
             if (type.equalsIgnoreCase("A0")) {
-                if (matches != null)
+                if (matches != null) {
                     undergoerIndex.addAll(matches);
+                }
             }
             if (type.equalsIgnoreCase("A1")) {
-                if (matches != null)
+                if (matches != null) {
                     enablerIndex.addAll(matches);
+                }
             }
             if (type.equalsIgnoreCase("T")) {
-                if (matches != null)
-                {
+                if (matches != null) {
                     triggerIndex.addAll(matches);
                     // Check if VB or process name or NN
                 }
             }
             if (type.equalsIgnoreCase("A2")) {
-                if (matches != null)
+                if (matches != null) {
                     resultIndex.addAll(matches);
+                }
             }
-            if (matches!= null)
+            if (matches != null) {
                 allIdx.addAll(matches);
+            }
         }
-        
+
     }
 
     public ArrayList<Integer> getEnablerIdx() {
@@ -129,13 +156,11 @@ public class ProcessFrame implements Serializable{
     }
 
     public ArrayList<Integer> getResultIdx() {
- 
 
         return resultIndex;
     }
 
     public ArrayList<Integer> getUndergoerIdx() {
-
 
         return undergoerIndex;
     }
@@ -200,10 +225,10 @@ public class ProcessFrame implements Serializable{
         return tokenizedText;
     }
 
-    public String getQuestionText()
-    {
+    public String getQuestionText() {
         return processName;
     }
+
     public void setTokenizedText(String[] tokenizedText) {
         this.tokenizedText = tokenizedText;
     }
@@ -214,7 +239,7 @@ public class ProcessFrame implements Serializable{
         int matchEnd = targetPattern.length;
         ArrayList<Integer> idx = new ArrayList<Integer>();
         for (int i = 0; i < tokenizedSentence.length && matchStart < matchEnd; i++) {
-            if (tokenizedSentence[i].equalsIgnoreCase(targetPattern[matchStart]) && !idxs.contains(i+1)) {
+            if (tokenizedSentence[i].equalsIgnoreCase(targetPattern[matchStart]) && !idxs.contains(i + 1)) {
                 idx.add(i + 1); // because ConLL index starts from 1 
                 if (!inRegion) {
                     inRegion = true;
@@ -269,33 +294,56 @@ public class ProcessFrame implements Serializable{
             return null;
         }
     }
-    
-    public String toString()
-    {
+
+    public String toString() {
         StringBuilder strB = new StringBuilder();
-        strB.append(processName+"\t");
-        strB.append(underGoer+"\t");
-        strB.append(enabler+"\t");
-        strB.append(trigger+"\t");
-        strB.append(result+"\t");
-        strB.append(underSpecified+"\t");
+        strB.append(processName + "\t");
+        strB.append(underGoer + "\t");
+        strB.append(enabler + "\t");
+        strB.append(trigger + "\t");
+        strB.append(result + "\t");
+        strB.append(underSpecified + "\t");
         strB.append(rawText);
+
+        return strB.toString();
+    }
+
+    public String toStringWScore() {
+        StringBuilder strB = new StringBuilder();
+        // WATCHOUT FOR THE INDEX!
+        strB.append(processName + "\t");
         
+        strB.append(underGoer + "\t");
+        strB.append(scores.get(0).size()==0?"\t\t":StringUtils.join(scores.get(0), "\t")).append("\t");
+
+        strB.append(enabler + "\t");
+        strB.append(scores.get(1).size() == 0?"\t\t":StringUtils.join(scores.get(1), "\t")).append("\t");
+        //strB.append(StringUtils.join(scores.get(1), "\t")).append("\t");
+
+        strB.append(trigger + "\t");
+        strB.append(scores.get(2).size() == 0?"\t":StringUtils.join(scores.get(2), "\t")).append("\t");
+
+        strB.append(result + "\t");
+        strB.append(scores.get(3).size() == 0?"\t\t":StringUtils.join(scores.get(3), "\t")).append("\t");
+
+        strB.append(underSpecified + "\t");
+        strB.append(rawText);
+
         return strB.toString();
     }
 
 }
+
 class MyComparator implements java.util.Comparator<String> {
 
-
-
-
     public int compare(String o1, String o2) {
-        if (o1.length() > o2.length())
+        if (o1.length() > o2.length()) {
             return -1;
-        if (o1.length() == o2.length())
+        }
+        if (o1.length() == o2.length()) {
             return 0;
+        }
         return 1;
-        
+
     }
 }

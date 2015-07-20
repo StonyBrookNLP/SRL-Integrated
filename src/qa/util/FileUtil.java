@@ -220,7 +220,8 @@ public class FileUtil {
         //String[] lines = readLinesFromFile("./data/sp/process.tsv");
         //System.out.println(lines.length);
         //System.out.println(readCoNLLFormat("temp.dep"));
-        fromConll2009ToClearParserFormat("./data/srl_test.txt", "./data/srl_test.converted.txt");
+        fromConll2009ToClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/CombinedFold5MATEPi/gs.txt", "/Users/samuellouvan/NetBeansProjects/QA/CombinedFold5MATEPi/gs_converted.txt");
+        fromConll2009ToClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/CombinedFold5MATEPi/srl.txt", "/Users/samuellouvan/NetBeansProjects/QA/CombinedFold5MATEPi/srl_converted.txt");
     }
 
 }

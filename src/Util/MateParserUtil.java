@@ -20,8 +20,8 @@ public class MateParserUtil {
     public static String[] PREDICT_ARGS_NOPI = {"eng",
         "", // TEST FILE INPUT
         "", // MODEL NAME
-        "-nopi",// OUTPUT FILE
-        ""
+        "-nopi",
+        ""  // OUTPUT FILE
      //"-nopi", // NOPI
     };
     

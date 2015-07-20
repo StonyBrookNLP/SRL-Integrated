@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package qa.experiment;
+package qa.aligner;
 
+import qa.experiment.*;
 import Util.ArrUtil;
 import Util.GlobalVariable;
 import Util.ProcessFrameUtil;

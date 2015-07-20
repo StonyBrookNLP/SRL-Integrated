@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -78,11 +79,12 @@ public class SRLDSPerProcessModelCrossValidation {
      "spear_spearing", "retract", "distillation", "Feelsleepy", "filtering", "revising" "fertilization",
      "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
      "upwelling", "write", "work", "vibrates_vibration_vibrations", "warming", "watercycle_thewatercycle", "weather_weathering", "whiten_becomewhiter", "windbreaking"};*/
-    String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
+    
+        String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
         "spear_spearing", "retract", 
         "drop_dropping","Feelsleepy", "harden", "positivetropism", "Resting", "separated",
-        "revising"}; 
-
+        "revising", "sight"}; 
+        
     public SRLDSPerProcessModelCrossValidation() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
         testFilePath = new ArrayList<String>();
@@ -146,12 +148,12 @@ public class SRLDSPerProcessModelCrossValidation {
 
     public void doTrain(String trainingFileName, String modelFileName) throws IOException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 
-        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType);
+        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType, false);
     }
 
     public void doPredict() throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         for (int i = 0; i < testFilePath.size(); i++) {
-            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace(".test.", ".dsperprocess.predict."), trainingModelFilePath.get(i), srlType, pi);
+            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace(".test.", ".dsperprocess.predict."), trainingModelFilePath.get(i), srlType, pi, false);
         }
     }
 
@@ -195,6 +197,7 @@ public class SRLDSPerProcessModelCrossValidation {
             if (!blackList.contains(processName)) {
                 ArrayList<ProcessFrame> processData = proc.getProcessFrameByNormalizedName(processName);
                 ArrayList<ProcessFrame> dsData = dsProc.getProcessFrameByNormalizedName(processName);
+                Collections.shuffle(processData);
                 if (processData.size() < 5) // Special case
                 {
                     doCrossValidation(processName, processData, dsData, processData.size());

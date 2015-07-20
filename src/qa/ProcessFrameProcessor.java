@@ -70,9 +70,12 @@ public class ProcessFrameProcessor {
         Scanner scanner = new Scanner(new File(this.fileName));
         procArr.clear();
         int cnt = 0;
+        //System.out.println("Hai");
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
+            //System.out.println(line);
             if (!isHeader(line)) {
+                //System.out.println(cnt);
                 String[] columns = line.split("\t");
                 ProcessFrame procFrame = new ProcessFrame();
                 //System.out.println(cnt+" "+columns.length +" "+columns[0] + " "+columns[1]+" "+columns[2]);
@@ -455,9 +458,9 @@ public class ProcessFrameProcessor {
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/process_frame_june.tsv");
+        ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
         proc.loadProcessData();
-        proc.toConLL2009Format(GlobalVariable.PROJECT_DIR + "/data/process_frame_june.conll09");
+        //proc.toConLL2009Format(GlobalVariable.PROJECT_DIR + "/data/process_frame_june.conll09");
         //ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
         //proc.loadProcessData();
         //System.out.println(proc.procArr.size());

@@ -68,10 +68,12 @@ public class SRLDSCombinedModelCrossValidation {
 
     @Option(name = "-pi", usage = "predicate/trigger identification", required = false, metaVar = "OPTIONAL")
     private boolean pi = false;
-    
+
     boolean limitedProcess = false;
+    ArrayList<ProcessFrame> inverseData;
     private ArrayList<ProcessFrame> frameArr;
     private HashMap<String, Integer> processFold;
+    ProcessFrameProcessor dsProc;
     private ArrayList<String> processNames;
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
@@ -79,8 +81,11 @@ public class SRLDSCombinedModelCrossValidation {
      "spear_spearing", "retract", "distillation", "Feelsleepy", "filtering", "revising" "fertilization",
      "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
      "upwelling", "write", "work", "vibrates_vibration_vibrations", "warming", "watercycle_thewatercycle", "weather_weathering", "whiten_becomewhiter", "windbreaking"};*/
+
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
-        "spear_spearing", "retract"};
+        "spear_spearing", "retract",
+        "drop_dropping", "Feelsleepy", "harden", "positivetropism", "Resting", "separated",
+        "revising", "sight"};
 
     public SRLDSCombinedModelCrossValidation() throws FileNotFoundException {
         trainingModelFilePath = new ArrayList<String>();
@@ -144,17 +149,17 @@ public class SRLDSCombinedModelCrossValidation {
     }
 
     public void doTrain(String trainingFileName, String modelFileName) throws IOException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-       new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType);
+        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType, false);
     }
 
     public void doPredict() throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         for (int i = 0; i < testFilePath.size(); i++) {
-            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace("test.", "dscombined.predict."), trainingModelFilePath.get(i), srlType,pi);
+            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace("test.", "dscombined.predict."), trainingModelFilePath.get(i), srlType, pi, false);
         }
     }
 
     public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        testFilePath.clear();
+        /*testFilePath.clear();
         trainingModelFilePath.clear();
         int startIdx = 0;
         int testSize = frameArr.size() / fold;
@@ -187,7 +192,60 @@ public class SRLDSCombinedModelCrossValidation {
             }
         }
 
+        doPredict();*/
+        testFilePath.clear();
+        trainingModelFilePath.clear();
+        dsProc = new ProcessFrameProcessor(dsDirName + "/" + dsFileName);
+        dsProc.loadProcessData();
+        int cnt = 0;
+        for (String processName : processNames) {
+            
+            if (!blackList.contains(processName)) {
+                ArrayList<ProcessFrame> processData = proc.getProcessFrameByNormalizedName(processName);
+                Collections.shuffle(processData);
+                inverseData = proc.getInverseProcessFrameByNormalizedName(processName);
+                if (processData.size() < 5) // Special case
+                {
+                    System.out.println("Less than 5 " + processName + " size " + processData.size());
+                    doCrossValidation(processName, processData, processData.size());
+                } else {
+                    doCrossValidation(processName, processData, fold);
+                }
+                cnt++;
+            }
+        }
         doPredict();
+    }
+    
+    public void doCrossValidation(String processName, ArrayList<ProcessFrame> selectedProcessFrame, int foldSize) throws IOException, InterruptedException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        int startIdx = 0;
+        int testSize = selectedProcessFrame.size() / foldSize;
+        int endIdx = testSize;
+        for (int currentFold = 0; currentFold < foldSize; currentFold++) {
+            ArrayList<ProcessFrame> testingFrames = new ArrayList<ProcessFrame>(selectedProcessFrame.subList(startIdx, endIdx));
+            ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>(selectedProcessFrame.subList(0, startIdx));
+            trainingFrames.addAll(new ArrayList<ProcessFrame>(selectedProcessFrame.subList(endIdx, selectedProcessFrame.size())));
+            trainingFrames.addAll(inverseData);
+            trainingFrames.addAll(dsProc.getProcArr());
+            
+            String trainingFileName = outDirName + "/" + processName + ".train.dscombined.cv." + currentFold;
+            String testingFileName = outDirName + "/" + processName + ".test.cv." + currentFold;
+            String modelName = outDirName + "/" + processName + ".dscombinedmodel.cv." + currentFold;
+
+            testFilePath.add(testingFileName);
+            trainingModelFilePath.add(modelName);
+
+            ProcessFrameUtil.toParserFormat(trainingFrames, trainingFileName, srlType);
+            ProcessFrameUtil.toParserFormat(testingFrames, testingFileName, srlType);
+
+            doTrain(trainingFileName, modelName);
+            startIdx = endIdx;
+            if (currentFold == foldSize - 2) {
+                endIdx = selectedProcessFrame.size();
+            } else {
+                endIdx = startIdx + testSize;
+            }
+        }
     }
 
     /**

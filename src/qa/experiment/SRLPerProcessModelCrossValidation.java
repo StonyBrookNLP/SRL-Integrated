@@ -7,6 +7,7 @@ package qa.experiment;
 
 import Util.ClearParserUtil;
 import Util.Constant;
+import Util.GlobalVariable;
 import Util.ProcessFrameUtil;
 import Util.StdUtil;
 import Util.StringUtil;
@@ -23,9 +24,11 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import jdk.nashorn.internal.objects.Global;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -40,7 +43,7 @@ import org.apache.commons.io.FileUtils;
  * @author samuellouvan
  */
 public class SRLPerProcessModelCrossValidation {
-
+    
     ProcessFrameProcessor proc;
 
     private ArrayList<String> blackList;
@@ -65,12 +68,17 @@ public class SRLPerProcessModelCrossValidation {
     @Option(name = "-pi", usage = "predicate/trigger identification", required = false, metaVar = "OPTIONAL")
     private boolean pi = false;
     
+    @Option(name = "-da", usage = "domain adaptation", required = false, metaVar = "OPTIONAL")
+    private boolean da = false;
+    
+    
     boolean limitedProcess = false;
     private ArrayList<ProcessFrame> frameArr;
     private HashMap<String, Integer> processFold;
     private ArrayList<String> processNames;
     ArrayList<String> testFilePath;
     ArrayList<String> trainingModelFilePath;
+    ArrayList<ProcessFrame> inverseData;
     /* String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
      "spear_spearing", "retract", "distillation", "Feelsleepy", "filtering", "revising" "fertilization",
      "freeze_freezing", "germinating_germination", "inferring", "melt_melting", "reusing", "takeinnutrients_takinginnutrients", "sight",
@@ -78,7 +86,7 @@ public class SRLPerProcessModelCrossValidation {
     String[] blackListProcess = {"Salivating", "composted", "decant_decanting", "dripping", "magneticseparation", "loosening", "momentum", "seafloorspreadingtheory", "sedimentation",
         "spear_spearing", "retract", 
         "drop_dropping","Feelsleepy", "harden", "positivetropism", "Resting", "separated",
-        "revising"}; 
+        "revising", "sight"}; 
 
    
     public SRLPerProcessModelCrossValidation() throws FileNotFoundException {
@@ -143,13 +151,12 @@ public class SRLPerProcessModelCrossValidation {
     }
 
     public void doTrain(String trainingFileName, String modelFileName) throws IOException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-
-        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType);
+        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType, da);
     }
 
     public void doPredict() throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         for (int i = 0; i < testFilePath.size(); i++) {
-            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace(".test.", ".perprocess.predict."), trainingModelFilePath.get(i), srlType, pi);
+            new SRLWrapper().doPredict(testFilePath.get(i), testFilePath.get(i).replace(".test.", ".perprocess.predict."), trainingModelFilePath.get(i), srlType, pi, da);
         }
     }
 
@@ -161,7 +168,11 @@ public class SRLPerProcessModelCrossValidation {
             ArrayList<ProcessFrame> testingFrames = new ArrayList<ProcessFrame>(selectedProcessFrame.subList(startIdx, endIdx));
             ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>(selectedProcessFrame.subList(0, startIdx));
             trainingFrames.addAll(new ArrayList<ProcessFrame>(selectedProcessFrame.subList(endIdx, selectedProcessFrame.size())));
-
+            if (da)
+            {
+                GlobalVariable.sourceIdxStart = trainingFrames.size();
+                trainingFrames.addAll(inverseData);
+            }
             String trainingFileName = outDirName + "/" + processName + ".train.perprocess.cv." + currentFold;
             String testingFileName = outDirName + "/" + processName + ".test.cv." + currentFold;
             String modelName = outDirName + "/" + processName + ".perprocessmodel.cv." + currentFold;
@@ -180,17 +191,20 @@ public class SRLPerProcessModelCrossValidation {
                 endIdx = startIdx + testSize;
             }
         }
-
     }
 
     public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         testFilePath.clear();
         trainingModelFilePath.clear();
+        int cnt = 0;
         for (String processName : processNames) {
             if (!blackList.contains(processName)) {
                 ArrayList<ProcessFrame> processData = proc.getProcessFrameByNormalizedName(processName);
+                Collections.shuffle(processData);
+                inverseData = proc.getInverseProcessFrameByNormalizedName(processName);
                 if (processData.size() < 5) // Special case
                 {
+                    System.out.println("Less than 5 "+processName + " size "+processData.size());
                     doCrossValidation(processName, processData, processData.size());
                 } else {
                     doCrossValidation(processName, processData, fold);
@@ -198,6 +212,7 @@ public class SRLPerProcessModelCrossValidation {
             }
         }
         doPredict();
+        GlobalVariable.sourceIdxStart = -1;
     }
 
     /**

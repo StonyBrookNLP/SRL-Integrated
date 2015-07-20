@@ -138,7 +138,7 @@ public class SRLPerProcess extends SRLExperiment {
 
     public void doTrain(String trainingFileName, String modelFileName) throws IOException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 
-        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType);
+        new SRLWrapper().doTrain(trainingFileName, modelFileName, srlType, false);
     }
 
     public void doPredict() throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -183,6 +183,7 @@ public class SRLPerProcess extends SRLExperiment {
         for (String processName : processNames) {
             if (!blackList.contains(processName)) {
                 ArrayList<ProcessFrame> processData = proc.getProcessFrameByNormalizedName(processName);
+                
                 if (processData.size() < 5) // Special case
                 {
                     doCrossValidation(processName, processData, processData.size());
