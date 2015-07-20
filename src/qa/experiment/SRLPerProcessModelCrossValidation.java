@@ -14,7 +14,6 @@ import Util.StringUtil;
 import clear.engine.SRLPredict;
 import clear.engine.SRLTrain;
 import qa.util.FileUtil;
-import com.sun.medialib.mlib.Image;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
