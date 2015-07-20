@@ -14,7 +14,8 @@ import java.util.HashMap;
 public class WordProbsPair {
     private Word word;
     private HashMap<String, Double> labelConfidencePair;
-    
+    private double x = 0;
+    private double y = 0;
     public WordProbsPair(Word w, HashMap<String, Double> lblConfPair)
     {
         this.word = w;
