@@ -6,6 +6,7 @@ nb-configuration.xml
 .nb-gradle/
 data/
 lib/
+nbproject/
 <<<<<<< HEAD
 =======
 dist/
