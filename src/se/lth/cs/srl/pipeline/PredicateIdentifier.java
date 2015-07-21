@@ -1,7 +1,11 @@
 package se.lth.cs.srl.pipeline;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.TreeSet;
+import static java.util.stream.Collectors.toList;
 
 import se.lth.cs.srl.Learn;
 import se.lth.cs.srl.Parse;
@@ -12,6 +16,7 @@ import se.lth.cs.srl.features.Feature;
 import se.lth.cs.srl.features.FeatureSet;
 import se.lth.cs.srl.ml.LearningProblem;
 import se.lth.cs.srl.ml.Model;
+import se.lth.cs.srl.ml.liblinear.Label;
 
 public class PredicateIdentifier extends AbstractStep {
 
@@ -74,13 +79,42 @@ public class PredicateIdentifier extends AbstractStep {
         }*/
     }
 
+    // s.louvan
     public void parse(Sentence s) {
+        boolean predicateSet = false;
+        HashMap<Integer,List<Label>> predicateCandidate = new HashMap<Integer,List<Label>>();
         for (int i = 1, size = s.size(); i < size; ++i) {
             Integer label = classifyInstance(s, i);
+            List<Label> probs = classifyAllProbs(s, i);
+            if (probs != null)
+                predicateCandidate.put(i,probs);
             if (label.equals(POSITIVE)) {
                 s.makePredicate(i);
+                predicateSet = true;
             }
         }
+        if (!predicateSet && predicateCandidate.size() > 0)
+        {
+            
+            double maxConf = Double.MIN_VALUE;
+            int maxIndex = -1;
+            for (int i : predicateCandidate.keySet())
+            {
+                List<Label> posLabel = predicateCandidate.get(i).stream().filter(pred -> pred.getLabel().equals( POSITIVE)).collect(toList());
+                System.out.println("SIZE : "+posLabel.size()+" "+posLabel);
+                if (posLabel.get(0).getProb() > maxConf)
+                {
+                    maxIndex = i;
+                    maxConf = posLabel.get(0).getProb();
+                }
+            }
+            s.makePredicate(maxIndex);
+            
+            predicateSet = true;
+        }
+        
+        if (!predicateSet)
+            System.out.println("PREDICATE IS STILL NOT SET");
     }
 
     private Integer classifyInstance(Sentence s, int i) {
@@ -106,7 +140,33 @@ public class PredicateIdentifier extends AbstractStep {
         if (Parse.parseOptions.domainAdaptation) {
 
         }
+        
         return m.classify(indices);
+    }
+    
+    //s.louvan
+    private List<Label> classifyAllProbs(Sentence s, int i)
+    {
+        String POSPrefix = null;
+        String POS = s.get(i).getPOS();
+        for (String prefix : featureSet.POSPrefixes) {
+            if (POS.startsWith(prefix)) {
+                POSPrefix = prefix;
+                break;
+            }
+        }
+        if (POSPrefix == null) {
+            return null;
+        }
+        Model m = models.get(POSPrefix);
+        Collection<Integer> indices = new TreeSet<Integer>();
+        Integer offset = 0;
+        for (Feature f : featureSet.get(POSPrefix)) {
+            f.addFeatures(s, indices, i, -1, offset, true);
+            offset += f.size(true);
+        }
+
+        return m.classifyProb(indices);
     }
 
     @Override

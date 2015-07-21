@@ -183,6 +183,7 @@ public class SRLToAligner {
             frames.get(i).setEnabler("");
             frames.get(i).setUnderGoer("");
             frames.get(i).setResult("");
+            frames.get(i).setUnderSpecified("");
             String[] tokenized = frames.get(i).getTokenizedText();
             // get the corresponding sentence
             Sentence correspondingSent = getCorrespondingSentence(tokenized, sentences);

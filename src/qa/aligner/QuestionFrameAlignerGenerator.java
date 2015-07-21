@@ -38,13 +38,13 @@ public class QuestionFrameAlignerGenerator {
         new SRLWrapper().doPredict("/tmp/question.parser", "/tmp/questionFramePredicted.parser", "/tmp/model", 1, autoPi, false);
 
         new SRLToAligner().generateTsvForAlignerMergeVersion(questionFrameFileName, "/tmp/questionFramePredicted.parser", questionFramePredictedFileName, true, true, false);
-        //new SRLToAligner().generateTsvForAlignerMergeVersion(processFileName, processPredictedFile, answerFramePredicted, false, false, true);
+        new SRLToAligner().generateTsvForAlignerMergeVersion(processFileName, processPredictedFile, answerFramePredicted, false, false, true);
     }
 
     public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         new QuestionFrameAlignerGenerator().generatePredictedQuestionFrame("./data/process_frame_june.tsv", "./data/question_frame_23_june.tsv", 
-                                                                           "./data/question_frame_srl_manual_trigger.tsv", 
-                                                                           "./data/all_predicted_manual.srl","./data/answer_frame_srl_manual_trigger.tsv", 1, false, false);
+                                                                           "./data/q_frame_combined_autoPi.tsv", 
+                                                                           "./data/a_frame_combined_autoPi.srl","./data/a_frame_combined_autoPi.tsv", 1, true, false);
         //new SRLToAligner().generateTsvForAlignerMergeVersion("./data/question_frame_23_june.tsv", "/tmp/questionFramePredicted.parser", "./data/question_frame_srl_manual.tsv", true, true, false);
         //new SRLToAligner().generateTsvForAlignerMergeVersion("./data/process_frame.tsv", "./data/all_predicted.srl", "./data/answer_frame_srl.tsv", false, false, true);
 
