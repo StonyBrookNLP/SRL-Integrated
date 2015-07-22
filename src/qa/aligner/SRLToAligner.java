@@ -226,16 +226,16 @@ public class SRLToAligner {
      sasasas
     
      */
-    public void generateQuestionAnswerFrameWithScore(String goldFrame, String parserPrediction, String predictionFrame, boolean isQuestionFrame,
+    public void generateQuestionAnswerFrameWithScore(String goldProcessFrame, String srlPredictionWScore, String predictionFrameWScore, boolean isQuestionFrame,
             boolean strictMode, boolean blacklistMode) throws IOException, FileNotFoundException, ClassNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor(goldFrame);
+        ProcessFrameProcessor proc = new ProcessFrameProcessor(goldProcessFrame);
         if (isQuestionFrame) {
             proc.setQuestionFrame(true);
         }
         proc.loadProcessData();
         ArrayList<ProcessFrame> frames = proc.getProcArr();
 
-        AllCoNLL09ReaderWScore reader = new AllCoNLL09ReaderWScore(new File(parserPrediction));
+        AllCoNLL09ReaderWScore reader = new AllCoNLL09ReaderWScore(new File(srlPredictionWScore));
         ArrayList<Sentence> sentences = new ArrayList<Sentence>(reader.readAll());
         if (strictMode) {
             if (frames.size() != sentences.size()) {
@@ -286,7 +286,7 @@ public class SRLToAligner {
 
             }
         }
-        ProcessFrameUtil.dumpFramesToFileWScore(predictedFrames, predictionFrame);
+        ProcessFrameUtil.dumpFramesToFileWScore(predictedFrames, predictionFrameWScore);
     }
 
     private String getRoleValues(ArrayList<Integer> arr, Sentence sentence) {
