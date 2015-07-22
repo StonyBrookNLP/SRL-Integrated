@@ -93,7 +93,7 @@ public class PredicateIdentifier extends AbstractStep {
                 predicateSet = true;
             }
         }
-        if (!predicateSet && predicateCandidate.size() > 0)
+        /*if (!predicateSet && predicateCandidate.size() > 0)
         {
             
             double maxConf = Double.MIN_VALUE;
@@ -114,7 +114,7 @@ public class PredicateIdentifier extends AbstractStep {
         }
         
         if (!predicateSet)
-            System.out.println("PREDICATE IS STILL NOT SET");
+            System.out.println("PREDICATE IS STILL NOT SET");*/
     }
 
     private Integer classifyInstance(Sentence s, int i) {

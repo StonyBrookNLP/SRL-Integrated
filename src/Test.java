@@ -21,7 +21,12 @@ public class Test {
        /* String [] arr = {"A0", "A2", "A1"};
         Arrays.sort(arr);
         System.out.println(Arrays.toString(arr));*/
-        FileUtil.fromConll2009ToClearParserFormat("./data/gs.txt", "./data/gs_converted.txt");
-        FileUtil.fromConll2009ToClearParserFormat("./data/srl.txt", "./data/srl_converted.txt");
+       // FileUtil.fromConll2009ToClearParserFormat("./data/gs.txt", "./data/gs_converted.txt");
+        //FileUtil.fromConll2009ToClearParserFormat("./data/srl.txt", "./data/srl_converted.txt");
+        //String [] ar;
+        //System.out.println(ar);
+        
+         System.out.printf("\n%s %10s %10s\n", "P", "R", "F1");
+         System.out.printf("\n%.3f %10.3f %10.3f\n", 0.4573859874, 0.23897537498, 0.23892034);
     }
 }

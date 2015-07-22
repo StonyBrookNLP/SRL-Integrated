@@ -15,7 +15,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import qa.util.FileUtil;
+import se.lth.cs.srl.corpus.Sentence;
+import se.lth.cs.srl.corpus.Word;
+import se.lth.cs.srl.io.AllCoNLL09Reader;
 
 /**
  *
@@ -51,7 +55,7 @@ public class SRLEvaluate {
             new File("gs_temp.txt").renameTo(new File("gs.txt"));
             new File("srl_temp.txt").renameTo(new File("srl.txt"));
         }
-        
+
         // create runtime to execute external command
         String pythonScriptPath = "./script/evaluate.py";
         String[] cmd = new String[4];
@@ -70,5 +74,49 @@ public class SRLEvaluate {
             System.out.println(line);
         }
         StdUtil.printError(pr);
+    }
+
+    public void evaluate(String gsFileName, String srlFileName) {
+        AllCoNLL09Reader gsReader = new AllCoNLL09Reader(new File(gsFileName));
+        AllCoNLL09Reader srlReader = new AllCoNLL09Reader(new File(srlFileName));
+
+        List<Sentence> gsSentences = gsReader.readAll();
+        List<Sentence> srlSentences = srlReader.readAll();
+        double totalCorrect = 0;
+        double totalLabelGS = 0;
+        double totalLabelSRL = 0;
+        for (int i = 0; i < gsSentences.size(); i++) {
+            Sentence gsSentence = gsSentences.get(i);
+            Sentence srlSentence = srlSentences.get(i);
+
+            for (int j = 1; j < gsSentence.size(); j++) {
+                Word currentGSWord = gsSentence.get(j);
+                Word currentSRLWord = srlSentence.get(j);
+                ArrayList<String> gsLabels = gsSentence.getUniqueLabel(currentGSWord);
+                ArrayList<String> srlLabels = srlSentence.getUniqueLabel(currentSRLWord);
+                totalLabelGS += gsLabels.size();
+                totalLabelSRL += srlLabels.size();
+                for (int k = 0; k < srlLabels.size(); k++) {
+                    if (gsLabels.contains(srlLabels.get(k))) {
+                        totalCorrect++;
+                    }
+                }
+
+            }
+        }
+
+        double precision = totalCorrect/totalLabelSRL;
+        double recall = totalCorrect/totalLabelGS;
+        double f1 = (2 * precision * recall) / (precision + recall);
+        System.out.printf("\n%s %10s %10s\n", "P", "R", "F1");
+        System.out.printf("\n%.4f %10.4f %10.4f\n", precision, recall, f1);
+
+        gsReader.close();
+        srlReader.close();
+    }
+    
+    public static void main(String[] args)
+    {
+        new SRLEvaluate().evaluate("./data/gs_test.txt", "./data/srl_test.txt");
     }
 }

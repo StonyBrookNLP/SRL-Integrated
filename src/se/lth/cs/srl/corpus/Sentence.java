@@ -282,6 +282,22 @@ public class Sentence extends ArrayList<Word> {
         return ret;
     }
 
+    // s.louvan
+    public ArrayList<String> getUniqueLabel(Word w)
+    {
+        ArrayList<String> labels = new ArrayList<String>();
+        for (int i = 0; i < predicates.size(); i++)
+        {
+            Predicate currentPredicate = predicates.get(i);
+            String argLabel = currentPredicate.getArgumentTag(w);
+            if (!labels.contains(argLabel))
+                labels.add(argLabel);
+            if (currentPredicate.getIdx() == w.getIdx() && !labels.contains("T"))
+                labels.add("T");
+        }
+        
+        return labels;
+    }
     public static Sentence newSRLOnlySentence(String[] lines) {
         Sentence ret = new Sentence();
         Word nextWord;

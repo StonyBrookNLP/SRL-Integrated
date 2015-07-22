@@ -43,8 +43,8 @@ public class QuestionFrameAlignerGenerator {
 
     public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         new QuestionFrameAlignerGenerator().generatePredictedQuestionFrame("./data/process_frame_june.tsv", "./data/question_frame_23_june.tsv", 
-                                                                           "./data/q_frame_combined_autoPi.tsv", 
-                                                                           "./data/a_frame_combined_autoPi.srl","./data/a_frame_combined_autoPi.tsv", 1, true, false);
+                                                                           "./data/q_frame_combined_manual_2.tsv", 
+                                                                           "./data/a_frame_combined_manual.srl","./data/a_frame_combined_manual_2.tsv", 1, false, false);
         //new SRLToAligner().generateTsvForAlignerMergeVersion("./data/question_frame_23_june.tsv", "/tmp/questionFramePredicted.parser", "./data/question_frame_srl_manual.tsv", true, true, false);
         //new SRLToAligner().generateTsvForAlignerMergeVersion("./data/process_frame.tsv", "./data/all_predicted.srl", "./data/answer_frame_srl.tsv", false, false, true);
 
