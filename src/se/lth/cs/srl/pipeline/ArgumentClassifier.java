@@ -48,21 +48,21 @@ public class ArgumentClassifier extends ArgumentStep {
                 List<Label> labelProbs = super.classifyAllProbs(pred, arg);
                 
                 String labelName = argLabels.get(label);
-                HashMap<String, Double> labelConfPair = new HashMap<String, Double>();
+                HashMap<String, Double> possibleLabelConfPair = new HashMap<String, Double>();
                 for (Label labelProb : labelProbs) {
-                    labelConfPair.put(argLabels.get(labelProb.getLabel()), labelProb.getProb());
+                    possibleLabelConfPair.put(argLabels.get(labelProb.getLabel()), labelProb.getProb());
                 }
-                HashMap<String, ArrayList<WordProbsPair>> argConfPair = s.argProbs;
-                if (argConfPair.get(labelName) == null) {
+                HashMap<String, ArrayList<WordProbsPair>> allLabelConfPair = s.labelProbs;
+                if (allLabelConfPair.get(labelName) == null) {
                     ArrayList<WordProbsPair> wProbPair = new ArrayList<WordProbsPair>();
-                    wProbPair.add(new WordProbsPair(arg, labelConfPair));
-                    argConfPair.put(labelName, wProbPair);
+                    wProbPair.add(new WordProbsPair(arg, possibleLabelConfPair));
+                    allLabelConfPair.put(labelName, wProbPair);
                 }
                 else
                 {
-                    ArrayList<WordProbsPair> wProbPair = argConfPair.get(labelName);
-                    wProbPair.add(new WordProbsPair(arg, labelConfPair));
-                    argConfPair.put(labelName, wProbPair);
+                    ArrayList<WordProbsPair> wProbPair = allLabelConfPair.get(labelName);
+                    wProbPair.add(new WordProbsPair(arg, possibleLabelConfPair));
+                    allLabelConfPair.put(labelName, wProbPair);
                 }
             }
         }

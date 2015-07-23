@@ -1,5 +1,6 @@
 package se.lth.cs.srl.corpus;
 
+import Util.GlobalV;
 import is2.data.SentenceData09;
 import is2.io.CONLLReader09;
 
@@ -10,6 +11,9 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import qa.ProcessFrame;
+import se.lth.cs.srl.Parse;
+import se.lth.cs.srl.options.Options;
+import se.lth.cs.srl.pipeline.AbstractStep;
 
 public class Sentence extends ArrayList<Word> {
 
@@ -18,13 +22,14 @@ public class Sentence extends ArrayList<Word> {
     private static final long serialVersionUID = 10;
 
     private List<Predicate> predicates;
-    public HashMap<String, ArrayList<WordProbsPair>> argProbs;
-
+    public HashMap<String, ArrayList<WordProbsPair>> labelProbs;
+    public HashMap<String, ArrayList<WordProbsPair>> triggerProbs;
+    
     private Sentence() {
         Word BOS = new Word(this);
         super.add(BOS); //Add the root token
         predicates = new ArrayList<Predicate>();
-        argProbs = new HashMap<String, ArrayList<WordProbsPair>>();
+        labelProbs = new HashMap<String, ArrayList<WordProbsPair>>();
     }
 
     public Sentence(SentenceData09 data, boolean skipTree) {
@@ -88,6 +93,7 @@ public class Sentence extends ArrayList<Word> {
     public void buildSemanticTreeWScore() {
         for (int i = 0; i < predicates.size(); ++i) {
             Predicate pred = predicates.get(i);
+           
             for (int j = 1; j < super.size(); ++j) {
                 Word curWord = get(j);
                 String arg = curWord.getArg(i);
@@ -96,7 +102,7 @@ public class Sentence extends ArrayList<Word> {
                     System.out.println(arg);
                     String scoresStr[] = arg.split(":")[1].split(",");
                     pred.addArgMap(curWord, label); // just take the first one, change arg
-                    if (argProbs.get(label) == null)
+                    if (labelProbs.get(label) == null)
                     {
                         ArrayList<WordProbsPair> arr = new ArrayList<WordProbsPair>();
                         HashMap<String,Double> scores = new HashMap<String,Double>();
@@ -104,19 +110,41 @@ public class Sentence extends ArrayList<Word> {
                         scores.put("A1", Double.parseDouble(scoresStr[1]));
                         scores.put("A2", Double.parseDouble(scoresStr[2]));
                         arr.add(new WordProbsPair(curWord, scores));
-                        argProbs.put(label, arr);
+                        labelProbs.put(label, arr);
                     }
                     else
                     {
-                        ArrayList<WordProbsPair> arr = argProbs.get(label);
+                        ArrayList<WordProbsPair> arr = labelProbs.get(label);
                         HashMap<String,Double> scores = new HashMap<String,Double>();
                         scores.put("A0", Double.parseDouble(scoresStr[0]));
                         scores.put("A1", Double.parseDouble(scoresStr[1]));
                         scores.put("A2", Double.parseDouble(scoresStr[2]));
                         arr.add(new WordProbsPair(curWord, scores));
-                        argProbs.put(label, arr);
+                        labelProbs.put(label, arr);
                     }
                 }
+            }
+        }
+        for (int i = 0; i < predicates.size(); ++i)
+        {
+            Predicate pred = predicates.get(i);
+            if (labelProbs.get(GlobalV.T) == null)
+            {
+                ArrayList<WordProbsPair> arr = new ArrayList<WordProbsPair>();
+                HashMap<String,Double> scores = new HashMap<String,Double>();
+                scores.put("T", pred.triggerScore);
+                scores.put("NO_T", pred.noTriggerScore);
+                arr.add(new WordProbsPair(pred, scores));
+                labelProbs.put(GlobalV.T, arr);
+            }
+            else
+            {
+                ArrayList<WordProbsPair> arr = labelProbs.get(GlobalV.T);
+                HashMap<String,Double> scores = new HashMap<String,Double>();
+                scores.put("T", pred.triggerScore);
+                scores.put("NO_T", pred.noTriggerScore);
+                arr.add(new WordProbsPair(pred, scores));
+                labelProbs.put(GlobalV.T, arr);
             }
         }
         for (Word w : this) //Free this memory as we no longer need this string array
@@ -157,6 +185,22 @@ public class Sentence extends ArrayList<Word> {
             {
                 ret.append("\t_\t_");
             }
+            else
+            {
+                if (!Parse.parseOptions.skipPI)
+                {
+                    ArrayList<WordProbsPair> wpPair = labelProbs.get(GlobalV.T);
+                    WordProbsPair wp = wpPair.stream().filter(node -> node.getWord().getIdx() == w.getIdx()).collect(Collectors.toList()).get(0);
+                    StringBuilder scores = new StringBuilder();
+                    scores.append(wp.getScore(AbstractStep.POSITIVE.toString())).append(",");
+                    scores.append(wp.getScore(AbstractStep.NEGATIVE.toString()));
+                    ret.append(":").append(scores).append("\t");
+                }
+                else
+                {
+                    ret.append(":").append("1.0,0.0").append("\t");
+                }
+            }
             for (int j = 0; j < predicates.size(); ++j) {
                 ret.append("\t");
                 Predicate pred = predicates.get(j);
@@ -164,12 +208,12 @@ public class Sentence extends ArrayList<Word> {
                 if (pred.getArgumentTag(w) != null) {
                     String label = pred.getArgumentTag(w);
                     //A0:[A0:0.5;A1:0.2,A2:0.3]
-                    ArrayList<WordProbsPair> wpPair = argProbs.get(label);
+                    ArrayList<WordProbsPair> wpPair = labelProbs.get(label);
                     WordProbsPair wp = wpPair.stream().filter(node -> node.getWord().getIdx() == w.getIdx()).collect(Collectors.toList()).get(0);
                     StringBuilder scores = new StringBuilder();
-                    scores.append(wp.getScore("A0")).append(",");
-                    scores.append(wp.getScore("A1")).append(",");
-                    scores.append(wp.getScore("A2"));
+                    scores.append(wp.getScore(GlobalV.A0)).append(",");
+                    scores.append(wp.getScore(GlobalV.A1)).append(",");
+                    scores.append(wp.getScore(GlobalV.A2));
                     // get the scores 
                     ret.append(pred.getArgumentTag(w)).append(":").append(scores);
                 } else {
@@ -269,7 +313,7 @@ public class Sentence extends ArrayList<Word> {
             //System.out.println(line);
             String[] cols = WHITESPACE_PATTERN.split(line);
             if (cols[12].equals("Y")) {
-                Predicate pred = new Predicate(cols, ret, ix++);
+                Predicate pred = new Predicate(cols, ret, ix++,true);
                 ret.addPredicate(pred);
                 nextWord = pred;
             } else {

@@ -6,7 +6,7 @@
 package qa.distantsupervision;
 
 import Util.FunctionWords;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.StringUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,10 +34,10 @@ public class QueryPatternGenerator {
                 processName = processName.replaceAll("\\s+", "");
                 // mkdir 
                 if (cnt % 10 == 0) {
-                    FileUtil.mkDir(GlobalVariable.PROJECT_DIR + "/data/queries" + cnt + "/");
+                    FileUtil.mkDir(GlobalV.PROJECT_DIR + "/data/queries" + cnt + "/");
                     currentDirCnt = cnt;
                 }
-                constructQueryWords(fields, GlobalVariable.PROJECT_DIR + "/data/queries" + currentDirCnt + "/" + processName);
+                constructQueryWords(fields, GlobalV.PROJECT_DIR + "/data/queries" + currentDirCnt + "/" + processName);
                 cnt++;
             }
         }
@@ -148,6 +148,6 @@ public class QueryPatternGenerator {
 
     public static void main(String[] args) throws FileNotFoundException {
         QueryPatternGenerator gen = new QueryPatternGenerator();
-        gen.generateQueryPattern(GlobalVariable.PROJECT_DIR + "/data/most_frequent_7_june.tsv");
+        gen.generateQueryPattern(GlobalV.PROJECT_DIR + "/data/most_frequent_7_june.tsv");
     }
 }

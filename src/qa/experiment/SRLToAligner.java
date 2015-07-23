@@ -6,7 +6,7 @@
 package qa.experiment;
 
 import Util.ArrUtil;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.ProcessFrameUtil;
 import clear.dep.DepTree;
 import clear.reader.SRLReader;
@@ -271,7 +271,7 @@ public class SRLToAligner {
                     for (int j = 0; j < predicates.size(); j++) {
                         Predicate currentPred = predicates.get(j);
                         HashMap<String, ArrayList<RoleSpan>> roleRoleSpanPair = new HashMap<String, ArrayList<RoleSpan>>();
-                        for (String roleType : GlobalVariable.argumentLabels) {
+                        for (String roleType : GlobalV.labels) {
                             ArrayList<RoleSpan> span = getRoleSpan(correspondingSent, currentPred, roleType);
                             if (span != null) {
                                 roleRoleSpanPair.put(roleType, span);
@@ -342,10 +342,10 @@ public class SRLToAligner {
                 for (int j = 0; j < currentSpan.size(); j++) {
                     textSpan.append(currentSpan.get(j).getForm() + " ");
                     int currentWordIdx = currentSpan.get(j).getIdx();
-                    ArrayList<WordProbsPair> wProbsArr = correspondingSent.argProbs.get(roleType);
+                    ArrayList<WordProbsPair> wProbsArr = correspondingSent.labelProbs.get(roleType);
                     WordProbsPair collect = wProbsArr.stream().filter(e -> e.getWord().getIdx() == currentWordIdx).collect(Collectors.toList()).get(0);
                     for (int k = 0; k < scores.length; k++) {
-                        scores[k] *= collect.getScore(k);
+                        scores[k] *= collect.getArgumentScore(k);
                     }
                 }
                 spans.add(new RoleSpan(textSpan.toString().trim(), scores, roleType));
@@ -362,10 +362,10 @@ public class SRLToAligner {
             for (int j = 0; j < currentSpan.size(); j++) {
                 textSpan.append(currentSpan.get(j).getForm() + " ");
                 int currentWordIdx = currentSpan.get(j).getIdx();
-                ArrayList<WordProbsPair> wProbsArr = correspondingSent.argProbs.get(roleType);
+                ArrayList<WordProbsPair> wProbsArr = correspondingSent.labelProbs.get(roleType);
                 WordProbsPair collect = wProbsArr.stream().filter(e -> e.getWord().getIdx() == currentWordIdx).collect(Collectors.toList()).get(0);
                 for (int k = 0; k < scores.length; k++) {
-                    scores[k] *= collect.getScore(k);
+                    scores[k] *= collect.getArgumentScore(k);
                 }
             }
 
@@ -383,7 +383,7 @@ public class SRLToAligner {
         res.setTokenizedText(frame.getTokenizedText());
         res.setRawText(frame.getRawText());
 
-        for (String argLabel : GlobalVariable.argumentLabels) {
+        for (String argLabel : GlobalV.labels) {
             if (roleRoleSpanPair.get(argLabel) != null) {
                 ArrayList<RoleSpan> spans = roleRoleSpanPair.get(argLabel);
                 RoleSpan maxSpan = spans.stream().max(comp).get();

@@ -7,7 +7,7 @@ package qa.aligner;
 
 import qa.experiment.*;
 import Util.ArrUtil;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.ProcessFrameUtil;
 import clear.dep.DepTree;
 import clear.reader.SRLReader;
@@ -221,12 +221,9 @@ public class SRLToAligner {
         ProcessFrameUtil.dumpFramesToFile(frames, outTsvFile);
     }
 
-    /*
-    
-     sasasas
-    
-     */
-    public void generateQuestionAnswerFrameWithScore(String goldProcessFrame, String srlPredictionWScore, String predictionFrameWScore, boolean isQuestionFrame,
+
+    public void generateQuestionAnswerFrameWithScore(String goldProcessFrame, String srlPredictionWScore, 
+            String predictionFrameWScore, boolean isQuestionFrame,
             boolean strictMode, boolean blacklistMode) throws IOException, FileNotFoundException, ClassNotFoundException {
         ProcessFrameProcessor proc = new ProcessFrameProcessor(goldProcessFrame);
         if (isQuestionFrame) {
@@ -273,14 +270,15 @@ public class SRLToAligner {
                     for (int j = 0; j < predicates.size(); j++) {
                         Predicate currentPred = predicates.get(j);
                         HashMap<String, ArrayList<RoleSpan>> roleRoleSpanPair = new HashMap<String, ArrayList<RoleSpan>>();
-                        for (String roleType : GlobalVariable.argumentLabels) {
+                        for (String roleType : GlobalV.labels) {
                             ArrayList<RoleSpan> span = getRoleSpan(correspondingSent, currentPred, roleType);
                             if (span != null) {
                                 roleRoleSpanPair.put(roleType, span);
                             }
                         }
-                        ProcessFrame predictedFrame = constructProcessFrame(frames.get(i), roleRoleSpanPair);
-                        predictedFrames.add(predictedFrame);
+                        // Should be an array of process frames here because CN wants combination of roles and its trigger
+                        List<ProcessFrame> predictedFrame = constructProcessFrame(frames.get(i), roleRoleSpanPair);
+                        predictedFrames.addAll(predictedFrame);
                     }
                 }
 
@@ -319,8 +317,8 @@ public class SRLToAligner {
         System.out.println("Getting rolespan for " + roleType + " , Predicate : " + pred.getForm());
         ArrayList<RoleSpan> spans = new ArrayList<RoleSpan>();
         ArrayList<Integer> roleIdx = pred.getRoleFillersIdxs(roleType);
-        if (roleType.equalsIgnoreCase("T")) {
-            spans.add(new RoleSpan(pred.getForm(), new double[]{1.0, 0.0}, roleType));
+        if (roleType.equalsIgnoreCase(GlobalV.T)) {
+            spans.add(new RoleSpan(pred.getForm(), new double[]{pred.triggerScore, pred.noTriggerScore}, roleType));
             return spans;
         }
         if (roleIdx.size() == 0) {
@@ -344,10 +342,10 @@ public class SRLToAligner {
                 for (int j = 0; j < currentSpan.size(); j++) {
                     textSpan.append(currentSpan.get(j).getForm() + " ");
                     int currentWordIdx = currentSpan.get(j).getIdx();
-                    ArrayList<WordProbsPair> wProbsArr = correspondingSent.argProbs.get(roleType);
+                    ArrayList<WordProbsPair> wProbsArr = correspondingSent.labelProbs.get(roleType);
                     WordProbsPair collect = wProbsArr.stream().filter(e -> e.getWord().getIdx() == currentWordIdx).collect(Collectors.toList()).get(0);
                     for (int k = 0; k < scores.length; k++) {
-                        scores[k] *= collect.getScore(k);
+                        scores[k] *= collect.getArgumentScore(k);
                     }
                 }
                 spans.add(new RoleSpan(textSpan.toString().trim(), scores, roleType));
@@ -359,15 +357,15 @@ public class SRLToAligner {
 
         if (currentSpan.size() > 0) {
             StringBuilder textSpan = new StringBuilder();
-            double[] scores = new double[3];
+            double[] scores = new double[GlobalV.NB_ARG];
             Arrays.fill(scores, 1);
             for (int j = 0; j < currentSpan.size(); j++) {
                 textSpan.append(currentSpan.get(j).getForm() + " ");
                 int currentWordIdx = currentSpan.get(j).getIdx();
-                ArrayList<WordProbsPair> wProbsArr = correspondingSent.argProbs.get(roleType);
+                ArrayList<WordProbsPair> wProbsArr = correspondingSent.labelProbs.get(roleType);
                 WordProbsPair collect = wProbsArr.stream().filter(e -> e.getWord().getIdx() == currentWordIdx).collect(Collectors.toList()).get(0);
                 for (int k = 0; k < scores.length; k++) {
-                    scores[k] *= collect.getScore(k);
+                    scores[k] *= collect.getArgumentScore(k);
                 }
             }
 
@@ -378,35 +376,91 @@ public class SRLToAligner {
         return spans;
     }
 
-    private ProcessFrame constructProcessFrame(ProcessFrame frame, HashMap<String, ArrayList<RoleSpan>> roleRoleSpanPair) {
-        final Comparator<RoleSpan> comp = (r1, r2) -> Double.compare(r1.getRoleScore(), r2.getRoleScore());
-        ProcessFrame res = new ProcessFrame();
-        res.setProcessName(frame.getProcessName());
-        res.setTokenizedText(frame.getTokenizedText());
-        res.setRawText(frame.getRawText());
-
-        for (String argLabel : GlobalVariable.argumentLabels) {
-            if (roleRoleSpanPair.get(argLabel) != null) {
-                ArrayList<RoleSpan> spans = roleRoleSpanPair.get(argLabel);
-                RoleSpan maxSpan = spans.stream().max(comp).get();
-                if (argLabel.equalsIgnoreCase("A0")) {
-                    res.setUnderGoer(maxSpan.getTextSpan());
-                    res.setScores(0, maxSpan.getScores());
-                }
-                if (argLabel.equalsIgnoreCase("A1")) {
-                    res.setEnabler(maxSpan.getTextSpan());
-                    res.setScores(1, maxSpan.getScores());
-                }
-                if (argLabel.equalsIgnoreCase("T")) {
-                    res.setTrigger(maxSpan.getTextSpan());
-                    res.setScores(2, maxSpan.getScores());
-                }
-                if (argLabel.equalsIgnoreCase("A2")) {
-                    res.setResult(maxSpan.getTextSpan());
-                    res.setScores(3, maxSpan.getScores());
+    public  <T> List<List<T>> computeCombinations2(List<List<T>> lists) {
+        List<List<T>> combinations = Arrays.asList(Arrays.asList());
+        for (List<T> list : lists) {
+            List<List<T>> extraColumnCombinations = new ArrayList<>();
+            for (List<T> combination : combinations) {
+                for (T element : list) {
+                    List<T> newCombination = new ArrayList<>(combination);
+                    newCombination.add(element);
+                    extraColumnCombinations.add(newCombination);
                 }
             }
+            combinations = extraColumnCombinations;
         }
+        return combinations;
+    }
+   
+    // minimal satuArrayList<RoleSpan>();
+    private List<List<RoleSpan>> getRoleSpanCombination(HashMap<String, ArrayList<RoleSpan>> roleRoleSpanPair)
+    {
+        //List<List<RoleSpan>> combinations =   new ArrayList<ArrayList<RoleSpan>>();
+        List<List<RoleSpan>> temp = new ArrayList<List<RoleSpan>>();
+        
+        
+        if (roleRoleSpanPair.keySet().size() < 2)
+        {
+           List<List<RoleSpan>> res =new ArrayList<List<RoleSpan>>();
+           for (String roleGroup : roleRoleSpanPair.keySet())
+                res.add(roleRoleSpanPair.get(roleGroup));
+           return res;
+        }
+        
+        for (String roleGroup : roleRoleSpanPair.keySet())
+        {
+                temp.add(roleRoleSpanPair.get(roleGroup));
+        }
+        
+        List<List<RoleSpan>> combinations = computeCombinations2(temp);
+        return combinations;
+    }
+    
+    
+    private List<ProcessFrame> constructProcessFrame(ProcessFrame frame, HashMap<String, ArrayList<RoleSpan>> roleRoleSpanPair) {
+        final Comparator<RoleSpan> comp = (r1, r2) -> Double.compare(r1.getRoleScore(), r2.getRoleScore());
+        ArrayList<ProcessFrame> res = new ArrayList<ProcessFrame>();
+        List<List<RoleSpan>> roleSpanCombination = new ArrayList<List<RoleSpan>>();
+        
+        if (roleRoleSpanPair.keySet().size() == 0)
+            return res;
+        
+        roleSpanCombination = getRoleSpanCombination(roleRoleSpanPair);
+        for (int i = 0; i < roleSpanCombination.size(); i++)
+        {
+            List<RoleSpan> spans = roleSpanCombination.get(i);
+            ProcessFrame newFrame = new ProcessFrame();
+            newFrame.setProcessName(frame.getProcessName());
+            newFrame.setRawText(frame.getRawText());
+            newFrame.setTokenizedText(frame.getTokenizedText());
+            
+            for (int j = 0; j < spans.size(); j++)
+            {
+                if (spans.get(j).getRoleType().equals(GlobalV.A0))
+                {
+                    newFrame.setUnderGoer(spans.get(j).getTextSpan());
+                    newFrame.setScores(GlobalV.AO_IDX, spans.get(j).getScores());
+                }
+                if (spans.get(j).getRoleType().equals(GlobalV.A1))
+                {
+                    newFrame.setEnabler(spans.get(j).getTextSpan());
+                    newFrame.setScores(GlobalV.A1_IDX, spans.get(j).getScores());
+                }
+                if (spans.get(j).getRoleType().equals(GlobalV.T))
+                {
+                    newFrame.setTrigger(spans.get(j).getTextSpan());
+                    newFrame.setScores(GlobalV.T_IDX, spans.get(j).getScores());
+                }
+                if (spans.get(j).getRoleType().equals(GlobalV.A2))
+                {
+                    newFrame.setResult(spans.get(j).getTextSpan());
+                    newFrame.setScores(GlobalV.A2_IDX, spans.get(j).getScores());
+                }
+            }
+            res.add(newFrame);
+        }
+        
+        
         return res;
     }
 
@@ -420,7 +474,7 @@ public class SRLToAligner {
         //    public void generateQuestionAnswerFrameWithScore(String goldFrame, String parserPrediction, String predictionFrame, boolean isQuestionFrame,
         //    boolean strictMode, boolean blacklistMode) 
         // Test input : process_frame.tsv , SRL prediction w Score
-        srlTA.generateQuestionAnswerFrameWithScore("./data/process_frame_june.tsv", "./data/all_scores_per_process.srl", "./data/predictedWScore.tsv", false, false, true);
+        srlTA.generateQuestionAnswerFrameWithScore("./data/process_frame_june.tsv", "./data/allSrlWScore.srl", "./data/predictedWScore.tsv", false, false, true);
         //srlTA.generateQuestionAnswerFrameWithScore("./data/question_frame_23_june.tsv", "./data/questionFramePredicted.parser.scores", "./data/predictedQWScore.tsv", true, false, true);
     }
 }

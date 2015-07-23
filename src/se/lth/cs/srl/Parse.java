@@ -53,7 +53,6 @@ public class Parse {
                 System.out.println("Parsing sentence " + senCount);
             }
             srl.parseSentence(s);
-            HashMap<String, ArrayList<WordProbsPair>> argProb = s.argProbs;
             writer.write(s);
         }
         writer.close();

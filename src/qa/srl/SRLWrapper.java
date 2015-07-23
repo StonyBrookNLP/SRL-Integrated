@@ -7,7 +7,7 @@ package qa.srl;
 
 import Util.ClearParserUtil;
 import Util.Constant;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.MateParserUtil;
 import clear.engine.SRLPredict;
 import clear.engine.SRLTrain;
@@ -79,10 +79,10 @@ public class SRLWrapper {
                 }
                 System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, trainArgs, 0, MateParserUtil.TRAIN_ARGS.length);
                 trainArgs[MateParserUtil.TRAIN_ARGS.length] = "-fdir";
-                trainArgs[MateParserUtil.TRAIN_ARGS.length + 1] = GlobalVariable.PROJECT_DIR.concat("/featuresets/eng-v");
+                trainArgs[MateParserUtil.TRAIN_ARGS.length + 1] = GlobalV.PROJECT_DIR.concat("/featuresets/eng-v");
                 if (domainAdaptation) {
                     trainArgs[MateParserUtil.TRAIN_ARGS.length + 2] = "-da";
-                    trainArgs[MateParserUtil.TRAIN_ARGS.length + 3] = GlobalVariable.sourceIdxStart + "";
+                    trainArgs[MateParserUtil.TRAIN_ARGS.length + 3] = GlobalV.sourceIdxStart + "";
                 }
             } else if (triggerType == Constant.TRIGGER_NN_ONLY) {
                 //MateParserUtil.TRAIN_ARGS[0] = "eng-n";
@@ -94,10 +94,10 @@ public class SRLWrapper {
                 }
                 System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, trainArgs, 0, MateParserUtil.TRAIN_ARGS.length);
                 trainArgs[MateParserUtil.TRAIN_ARGS.length] = "-fdir";
-                trainArgs[MateParserUtil.TRAIN_ARGS.length + 1] = GlobalVariable.PROJECT_DIR.concat("/featuresets/eng-n");
+                trainArgs[MateParserUtil.TRAIN_ARGS.length + 1] = GlobalV.PROJECT_DIR.concat("/featuresets/eng-n");
                 if (domainAdaptation) {
                     trainArgs[MateParserUtil.TRAIN_ARGS.length + 2] = "-da";
-                    trainArgs[MateParserUtil.TRAIN_ARGS.length + 3] = GlobalVariable.sourceIdxStart + "";
+                    trainArgs[MateParserUtil.TRAIN_ARGS.length + 3] = GlobalV.sourceIdxStart + "";
                 }
             }
             if (trainArgs == null) {
@@ -108,7 +108,7 @@ public class SRLWrapper {
                     params = new String[MateParserUtil.TRAIN_ARGS.length + 2];
                     System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, params, 0, MateParserUtil.TRAIN_ARGS.length);
                     params[params.length - 2] = "-da";
-                    params[params.length - 1] = GlobalVariable.sourceIdxStart + "";
+                    params[params.length - 1] = GlobalV.sourceIdxStart + "";
                     System.out.println(Arrays.toString(params));
                 }
                 try {

@@ -7,7 +7,7 @@ package qa.experiment;
 
 import Util.ClearParserUtil;
 import Util.Constant;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.ProcessFrameUtil;
 import Util.StdUtil;
 import Util.StringUtil;

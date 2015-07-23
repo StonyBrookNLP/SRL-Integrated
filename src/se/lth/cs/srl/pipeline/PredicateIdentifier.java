@@ -1,5 +1,6 @@
 package se.lth.cs.srl.pipeline;
 
+import Util.GlobalV;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import se.lth.cs.srl.Parse;
 import se.lth.cs.srl.corpus.Predicate;
 import se.lth.cs.srl.corpus.Sentence;
 import se.lth.cs.srl.corpus.Word;
+import se.lth.cs.srl.corpus.WordProbsPair;
 import se.lth.cs.srl.features.Feature;
 import se.lth.cs.srl.features.FeatureSet;
 import se.lth.cs.srl.ml.LearningProblem;
@@ -91,15 +93,35 @@ public class PredicateIdentifier extends AbstractStep {
             if (label.equals(POSITIVE)) {
                 s.makePredicate(i);
                 predicateSet = true;
+                
+                HashMap<String, Double> possibleLabelsConf = new HashMap<String, Double>();
+                for (Label currLabel : probs)
+                {
+                    possibleLabelsConf.put(currLabel.getLabel().toString(), currLabel.getProb());
+                }
+                HashMap<String, ArrayList<WordProbsPair>> allLabelConfPair = s.labelProbs;
+                if (allLabelConfPair.get(GlobalV.T) == null) {
+                    ArrayList<WordProbsPair> wProbPair = new ArrayList<WordProbsPair>();
+                    wProbPair.add(new WordProbsPair(s.get(i),possibleLabelsConf ));
+                    allLabelConfPair.put(GlobalV.T, wProbPair);
+                }
+                else
+                {
+                    ArrayList<WordProbsPair> wProbPair = allLabelConfPair.get(GlobalV.T);
+                    wProbPair.add(new WordProbsPair(s.get(i), possibleLabelsConf));
+                    allLabelConfPair.put(GlobalV.T, wProbPair);
+                }
             }
         }
-        /*if (!predicateSet && predicateCandidate.size() > 0)
+        if (!predicateSet && predicateCandidate.size() > 0)
         {
-            
+            System.out.println("FORCED");
             double maxConf = Double.MIN_VALUE;
             int maxIndex = -1;
+            Label maxLabel = null;
             for (int i : predicateCandidate.keySet())
             {
+                // Ga harus list ini harusnya
                 List<Label> posLabel = predicateCandidate.get(i).stream().filter(pred -> pred.getLabel().equals( POSITIVE)).collect(toList());
                 System.out.println("SIZE : "+posLabel.size()+" "+posLabel);
                 if (posLabel.get(0).getProb() > maxConf)
@@ -110,11 +132,23 @@ public class PredicateIdentifier extends AbstractStep {
             }
             s.makePredicate(maxIndex);
             
+            HashMap<String, Double> possibleLabelsConf = new HashMap<String, Double>();
+            for (Label currLabel : predicateCandidate.get(maxIndex))
+            {
+                possibleLabelsConf.put(currLabel.getLabel().toString(), currLabel.getProb());
+            }
+            HashMap<String, ArrayList<WordProbsPair>> allLabelConfPair = s.labelProbs;
+            
+            ArrayList<WordProbsPair> wProbPair = new ArrayList<WordProbsPair>();
+            wProbPair.add(new WordProbsPair(s.get(maxIndex),possibleLabelsConf));
+            allLabelConfPair.put(GlobalV.T, wProbPair);
+            
+            
             predicateSet = true;
         }
         
         if (!predicateSet)
-            System.out.println("PREDICATE IS STILL NOT SET");*/
+            System.out.println("PREDICATE IS STILL NOT SET");
     }
 
     private Integer classifyInstance(Sentence s, int i) {

@@ -327,6 +327,7 @@ public class ProcessFrame implements Serializable {
         strB.append(scores.get(3).size() == 0?"\t\t":StringUtils.join(scores.get(3), "\t")).append("\t");
 
         strB.append(underSpecified + "\t");
+        strB.append("\t\t\t");
         strB.append(rawText);
 
         return strB.toString();

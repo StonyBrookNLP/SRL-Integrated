@@ -5,7 +5,9 @@
  */
 package se.lth.cs.srl.corpus;
 
+import Util.GlobalV;
 import java.util.HashMap;
+import se.lth.cs.srl.pipeline.AbstractStep;
 
 /**
  *
@@ -38,17 +40,24 @@ public class WordProbsPair {
         this.labelConfidencePair = labelConfidencePair;
     }
     
-    public double getScore(int idx)
+    public double getArgumentScore(int idx)
     {
         if (idx == 0)
-            return labelConfidencePair.get("A0");
+            return labelConfidencePair.get(GlobalV.A0);
         else if (idx == 1)
-            return labelConfidencePair.get("A1");
-        else if (idx == 2)
-            return labelConfidencePair.get("A2");
+            return labelConfidencePair.get(GlobalV.A1);
         else
-            return labelConfidencePair.get("T");
+            return labelConfidencePair.get(GlobalV.A2);
+       
     }
+    
+    public double getTriggerScore(int idx)
+    {
+        if (idx == 0)
+            return labelConfidencePair.get(AbstractStep.POSITIVE+"");
+        return labelConfidencePair.get(AbstractStep.NEGATIVE.toString());
+    }
+    //public double getScore()
     public double getScore(String label)
     {
         if (labelConfidencePair.get(label) != null)

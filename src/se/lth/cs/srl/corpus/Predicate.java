@@ -9,7 +9,8 @@ import se.lth.cs.srl.Learn;
 
 public class Predicate extends Word {
 	private static final long serialVersionUID = 1L;
-	
+	public double triggerScore;
+        public double noTriggerScore;
 	private Map<Word,String> argmap;
 	private String sense; //This is PredLemmaSense in CoNLL2008
 
@@ -40,6 +41,22 @@ public class Predicate extends Word {
 			argmap=new HashMap<Word,String>();
 		}
 	}
+        
+        public Predicate(String[] CoNLL2009Columns,Sentence s,int idx, boolean wScore){
+		super(CoNLL2009Columns,s,idx);
+		if(CoNLL2009Columns.length>13)
+                {
+			this.sense=CoNLL2009Columns[13].split(":")[0];
+                        this.triggerScore = Double.parseDouble(CoNLL2009Columns[13].split(":")[1].split(",")[0]);
+                        this.noTriggerScore = Double.parseDouble(CoNLL2009Columns[13].split(":")[1].split(",")[1]);
+                }
+		if(Learn.learnOptions!=null && Learn.learnOptions.deterministicPipeline){
+			argmap=new TreeMap<Word,String>(mySentence.wordComparator);
+		} else {
+			argmap=new HashMap<Word,String>();
+		}
+	}
+
 	
 	public Map<Word, String> getArgMap() {
 		return argmap;

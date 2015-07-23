@@ -6,7 +6,7 @@
 package qa;
 
 import Util.ClearParserUtil;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.ProcessFrameUtil;
 import Util.StringUtil;
 import java.io.FileReader;
@@ -458,7 +458,7 @@ public class ProcessFrameProcessor {
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
+        ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalV.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
         proc.loadProcessData();
         //proc.toConLL2009Format(GlobalVariable.PROJECT_DIR + "/data/process_frame_june.conll09");
         //ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");

@@ -7,7 +7,7 @@ package qa.experiment;
 
 import Util.ClearParserUtil;
 import Util.Constant;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.ProcessFrameUtil;
 import Util.StdUtil;
 import Util.StringUtil;
@@ -169,7 +169,7 @@ public class SRLPerProcessModelCrossValidation {
             trainingFrames.addAll(new ArrayList<ProcessFrame>(selectedProcessFrame.subList(endIdx, selectedProcessFrame.size())));
             if (da)
             {
-                GlobalVariable.sourceIdxStart = trainingFrames.size();
+                GlobalV.sourceIdxStart = trainingFrames.size();
                 trainingFrames.addAll(inverseData);
             }
             String trainingFileName = outDirName + "/" + processName + ".train.perprocess.cv." + currentFold;
@@ -211,7 +211,7 @@ public class SRLPerProcessModelCrossValidation {
             }
         }
         doPredict();
-        GlobalVariable.sourceIdxStart = -1;
+        GlobalV.sourceIdxStart = -1;
     }
 
     /**

@@ -6,7 +6,7 @@
 package qa.distantsupervision;
 
 import Util.ArrUtil;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.ProcessFrameUtil;
 import Util.StringUtil;
 import java.io.File;
@@ -431,7 +431,7 @@ public class DistantSupervisionMostFrequent {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
 
-        File dir = new File(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015_copy");
+        File dir = new File(GlobalV.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015_copy");
         File[] files = dir.listFiles();
 
         for (int i = 0; i < files.length; i++) {

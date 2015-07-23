@@ -6,7 +6,7 @@
 package qa.distantsupervision;
 
 import Util.ArrUtil;
-import Util.GlobalVariable;
+import Util.GlobalV;
 import Util.ProcessFrameUtil;
 import com.google.common.collect.Lists;
 import java.io.FileNotFoundException;
@@ -459,8 +459,8 @@ public class PatternBasedAnnotator {
 
     public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException {
 
-        PatternBasedAnnotator annotator = new PatternBasedAnnotator(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes.tsv");
-        annotator.annotate(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
+        PatternBasedAnnotator annotator = new PatternBasedAnnotator(GlobalV.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes.tsv");
+        annotator.annotate(GlobalV.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
 
         //PatternBasedAnnotator annotator = new PatternBasedAnnotator(GlobalVariable.PROJECT_DIR + "/data/smallA0.tsv");
         //annotator.annotate(GlobalVariable.PROJECT_DIR + "/data/smallA0Annotated.tsv");
