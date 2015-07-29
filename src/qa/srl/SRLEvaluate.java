@@ -76,9 +76,25 @@ public class SRLEvaluate {
         StdUtil.printError(pr);
     }
 
-    public void evaluate(String gsFileName, String srlFileName) {
-        AllCoNLL09Reader gsReader = new AllCoNLL09Reader(new File(gsFileName));
-        AllCoNLL09Reader srlReader = new AllCoNLL09Reader(new File(srlFileName));
+    public void evaluateOverall(ArrayList<String> testFilePath,String testFilePattern, String predictFilePattern, int srlType) throws FileNotFoundException {
+        System.out.println("Evaluating");
+        PrintWriter gs_writer = new PrintWriter("gs.txt");
+        PrintWriter srl_writer = new PrintWriter("srl.txt");
+        for (int i = 0; i < testFilePath.size(); i++) {
+            String[] gsTxt = FileUtil.readLinesFromFile(testFilePath.get(i));
+            String[] srlTxt = FileUtil.readLinesFromFile(testFilePath.get(i).replace(testFilePattern, predictFilePattern));
+            if (gsTxt.length != srlTxt.length) {
+                System.out.println(testFilePath.get(i));
+                System.out.println("MISMATCH DUE TO PARSER ERROR");
+            } else {
+                gs_writer.print(StringUtil.toString(gsTxt));
+                srl_writer.print(StringUtil.toString(srlTxt));
+            }
+        }
+        gs_writer.close();
+        srl_writer.close();
+        AllCoNLL09Reader gsReader = new AllCoNLL09Reader(new File("gs.txt"));
+        AllCoNLL09Reader srlReader = new AllCoNLL09Reader(new File("srl.txt"));
 
         List<Sentence> gsSentences = gsReader.readAll();
         List<Sentence> srlSentences = srlReader.readAll();
@@ -115,8 +131,54 @@ public class SRLEvaluate {
         srlReader.close();
     }
     
+    public void evaluateOverall(String goldFile, String predictionFile)
+    {
+        AllCoNLL09Reader gsReader = new AllCoNLL09Reader(new File(goldFile));
+        AllCoNLL09Reader srlReader = new AllCoNLL09Reader(new File(predictionFile));
+
+        List<Sentence> gsSentences = gsReader.readAll();
+        List<Sentence> srlSentences = srlReader.readAll();
+        double totalCorrect = 0;
+        double totalLabelGS = 0;
+        double totalLabelSRL = 0;
+        for (int i = 0; i < gsSentences.size(); i++) {
+            Sentence gsSentence = gsSentences.get(i);
+            Sentence srlSentence = srlSentences.get(i);
+
+            for (int j = 1; j < gsSentence.size(); j++) {
+                Word currentGSWord = gsSentence.get(j);
+                Word currentSRLWord = srlSentence.get(j);
+                ArrayList<String> gsLabels = gsSentence.getUniqueLabel(currentGSWord);
+                ArrayList<String> srlLabels = srlSentence.getUniqueLabel(currentSRLWord);
+               
+                totalLabelGS += gsLabels.size();
+                totalLabelSRL += srlLabels.size();
+                for (int k = 0; k < srlLabels.size(); k++) {
+                    if (gsLabels.contains(srlLabels.get(k))) {
+                        totalCorrect++;
+                    }
+                }
+            }
+            double tempPrecision = totalCorrect/totalLabelSRL;
+            double tempRecall = totalCorrect/totalLabelGS;
+            double f1 = (2 * tempPrecision * tempRecall) / (tempPrecision + tempRecall);
+            //System.out.println("After sentence "+(i+1));
+            //System.out.printf("\n%s %10s %10s\n", "P", "R", "F1");
+            //System.out.printf("\n%.4f %10.4f %10.4f\n", tempPrecision, tempRecall, f1);
+        }
+
+        double precision = totalCorrect/totalLabelSRL;
+        double recall = totalCorrect/totalLabelGS;
+        double f1 = (2 * precision * recall) / (precision + recall);
+        System.out.printf("\n%s %10s %10s\n", "P", "R", "F1");
+        System.out.printf("\n%.4f %10.4f %10.4f\n", precision, recall, f1);
+
+        gsReader.close();
+        srlReader.close();
+    }
     public static void main(String[] args)
     {
-        new SRLEvaluate().evaluate("./data/gs_test.txt", "./data/srl_test.txt");
+        new SRLEvaluate().evaluateOverall("./data/gs.srl", "./data/srlPredict.srl");
+        //new SRLEvaluate().evaluateOverall("./data/gs_manual.txt", "./data/srl_manual.txt");
     }
 }

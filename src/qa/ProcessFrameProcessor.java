@@ -34,6 +34,7 @@ public class ProcessFrameProcessor {
 
     private String fileName;
     private StanfordLemmatizer slem = new StanfordLemmatizer();
+    private StanfordDepParser depParser = new StanfordDepParser();
     private ArrayList<ProcessFrame> procArr;
     private ArrayList<ProcessFrame> procArrA0;
     private ArrayList<ProcessFrame> procArrA1;
@@ -104,7 +105,7 @@ public class ProcessFrameProcessor {
             }
         }
         focusProcessOnRole();
-        System.out.println("END OF LOAD SENTENCES");
+        System.out.println("END OF LOAD SENTENCES "+procArr.size());
     }
 
     public void updateTrigger() {
@@ -175,7 +176,7 @@ public class ProcessFrameProcessor {
             List<String> tokenized = slem.tokenize(rawText);
             p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
             try {
-                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+                DependencyTree tree = depParser.parse(rawText);
                 String conLLStr = ClearParserUtil.toClearParserFormat(tree, p);
                 writer.println(conLLStr);
                 writer.println();
@@ -214,7 +215,7 @@ public class ProcessFrameProcessor {
             List<String> tokenized = slem.tokenize(rawText);
             p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
             try {
-                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+                DependencyTree tree = depParser.parse(rawText);
                 String conLLStr = ClearParserUtil.toCONLL2009Format(tree, p);
                 writer.println(conLLStr);
                 //writer.println();
@@ -253,7 +254,7 @@ public class ProcessFrameProcessor {
             List<String> tokenized = slem.tokenize(rawText);
             p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
             try {
-                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+                DependencyTree tree = depParser.parse(rawText);
 
                 String conLLStr = ClearParserUtil.toClearParserFormat(tree, p);
                 writer.println(conLLStr);
@@ -458,7 +459,7 @@ public class ProcessFrameProcessor {
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalV.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
+        ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalV.PROJECT_DIR + "/data/process_frame_24_july.tsv");
         proc.loadProcessData();
         //proc.toConLL2009Format(GlobalVariable.PROJECT_DIR + "/data/process_frame_june.conll09");
         //ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");

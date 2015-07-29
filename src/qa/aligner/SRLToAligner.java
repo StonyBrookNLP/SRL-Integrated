@@ -152,7 +152,7 @@ public class SRLToAligner {
          return null;*/
     }
 
-    public void generateTsvForAlignerMergeVersion(String sourceTsvFile, String clearparserPrediction, String outTsvFile, boolean isQuestionFrame, boolean strictMode, boolean blacklistMode) throws IOException, FileNotFoundException, ClassNotFoundException {
+    public void generateQuestionAnswerFrameWithoutScore(String sourceTsvFile, String clearparserPrediction, String outTsvFile, boolean isQuestionFrame, boolean strictMode, boolean blacklistMode) throws IOException, FileNotFoundException, ClassNotFoundException {
         ProcessFrameProcessor proc = new ProcessFrameProcessor(sourceTsvFile);
         if (isQuestionFrame) {
             proc.setQuestionFrame(true);

@@ -20,7 +20,6 @@ public class AllCoNLL09Reader extends AbstractCoNLL09Reader {
 			if(!str.trim().equals("")) {
 				senBuffer.append(str).append("\n");
 			} else {
-				//System.out.println(str.length());
 				sen=Sentence.newSentence((NEWLINE_PATTERN.split(senBuffer.toString())));
 				break;
 			}

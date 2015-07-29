@@ -47,7 +47,7 @@ public class StanfordTokenizer {
         this.pipeline = new StanfordCoreNLP(props);
     }
 
-    public List<String> tokenize(String documentText) {
+    public synchronized List<String> tokenize(String documentText) {
         List<String> tokens = new LinkedList<String>();
         // Create an empty Annotation just with the given text
         Annotation document = new Annotation(documentText);

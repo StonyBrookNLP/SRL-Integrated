@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import qa.ProcessFrame;
 import qa.ProcessFrameProcessor;
+import qa.StanfordDepParser;
 import qa.StanfordDepParserSingleton;
+import qa.StanfordTokenizer;
 import qa.StanfordTokenizerSingleton;
 import qa.dep.DependencyTree;
 
@@ -84,7 +86,7 @@ public class ProcessFrameUtil {
         writer.close();
     }
 
-    public static void toConll2009Format(ArrayList<ProcessFrame> processFrames, String mateParserFileName) throws FileNotFoundException, IOException {
+    public  static void toConll2009Format(ArrayList<ProcessFrame> processFrames, String mateParserFileName) throws FileNotFoundException, IOException {
         PrintWriter writer = new PrintWriter(mateParserFileName);
         System.out.println("Converting to  parser format, data size : " + processFrames.size() + " frames");
         int cnt = 0;
@@ -109,6 +111,7 @@ public class ProcessFrameUtil {
             p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
             try {
                 //System.out.println("DEP TREE");
+                
                 DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
                 //System.out.println("END OF DEP TREE");
                 String conLLStr = ClearParserUtil.toCONLL2009Format(tree, p);
@@ -134,7 +137,7 @@ public class ProcessFrameUtil {
         writer.close();
     }
 
-    public static void toParserFormat(ArrayList<ProcessFrame> processFrames, String parserFileName, int parserType) throws IOException {
+    public  synchronized static void toParserFormat(ArrayList<ProcessFrame> processFrames, String parserFileName, int parserType) throws IOException {
         if (parserType == Constant.SRL_CLEARPARSER) {
             toClearParserFormat(processFrames, parserFileName);
         } else if (parserType == Constant.SRL_MATE) {

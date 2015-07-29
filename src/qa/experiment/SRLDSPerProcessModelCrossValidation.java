@@ -214,7 +214,7 @@ public class SRLDSPerProcessModelCrossValidation {
      * combine.py and evaluate.py
      */
     public void evaluate() throws FileNotFoundException, IOException {
-        new SRLEvaluate().evaluate(testFilePath, ".test.", ".dsperprocess.predict.", srlType);
+        new SRLEvaluate().evaluateOverall(testFilePath, ".test.", ".dsperprocess.predict.", srlType);
     }
 
     public static void main(String[] args) throws FileNotFoundException {

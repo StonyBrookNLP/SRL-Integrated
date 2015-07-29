@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.apache.commons.io.FileUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -138,13 +139,15 @@ public class SRLDSCombinedModelCrossValidation {
         }
         File outDirHandler = new File(outDirName);
         if (outDirHandler.exists()) {
-            return;
+            //FileUtils.cleanDirectory(outDirHandler);
         }
-        boolean success = outDirHandler.mkdir();
-
-        if (!success) {
-            System.out.println("FAILED to create output directory");
-            System.exit(0);
+        else
+        {
+            boolean success = outDirHandler.mkdir();
+            if (!success) {
+                System.out.println("FAILED to create output directory");
+                System.exit(0);
+            }
         }
     }
 
@@ -159,40 +162,7 @@ public class SRLDSCombinedModelCrossValidation {
     }
 
     public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        /*testFilePath.clear();
-        trainingModelFilePath.clear();
-        int startIdx = 0;
-        int testSize = frameArr.size() / fold;
-        int endIdx = startIdx + testSize;
-        Collections.shuffle(frameArr);
-        ProcessFrameProcessor dsProc = new ProcessFrameProcessor(dsDirName + "/" + dsFileName);
-        dsProc.loadProcessData();
-        for (int currentFold = 0; currentFold < fold; currentFold++) {
-            ArrayList<ProcessFrame> testingFrames = new ArrayList<ProcessFrame>(frameArr.subList(startIdx, endIdx));
-            ArrayList<ProcessFrame> trainingFrames = new ArrayList<ProcessFrame>(frameArr.subList(0, startIdx));
-            trainingFrames.addAll(new ArrayList<ProcessFrame>(frameArr.subList(endIdx, frameArr.size())));
-            trainingFrames.addAll(dsProc.getProcArr());
-
-            String trainingFileName = outDirName + "/train.dscombined.cv." + currentFold;
-            String testingFileName = outDirName + "/test.cv." + currentFold;
-            String modelName = outDirName + "/dscombinedmodel.cv." + currentFold;
-
-            testFilePath.add(testingFileName);
-            trainingModelFilePath.add(modelName);
-
-            ProcessFrameUtil.toParserFormat(trainingFrames, trainingFileName, srlType);
-            ProcessFrameUtil.toParserFormat(testingFrames, testingFileName, srlType);
-
-            doTrain(trainingFileName, modelName);
-            startIdx = endIdx;
-            if (currentFold == fold - 2) {
-                endIdx = frameArr.size();
-            } else {
-                endIdx = startIdx + testSize;
-            }
-        }
-
-        doPredict();*/
+        
         testFilePath.clear();
         trainingModelFilePath.clear();
         dsProc = new ProcessFrameProcessor(dsDirName + "/" + dsFileName);
@@ -214,7 +184,7 @@ public class SRLDSCombinedModelCrossValidation {
                 cnt++;
             }
         }
-        doPredict();
+        //doPredict();
     }
     
     public void doCrossValidation(String processName, ArrayList<ProcessFrame> selectedProcessFrame, int foldSize) throws IOException, InterruptedException, FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -232,13 +202,25 @@ public class SRLDSCombinedModelCrossValidation {
             String testingFileName = outDirName + "/" + processName + ".test.cv." + currentFold;
             String modelName = outDirName + "/" + processName + ".dscombinedmodel.cv." + currentFold;
 
+            
             testFilePath.add(testingFileName);
             trainingModelFilePath.add(modelName);
+            System.out.println(testingFileName);
+            boolean train = false;
+            if (!(new File(trainingFileName).exists()))
+            {
+                ProcessFrameUtil.toParserFormat(trainingFrames, trainingFileName, srlType);
+                train = true;
+            }
+            if (!(new File(testingFileName).exists()))
+            {
+                ProcessFrameUtil.toParserFormat(testingFrames, testingFileName, srlType);
+            }
 
-            ProcessFrameUtil.toParserFormat(trainingFrames, trainingFileName, srlType);
-            ProcessFrameUtil.toParserFormat(testingFrames, testingFileName, srlType);
-
-            doTrain(trainingFileName, modelName);
+            if (train)
+            {
+                doTrain(trainingFileName, modelName);
+            }
             startIdx = endIdx;
             if (currentFold == foldSize - 2) {
                 endIdx = selectedProcessFrame.size();
@@ -253,7 +235,7 @@ public class SRLDSCombinedModelCrossValidation {
      * combine.py and evaluate.py
      */
     public void evaluate() throws FileNotFoundException, IOException {
-        new SRLEvaluate().evaluate(testFilePath, "test.", "dscombined.predict.", srlType);
+        new SRLEvaluate().evaluateOverall(testFilePath, "test.", "dscombined.predict.", srlType);
     }
 
     public static void main(String[] args) throws FileNotFoundException {

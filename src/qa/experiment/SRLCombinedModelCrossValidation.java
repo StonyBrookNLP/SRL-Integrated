@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.apache.commons.io.FileUtils;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -132,13 +133,15 @@ public class SRLCombinedModelCrossValidation {
         }
         File outDirHandler = new File(outDirName);
         if (outDirHandler.exists()) {
-            return;
+            FileUtils.cleanDirectory(outDirHandler);
         }
-        boolean success = outDirHandler.mkdir();
-
-        if (!success) {
-            System.out.println("FAILED to create output directory");
-            System.exit(0);
+        else
+        {
+            boolean success = outDirHandler.mkdir();
+            if (!success) {
+                System.out.println("FAILED to create output directory");
+                System.exit(0);
+            }
         }
     }
 
@@ -221,8 +224,8 @@ public class SRLCombinedModelCrossValidation {
             testFilePath.add(testingFileName);
             trainingModelFilePath.add(modelName);
 
-            ProcessFrameUtil.toParserFormat(trainingFrames, trainingFileName, srlType);
-            ProcessFrameUtil.toParserFormat(testingFrames, testingFileName, srlType);
+            new ProcessFrameUtil().toParserFormat(trainingFrames, trainingFileName, srlType);
+            new ProcessFrameUtil().toParserFormat(testingFrames, testingFileName, srlType);
 
             doTrain(trainingFileName, modelName);
             startIdx = endIdx;
@@ -239,7 +242,7 @@ public class SRLCombinedModelCrossValidation {
      * combine.py and evaluate.py
      */
     public void evaluate() throws FileNotFoundException, IOException {
-        new SRLEvaluate().evaluate(testFilePath, "test.", "combined.predict.", srlType);
+        new SRLEvaluate().evaluateOverall(testFilePath, "test.", "combined.predict.", srlType);
     }
 
     public static void main(String[] args) throws FileNotFoundException {

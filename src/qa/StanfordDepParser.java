@@ -32,6 +32,7 @@ import qa.util.FileUtil;
  */
 public class StanfordDepParser {
    protected StanfordCoreNLP pipeline;
+   
 
     public StanfordDepParser() {
         // Create StanfordCoreNLP object properties, with POS tagging
@@ -39,7 +40,9 @@ public class StanfordDepParser {
         Properties props;
         props = new Properties();
         props.put("annotators", "tokenize,ssplit,pos,lemma,depparse");
-
+        //props.put("threads",  Runtime.getRuntime().availableProcessors());
+        
+        
         /*
          * This is a pipeline that takes in a string and returns various analyzed linguistic forms. 
          * The String is tokenized via a tokenizer (such as PTBTokenizerAnnotator), 
@@ -58,7 +61,7 @@ public class StanfordDepParser {
         this.pipeline = new StanfordCoreNLP(props);
     }
 
-    public DependencyTree parse(String documentText) throws IOException
+    public synchronized DependencyTree parse(String documentText) throws IOException
     {
        
         // Create an empty Annotation just with the given text

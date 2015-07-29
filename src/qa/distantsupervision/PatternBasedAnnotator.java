@@ -35,7 +35,7 @@ import qa.util.FileUtil;
  */
 public class PatternBasedAnnotator {
 
-    // Load DS process frame
+        // Load DS process frame
     // For each DS sentence
     // for every role e.g. enabler + result
     // if empty then perform static pattern checking

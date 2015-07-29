@@ -5,6 +5,7 @@ import is2.data.SentenceData09;
 import is2.io.CONLLReader09;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -288,8 +289,9 @@ public class Sentence extends ArrayList<Word> {
         Sentence ret = new Sentence();
         Word nextWord;
         int ix = 1;
+        
         for (String line : lines) {
-            //System.out.println(line);
+            
             String[] cols = WHITESPACE_PATTERN.split(line);
             if (cols[12].equals("Y")) {
                 Predicate pred = new Predicate(cols, ret, ix++);
@@ -334,7 +336,7 @@ public class Sentence extends ArrayList<Word> {
         {
             Predicate currentPredicate = predicates.get(i);
             String argLabel = currentPredicate.getArgumentTag(w);
-            if (!labels.contains(argLabel))
+            if (argLabel != null && !labels.contains(argLabel)  )
                 labels.add(argLabel);
             if (currentPredicate.getIdx() == w.getIdx() && !labels.contains("T"))
                 labels.add("T");

@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Scanner;
 import qa.util.FileUtil;
+import se.lth.cs.srl.io.AllCoNLL09Reader;
 
 public class Test {
 
@@ -26,7 +27,7 @@ public class Test {
         //String [] ar;
         //System.out.println(ar);
         
-         System.out.printf("\n%s %10s %10s\n", "P", "R", "F1");
-         System.out.printf("\n%.3f %10.3f %10.3f\n", 0.4573859874, 0.23897537498, 0.23892034);
+         AllCoNLL09Reader reader = new AllCoNLL09Reader(new File("./data/srlPredict.srl"));
+         reader.readAll();
     }
 }
