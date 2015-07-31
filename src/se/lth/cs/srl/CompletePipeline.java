@@ -34,7 +34,7 @@ public class CompletePipeline {
 	public SemanticRoleLabeler srl;
 	
 	public static CompletePipeline getCompletePipeline(FullPipelineOptions options) throws ZipException, IOException, ClassNotFoundException{
-		Preprocessor pp=Language.getLanguage().getPreprocessor(options);
+		//Preprocessor pp=Language.getLanguage().getPreprocessor(options);
 		Parse.parseOptions=options.getParseOptions();
 		SemanticRoleLabeler srl;
 		if(options.reranker){
@@ -48,7 +48,8 @@ public class CompletePipeline {
 			}
 			zipFile.close();			
 		}
-		CompletePipeline pipeline=new CompletePipeline(pp,srl);
+		//CompletePipeline pipeline=new CompletePipeline(pp,srl);
+                CompletePipeline pipeline=new CompletePipeline(null,srl);
 		return pipeline;
 	}
 	

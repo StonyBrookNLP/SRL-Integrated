@@ -65,9 +65,9 @@ public abstract class ArgumentStep extends AbstractStep {
         for (Feature f : features) {
             featureSize += f.size(false);
         }
-        if (!Learn.learnOptions.domainAdaptation) {
+        if (Learn.learnOptions != null && !Learn.learnOptions.domainAdaptation) {
             return indices;
-        } else if (Learn.learnOptions.domainAdaptation) {
+        } else if (Learn.learnOptions != null && Learn.learnOptions.domainAdaptation) {
             if (Pipeline.isSRC) {
                 ArrayList<Integer> modIdx = new ArrayList<Integer>();
                 for (Integer i : indices) {

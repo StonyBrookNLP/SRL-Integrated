@@ -58,14 +58,17 @@ public class QuestionFrameAlignerGenerator {
         new SRLWrapper().doTrain("/tmp/train.parser", "/tmp/model", parserType, false);
         new SRLWrapper().doPredict("/tmp/question.parser", "/tmp/questionFramePredicted.parser", "/tmp/model", 1, autoPi, false);
 
-        new SRLToAligner().generateQuestionAnswerFrameWithScore(questionFrameFileName, "/tmp/questionFramePredicted.parser", questionFramePredictedFileName, true, true, false);
+        new SRLToAligner().generateQuestionAnswerFrameWithScore(questionFrameFileName, "/tmp/questionFramePredicted.parser.scores", questionFramePredictedFileName, true, true, false);
         new SRLToAligner().generateQuestionAnswerFrameWithScore(processFileName, processPredictedFile, answerFramePredicted, false, false, true);
     }
     
     public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        new QuestionFrameAlignerGenerator().generatePredictedQuestionFrame("./data/process_frame_24_july.tsv", "./data/question_frame_23_july.tsv", 
-                                                                           "./data/q_frame_combined.tsv", 
-                                                                           "./data/a_frame_srl_dsperprocess.srl","./data/a_frame_srl_dsperprocess.tsv", 1, true, false);
+       // new QuestionFrameAlignerGenerator().generatePredictedQuestionFrame("./data/process_frame_24_july.tsv", "./data/question_frame_23_july.tsv", 
+       //                                                                    "./data/q_frame_combined.tsv", 
+       //                                                                    "./data/a_frame_srl_dsperprocess.srl","./data/a_frame_srl_dsperprocess.tsv", 1, true, false);
+        new QuestionFrameAlignerGenerator().generatePredictedQuestionFrameWithScore("./data/process_frame_24_july.tsv", "./data/question_frame_23_july.tsv", 
+                                                                           "./data/q_frame_domainAdaptationWScore.tsv", 
+                                                                           "./data/domainAdaptationWScore.srl","./data/a_frame_domainAdaptationWScore.tsv", 1, true, false);
         //new SRLToAligner().generateTsvForAlignerMergeVersion("./data/question_frame_23_june.tsv", "/tmp/questionFramePredicted.parser", "./data/question_frame_srl_manual.tsv", true, true, false);
         //new SRLToAligner().generateTsvForAlignerMergeVersion("./data/process_frame.tsv", "./data/all_predicted.srl", "./data/answer_frame_srl.tsv", false, false, true);
 

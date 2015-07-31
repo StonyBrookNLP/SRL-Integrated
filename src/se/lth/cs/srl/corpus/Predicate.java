@@ -44,6 +44,7 @@ public class Predicate extends Word {
         
         public Predicate(String[] CoNLL2009Columns,Sentence s,int idx, boolean wScore){
 		super(CoNLL2009Columns,s,idx);
+                //System.out.println(s.toString());
 		if(CoNLL2009Columns.length>13)
                 {
 			this.sense=CoNLL2009Columns[13].split(":")[0];

@@ -312,7 +312,7 @@ public class Sentence extends ArrayList<Word> {
         Word nextWord;
         int ix = 1;
         for (String line : lines) {
-            //System.out.println(line);
+            System.out.println(line);
             String[] cols = WHITESPACE_PATTERN.split(line);
             if (cols[12].equals("Y")) {
                 Predicate pred = new Predicate(cols, ret, ix++,true);

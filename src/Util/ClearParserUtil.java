@@ -106,6 +106,22 @@ public class ClearParserUtil {
         return conll09Str;
     }
 
+    public static String fromConLL2006StrToCoNLL2009Str(String conll2006Str)
+    {
+        String[] conll2006Rows = conll2006Str.split("\n");
+        StringBuilder conll2009Rows = new StringBuilder();
+        for (int i = 0; i< conll2006Rows.length; i++)
+        {
+           
+            String[] conll2009Row = new String[20];
+            System.out.println(conll2006Rows[i]);
+            conll2009Row = fromConLL2006to2009(conll2006Rows[i].split("\t"));
+            conll2009Rows.append(String.join("\t", conll2009Row));
+            conll2009Rows.append("\n");
+        }
+        
+        return conll2009Rows.toString();
+    }
     public static String toCONLL2009Format(DependencyTree tree, ProcessFrame procFrame) {
         String conll2006 = toClearParserFormat(tree, procFrame);
         String conll2009 = "";

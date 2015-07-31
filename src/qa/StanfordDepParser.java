@@ -82,6 +82,23 @@ public class StanfordDepParser {
         return tree;
     } 
     
+    public String parseCoNLL(String documentText)throws IOException
+    {
+        // Create an empty Annotation just with the given text
+        Annotation document = new Annotation(documentText);
+        // run all Annotators on this text
+        this.pipeline.annotate(document);
+        // Iterate over all of the sentences found
+        SemanticGraph ccProcessed  = document.get(CoreAnnotations.SentencesAnnotation.class).get(0)
+                                        .get(
+                                            SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+        
+        Collection<TypedDependency> dependencies = ccProcessed.typedDependencies();
+        CoNLLOutputter.conllPrint(document, new FileOutputStream(new File("temp.dep")));
+        String conllString = FileUtil.readCoNLLFormat("temp.dep");
+        
+        return conllString;
+    }
     public static void main(String[] args) throws IOException
     {
         StanfordDepParser parser = new StanfordDepParser();

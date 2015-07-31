@@ -110,12 +110,13 @@ public class ProcessFrameUtil {
             //System.out.println(rawText);
             p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
             try {
-                //System.out.println("DEP TREE");
                 
-                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
-                //System.out.println("END OF DEP TREE");
-                String conLLStr = ClearParserUtil.toCONLL2009Format(tree, p);
-                writer.println(conLLStr);
+                    DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+                    
+                    //System.out.println("END OF DEP TREE");
+                    String conLLStr = ClearParserUtil.toCONLL2009Format(tree, p);
+                    writer.println(conLLStr);
+               
                 //writer.println();
                 ++cnt;
                 //System.out.print(++cnt + " ");
