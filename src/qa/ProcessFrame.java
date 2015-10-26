@@ -5,6 +5,7 @@
  */
 package qa;
 
+import Util.GlobalV;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Doubles;
 import java.io.Serializable;
@@ -28,6 +29,7 @@ public class ProcessFrame implements Serializable {
     private ArrayList<Integer> enablerIndex = new ArrayList<Integer>();
     private ArrayList<Integer> triggerIndex = new ArrayList<Integer>();
     private ArrayList<Integer> resultIndex = new ArrayList<Integer>();
+    private ArrayList<Integer> underSpecifiedIndex = new ArrayList<Integer>();
     private ArrayList<List<Double>> scores = new ArrayList<List<Double>>(4);
 
     public ProcessFrame() {
@@ -68,6 +70,9 @@ public class ProcessFrame implements Serializable {
         if (triggerIndex.size() > 0) {
             labeledIdxs.addAll(triggerIndex);
         }
+        if (underSpecifiedIndex.size() > 0) {
+            labeledIdxs.addAll(underSpecifiedIndex);
+        }
 
         return labeledIdxs;
     }
@@ -77,6 +82,7 @@ public class ProcessFrame implements Serializable {
         enablerIndex.clear();
         resultIndex.clear();
         triggerIndex.clear();
+        underSpecifiedIndex.clear();
     }
 
     public void updateTrigger() {
@@ -91,6 +97,7 @@ public class ProcessFrame implements Serializable {
         String[] enablers = enabler.split("\\|");
         String[] triggers = trigger.split("\\|");
         String[] results = result.split("\\|");
+        String[] underspecified = result.split("\\|");
 
         ArrayList<Integer> allIdx = new ArrayList<Integer>();
         for (String str : undergoers) {
@@ -111,6 +118,12 @@ public class ProcessFrame implements Serializable {
         for (String str : results) {
             if (str.trim().length() > 0) {
                 roleFillers.add(str.trim() + ":A2");
+            }
+        }
+
+        for (String str : underspecified) {
+            if (str.trim().length() > 0) {
+                roleFillers.add(str.trim() + ":A3");
             }
         }
 
@@ -143,6 +156,11 @@ public class ProcessFrame implements Serializable {
                     resultIndex.addAll(matches);
                 }
             }
+            if (type.equalsIgnoreCase("A3")) {
+                if (matches != null) {
+                    underSpecifiedIndex.addAll(matches);
+                }
+            }
             if (matches != null) {
                 allIdx.addAll(matches);
             }
@@ -163,6 +181,11 @@ public class ProcessFrame implements Serializable {
     public ArrayList<Integer> getUndergoerIdx() {
 
         return undergoerIndex;
+    }
+
+    public ArrayList<Integer> getUnderspecifiedIdx() {
+
+        return underSpecifiedIndex;
     }
 
     public String getRawText() {
@@ -233,7 +256,40 @@ public class ProcessFrame implements Serializable {
         this.tokenizedText = tokenizedText;
     }
 
-    public ArrayList<Integer> getIdxMatchesv2(String[] targetPattern, String[] tokenizedSentence, ArrayList<Integer> idxs) {
+    public boolean isExistUndergoer() {
+        return getUndergoerIdx().size() > 0;
+    }
+
+    public boolean isExistEnabler() {
+        return getEnablerIdx().size() > 0;
+    }
+
+    public boolean isExistTrigger() {
+        return getTriggerIdx().size() > 0;
+    }
+
+    public boolean isExistResult() {
+        return getResultIdx().size() > 0;
+    }
+
+    public boolean isExistRole(String roleName) {
+        if (roleName.equalsIgnoreCase("A0")) {
+            return isExistUndergoer();
+        }
+        if (roleName.equalsIgnoreCase("A1")) {
+            return isExistEnabler();
+        }
+        if (roleName.equalsIgnoreCase("T")) {
+            return isExistTrigger();
+        }
+        if (roleName.equalsIgnoreCase("A2")) {
+            return isExistResult();
+        }
+
+        return false;
+    }
+
+    public static ArrayList<Integer> getIdxMatchesv2(String[] targetPattern, String[] tokenizedSentence, ArrayList<Integer> idxs) {
         boolean inRegion = false;
         int matchStart = 0;
         int matchEnd = targetPattern.length;
@@ -262,6 +318,14 @@ public class ProcessFrame implements Serializable {
             }
             return null;
         }
+    }
+
+    public String getStringFromIdx(ArrayList<Integer> idxs) {
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; i < idxs.size(); i++) {
+            strBuilder.append(tokenizedText[idxs.get(i) - 1]).append(" ");
+        }
+        return strBuilder.toString().trim();
     }
 
     public ArrayList<Integer> getIdxMatches(String[] targetPattern, String[] tokenizedSentence) {
@@ -295,6 +359,71 @@ public class ProcessFrame implements Serializable {
         }
     }
 
+    public ArrayList<Integer> getRoleIdx(String role) {
+        if (role.equalsIgnoreCase(GlobalV.A0)) {
+            return getUndergoerIdx();
+        } else if (role.equalsIgnoreCase(GlobalV.A1)) {
+            return getEnablerIdx();
+        } else if (role.equalsIgnoreCase(GlobalV.T)) {
+            return getTriggerIdx();
+        } else if (role.equalsIgnoreCase(GlobalV.A2)) {
+            return getResultIdx();
+        } else if (role.equalsIgnoreCase(GlobalV.A3)) {
+            return getUnderspecifiedIdx();
+        } else {
+            return null;
+        }
+        //if (role.equalsIgnoreCase(GlobalV.A0))
+        //    return getUndergoerIdx();
+    }
+
+    public void setRoleFiller(String role, String text) {
+        if (role.equalsIgnoreCase(GlobalV.A0)) {
+            setUnderGoer(text);
+        } else if (role.equalsIgnoreCase(GlobalV.A1)) {
+            setEnabler(text);
+        } else if (role.equalsIgnoreCase(GlobalV.T)) {
+            setTrigger(text);
+        } else if (role.equalsIgnoreCase(GlobalV.A2)) {
+            setResult(text);
+        } else if (role.equalsIgnoreCase(GlobalV.A3)) {
+            setUnderSpecified(text);
+        } else {
+
+        }
+    }
+
+    public String getRoleFiller(String role) {
+        if (role.equalsIgnoreCase(GlobalV.A0)) {
+            return getUnderGoer();
+        } else if (role.equalsIgnoreCase(GlobalV.A1)) {
+            return getEnabler();
+        } else if (role.equalsIgnoreCase(GlobalV.T)) {
+            return getTrigger();
+        } else if (role.equalsIgnoreCase(GlobalV.A2)) {
+            return getResult();
+        } else if (role.equalsIgnoreCase(GlobalV.A3)) {
+            return getUnderSpecified();
+        } else {
+            return null;
+        }
+    }
+
+    public String toStringAnnotation(String pattern, String query) {
+        StringBuilder strB = new StringBuilder();
+        strB.append(processName + "\t");
+        strB.append(pattern + "\t");
+        strB.append(query + "\t");
+        strB.append(underGoer + "\t");
+        strB.append(enabler + "\t");
+        strB.append(trigger + "\t");
+        strB.append(result + "\t");
+        strB.append(underSpecified + "\t");
+        strB.append(rawText);
+
+        return strB.toString();
+    }
+
     public String toString() {
         StringBuilder strB = new StringBuilder();
         strB.append(processName + "\t");
@@ -312,19 +441,19 @@ public class ProcessFrame implements Serializable {
         StringBuilder strB = new StringBuilder();
         // WATCHOUT FOR THE INDEX!
         strB.append(processName + "\t");
-        
+
         strB.append(underGoer + "\t");
-        strB.append(scores.get(0).size()==0?"\t\t":StringUtils.join(scores.get(0), "\t")).append("\t");
+        strB.append(scores.get(0).size() == 0 ? "\t\t" : StringUtils.join(scores.get(0), "\t")).append("\t");
 
         strB.append(enabler + "\t");
-        strB.append(scores.get(1).size() == 0?"\t\t":StringUtils.join(scores.get(1), "\t")).append("\t");
+        strB.append(scores.get(1).size() == 0 ? "\t\t" : StringUtils.join(scores.get(1), "\t")).append("\t");
         //strB.append(StringUtils.join(scores.get(1), "\t")).append("\t");
 
         strB.append(trigger + "\t");
-        strB.append(scores.get(2).size() == 0?"\t":StringUtils.join(scores.get(2), "\t")).append("\t");
+        strB.append(scores.get(2).size() == 0 ? "\t" : StringUtils.join(scores.get(2), "\t")).append("\t");
 
         strB.append(result + "\t");
-        strB.append(scores.get(3).size() == 0?"\t\t":StringUtils.join(scores.get(3), "\t")).append("\t");
+        strB.append(scores.get(3).size() == 0 ? "\t\t" : StringUtils.join(scores.get(3), "\t")).append("\t");
 
         strB.append(underSpecified + "\t");
         strB.append("\t\t\t");

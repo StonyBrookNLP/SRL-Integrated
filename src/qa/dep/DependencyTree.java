@@ -12,6 +12,8 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import qa.WordNet;
+import se.lth.cs.srl.corpus.Word;
+import static se.lth.cs.srl.corpus.Word.pathToRoot;
 
 /**
  * Dependency tree.
@@ -111,6 +113,54 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         return null;
     }
 
+    public DependencyNode getHeadNode(ArrayList<Integer> tokenIdx) {
+        ArrayList<DependencyNode> headCandidates = new ArrayList<DependencyNode>();
+
+        if (tokenIdx.size() == 1) {
+            headCandidates.add(get(tokenIdx.get(0)));
+            return headCandidates.get(0);
+        } else {
+            for (int i = 0; i < tokenIdx.size(); i++) {
+                DependencyNode node = get(tokenIdx.get(i));
+                if ((node.getCpos().startsWith("VB") && !node.getRelationLabel().equalsIgnoreCase("cop")) || node.getCpos().startsWith("NN")) {
+                    headCandidates.add(node);
+                }
+            }
+        }
+
+        if (headCandidates.size() == 0) {
+            for (int i = 0; i < tokenIdx.size(); i++) {
+                headCandidates.add(get(tokenIdx.get(i)));
+            }
+        }
+        for (int i = 0; i < headCandidates.size(); i++) {
+            boolean allAreChildren = true;
+            for (int j = 0; j < headCandidates.size(); j++) {
+                if (i != j) {
+                    if (!isExistPathFrom(headCandidates.get(j), headCandidates.get(i))) {
+                        allAreChildren = false;
+                    }
+                }
+                if (!allAreChildren) {
+                    break;
+                }
+            }
+            if (allAreChildren) {
+                return headCandidates.get(i);
+            }
+        }
+        int maxChildren = Integer.MIN_VALUE;
+        DependencyNode nodeWithMostChildren = null;
+        for (int i = 0; i < headCandidates.size(); i++) {
+            DependencyNode currentNode = headCandidates.get(i);
+            if (getAllChildren(currentNode).size() > maxChildren)
+            {
+                nodeWithMostChildren = currentNode;
+            }
+        }
+        return nodeWithMostChildren;
+    }
+
     public DependencyNode getNextNodeWithCoarsePOS(DependencyNode node, String tag) {
         return getNextNodeWithCoarsePOS(node.getId(), tag);
     }
@@ -126,6 +176,129 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
             }
         }
         return nodes;
+    }
+
+    public ArrayList<DependencyNode> pathToRoot(DependencyNode node) {
+        ArrayList<DependencyNode> path;
+        if (node.getId() == 0) {
+            path = new ArrayList<DependencyNode>();
+            path.add(node);
+            return path;
+        }
+        path = pathToRoot(get(node.getHeadID()));
+        path.add(node);
+        return path;
+    }
+
+    /*public static List<Word> findPath(Word pred, Word arg) {
+     List<Word> predPath = pathToRoot(pred);
+     List<Word> argPath = pathToRoot(arg);
+     List<Word> ret = new ArrayList<Word>();
+
+     int commonIndex = 0;
+     int min = (predPath.size() < argPath.size() ? predPath.size() : argPath.size());
+     for (int i = 0; i < min; ++i) {
+     if (predPath.get(i) == argPath.get(i)) { //Always true at root (ie first index)
+     commonIndex = i;
+     }
+     }
+     for (int j = predPath.size() - 1; j >= commonIndex; --j) {
+     ret.add(predPath.get(j));
+     }
+     for (int j = commonIndex + 1; j < argPath.size(); ++j) {
+     ret.add(argPath.get(j));
+     }
+     return ret;
+     }*/
+    public ArrayList<DependencyNode> findPath(DependencyNode srcNode, DependencyNode targetNode) {
+        ArrayList<DependencyNode> srcPath = pathToRoot(srcNode);
+        ArrayList<DependencyNode> targetPath = pathToRoot(targetNode);
+        ArrayList<DependencyNode> ret = new ArrayList<DependencyNode>();
+
+        int commonIndex = 0;
+        int min = (srcPath.size() < targetPath.size() ? srcPath.size() : targetPath.size());
+        for (int i = 0; i < min; ++i) {
+            if (srcPath.get(i) == targetPath.get(i)) {
+                commonIndex = i;
+            }
+        }
+        for (int j = srcPath.size() - 1; j >= commonIndex; --j) {
+            ret.add(srcPath.get(j));
+        }
+        for (int j = commonIndex + 1; j < targetPath.size(); ++j) {
+            ret.add(targetPath.get(j));
+        }
+
+        return ret;
+    }
+
+    public String getDepRelPath(DependencyNode src, DependencyNode target) {
+
+        boolean up = true;
+        List<DependencyNode> path = findPath(src, target);
+        if (path.size() == 0) {
+            return "";
+        }
+        StringBuilder ret = new StringBuilder();
+        for (int i = 0; i < (path.size() - 1); ++i) {
+            DependencyNode node = path.get(i);
+            ret.append(node.getRelationLabel());
+            if (up) {
+                if (node.getHeadID() == path.get(i + 1).getId()) { //Arrow up
+                    ret.append("1");
+                } else {
+                    ret.append("0");
+                    up = false;
+                }
+            } else {
+                ret.append("0");
+            }
+        }
+        return ret.toString();
+    }
+
+    public Set<String> getChildWordSet(DependencyNode node) {
+        Set<DependencyNode> children = dependentsOf(node);
+        Set<String> childWordSet = new HashSet<String>();
+        for (DependencyNode childNode : children) {
+            childWordSet.add(childNode.getForm());
+        }
+
+        return childWordSet;
+    }
+
+    public Set<String> getChildPOSSet(DependencyNode node) {
+        Set<DependencyNode> children = dependentsOf(node);
+        Set<String> childPOSSet = new HashSet<String>();
+        for (DependencyNode childNode : children) {
+            childPOSSet.add(childNode.getCpos());
+        }
+
+        return childPOSSet;
+    }
+
+    public String getPOSPath(DependencyNode src, DependencyNode target) {
+        boolean up = true;
+        List<DependencyNode> path = findPath(src, target);
+        if (path.size() == 0) {
+            return "";
+        }
+        StringBuilder ret = new StringBuilder();
+        for (int i = 0; i < (path.size() - 1); ++i) {
+            DependencyNode node = path.get(i);
+            ret.append(node.getCpos());
+            if (up) {
+                if (node.getHeadID() == path.get(i + 1).getId()) { //Arrow up
+                    ret.append("1");
+                } else {
+                    ret.append("0");
+                    up = false;
+                }
+            } else {
+                ret.append("0");
+            }
+        }
+        return ret.toString();
     }
 
     public boolean isExistPathFrom(DependencyNode from, DependencyNode to) {
@@ -330,6 +503,15 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         return -1;
     }
 
+    public DependencyNode getWordDepNode(String word) {
+        for (int i = firstKey(); i <= lastKey(); i++) {
+            if (get(i).getForm().equalsIgnoreCase(word)) {
+                return get(i);
+            }
+        }
+        return null;
+    }
+
     public ArrayList<String> getWordMatchType(ArrayList<DependencyNode> trigger, String[] types, WordNet wn) {
         ArrayList<String> argMatches = new ArrayList<String>();
         for (DependencyNode node : trigger) {
@@ -347,7 +529,6 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         return argMatches;
     }
 
-    
     public boolean isExistPath(ArrayList<DependencyNode> from, DependencyNode to) {
         for (int i = 0; i < from.size(); i++) {
             if (isExistPathFrom(from.get(i), to)) {
@@ -358,7 +539,7 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         return false;
     }
 
-  public boolean isExistPath(DependencyNode from, ArrayList<DependencyNode> to) {
+    public boolean isExistPath(DependencyNode from, ArrayList<DependencyNode> to) {
         for (int i = 0; i < to.size(); i++) {
             if (isExistPathFrom(from, to.get(i))) {
                 return true;
@@ -388,4 +569,51 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         return nodes;
     }
 
+    public ArrayList<DependencyNode> getAllChildren(DependencyNode root) {
+        ArrayList<DependencyNode> result = new ArrayList<DependencyNode>();
+        Stack<DependencyNode> stack = new Stack<DependencyNode>();
+
+        Set<DependencyNode> children = dependentsOf(root);
+        stack.addAll(children);
+        result.addAll(children);
+        while (!stack.isEmpty()) {
+            DependencyNode currentNode = stack.pop();
+            children = dependentsOf(currentNode);
+            result.addAll(children);
+            stack.addAll(children);
+        }
+        return result;
+    }
+
+    public Set<String> getChildDEPSet(DependencyNode node) {
+        Set<DependencyNode> children = dependentsOf(node);
+        Set<String> childDepRelSet = new HashSet<String>();
+        for (DependencyNode childNode : children) {
+            childDepRelSet.add(childNode.getRelationLabel());
+        }
+
+        return childDepRelSet;
+    }
+
+    public String getLemmaVerb(boolean leftDirection, int windowSize, int currentTokenIdx) {
+        if (leftDirection) {
+            int step = 1;
+            for (int i = currentTokenIdx - 1; i > 0 && step < windowSize; i--) {
+                if (get(i).getCpos().startsWith("VB")) {
+                    return get(i).getLemma();
+                }
+                step++;
+            }
+        } else {
+            int step = 1;
+            for (int i = currentTokenIdx + 1; i < lastKey() && step < windowSize; i++) {
+                if (get(i).getCpos().startsWith("VB")) {
+                    return get(i).getLemma();
+                }
+                step++;
+            }
+        }
+
+        return "";
+    }
 }

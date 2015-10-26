@@ -12,7 +12,10 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
+import qa.extractor.RoleSpan;
 import qa.StanfordLemmatizerSingleton;
 
 /**
@@ -36,6 +39,44 @@ public class StringUtil {
         }
 
         return results;
+    }
+    public static void removePunctuationStartEndFromRoleSpan(List<RoleSpan> tokens)
+    {
+         //ArrayList<String> filtered = new ArrayList<String>();
+        if (tokens.size() > 0) {
+            String str = tokens.get(0).getNodeSpan().getForm();
+            Pattern p = Pattern.compile("\\p{Punct}+");
+            Matcher m = p.matcher(str);
+            if (m.matches()) {
+                tokens.remove(0);
+            }
+            str = tokens.get(tokens.size() - 1).getNodeSpan().getForm();
+            p = Pattern.compile("\\p{Punct}+");
+  
+            m = p.matcher(str);
+            if (m.matches())
+                tokens.remove(tokens.size() - 1);
+            System.out.println("Filtered");
+        }
+    }
+    public static void removePunctuationStartEnd(List<String> tokens) {
+        //ArrayList<String> filtered = new ArrayList<String>();
+        if (tokens.size() > 0) {
+            String str = tokens.get(0);
+            Pattern p = Pattern.compile("\\p{Punct}+");
+            Matcher m = p.matcher(str);
+            if (m.matches()) {
+                tokens.remove(0);
+            }
+            str = tokens.get(tokens.size() - 1);
+            p = Pattern.compile("\\p{Punct}+");
+  
+            m = p.matcher(str);
+            if (m.matches())
+                tokens.remove(tokens.size() - 1);
+            System.out.println("Filtered");
+        }
+        //return filtered;
     }
 
     public static boolean isHeader(String line) {
@@ -256,9 +297,10 @@ public class StringUtil {
     public static void main(String[] args) {
         //System.out.println(Arrays.toString(getTokenAsArr("absorption | absorp", "\\|")));
         ArrayList<String> str = new ArrayList<String>();
-        str.add("obtain energy");
-
-        System.out.println(generateSubsetFromArr(str));
+        str.add("energy");
+        str.add("...");
+        removePunctuationStartEnd(str);
+        System.out.println(str);
 
     }
 

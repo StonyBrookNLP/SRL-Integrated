@@ -91,6 +91,7 @@ public class LibLinearModel implements Model {
 				throw new Error("LibLinear binary exited with non-zero exit value: "+p.exitValue());
 		} else {
 			try {
+                            
 				String[] llargs=new String[]{"-s","0","-B","1.0", "-c", "1",dataFile.toString(),outputFile.toString()};
                                 System.out.println("LIBLINEAR JARRRARA");
 				liblinear.Linear.disableDebugOutput(); //We would like to have llargs=new String[]{"-q","-s","0",dataFile.toString(),outputFile.toString()};, but there is something buggy with the java implmentation.

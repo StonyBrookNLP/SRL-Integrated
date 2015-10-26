@@ -24,6 +24,15 @@ import qa.dep.DependencyTree;
  */
 public class ProcessFrameUtil {
 
+    public static void dumpRawTextToFile(ArrayList<ProcessFrame> frames, String fileName) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter(fileName);
+        for (ProcessFrame frame : frames) {
+            writer.println(frame.getRawText());
+        }
+
+        writer.close();
+    }
+
     public static ProcessFrame createProcessFrame(String processName, ArrayList<String> undergoer, ArrayList<String> enabler, ArrayList<String> trigger,
             ArrayList<String> result, String sentence) {
         ProcessFrame frame = new ProcessFrame();
@@ -86,7 +95,7 @@ public class ProcessFrameUtil {
         writer.close();
     }
 
-    public  static void toConll2009Format(ArrayList<ProcessFrame> processFrames, String mateParserFileName) throws FileNotFoundException, IOException {
+    public static void toConll2009Format(ArrayList<ProcessFrame> processFrames, String mateParserFileName) throws FileNotFoundException, IOException {
         PrintWriter writer = new PrintWriter(mateParserFileName);
         System.out.println("Converting to  parser format, data size : " + processFrames.size() + " frames");
         int cnt = 0;
@@ -110,13 +119,13 @@ public class ProcessFrameUtil {
             //System.out.println(rawText);
             p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
             try {
-                
-                    DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
-                    
-                    //System.out.println("END OF DEP TREE");
-                    String conLLStr = ClearParserUtil.toCONLL2009Format(tree, p);
-                    writer.println(conLLStr);
-               
+
+                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+
+                //System.out.println("END OF DEP TREE");
+                String conLLStr = ClearParserUtil.toCONLL2009Format(tree, p);
+                writer.println(conLLStr);
+
                 //writer.println();
                 ++cnt;
                 //System.out.print(++cnt + " ");
@@ -138,7 +147,7 @@ public class ProcessFrameUtil {
         writer.close();
     }
 
-    public  synchronized static void toParserFormat(ArrayList<ProcessFrame> processFrames, String parserFileName, int parserType) throws IOException {
+    public synchronized static void toParserFormat(ArrayList<ProcessFrame> processFrames, String parserFileName, int parserType) throws IOException {
         if (parserType == Constant.SRL_CLEARPARSER) {
             toClearParserFormat(processFrames, parserFileName);
         } else if (parserType == Constant.SRL_MATE) {
@@ -208,6 +217,15 @@ public class ProcessFrameUtil {
         return result;
     }
 
+    public static void dumpFramesToFile(ArrayList<ProcessFrame> arr, String fileName, String header) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter(fileName);
+        writer.println(header);
+        for (ProcessFrame p : arr) {
+            writer.println(p.getProcessName() + "\t" + p.getUnderGoer() + "\t" + p.getEnabler() + "\t" + p.getTrigger() + "\t" + p.getResult() + "\t" + p.getUnderSpecified() + "\t" + p.getRawText());
+        }
+        writer.close();
+    }
+
     public static void dumpFramesToFile(ArrayList<ProcessFrame> arr, String fileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         for (ProcessFrame p : arr) {
@@ -216,11 +234,11 @@ public class ProcessFrameUtil {
         writer.close();
 
     }
-    
+
     public static void dumpFramesToFileWScore(ArrayList<ProcessFrame> arr, String fileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         for (ProcessFrame p : arr) {
-            System.out.println("Writing "+p.toStringWScore());
+            System.out.println("Writing " + p.toStringWScore());
             writer.println(p.toStringWScore());
         }
         writer.close();

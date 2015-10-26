@@ -37,8 +37,8 @@ public class QuestionFrameAlignerGenerator {
         new SRLWrapper().doTrain("/tmp/train.parser", "/tmp/model", parserType, false);
         new SRLWrapper().doPredict("/tmp/question.parser", "/tmp/questionFramePredicted.parser", "/tmp/model",parserType, autoPi, domainAdaptation);
 
-        new SRLToAligner().generateQuestionAnswerFrameWithoutScore(questionFrameFileName, "/tmp/questionFramePredicted.parser", questionFramePredictedFileName, true, true, false);
-        new SRLToAligner().generateQuestionAnswerFrameWithoutScore(processFileName, processPredictedFile, answerFramePredicted, false, false, true);
+        //new SRLToAligner().generateQuestionAnswerFrameWithoutScore(questionFrameFileName, "/tmp/questionFramePredicted.parser", questionFramePredictedFileName, true, true, false);
+        //new SRLToAligner().generateQuestionAnswerFrameWithoutScore(processFileName, processPredictedFile, answerFramePredicted, false, false, true);
     }
 
     public void generatePredictedQuestionFrameWithScore(String processFileName, String questionFrameFileName, String questionFramePredictedFileName, 
@@ -58,8 +58,8 @@ public class QuestionFrameAlignerGenerator {
         new SRLWrapper().doTrain("/tmp/train.parser", "/tmp/model", parserType, false);
         new SRLWrapper().doPredict("/tmp/question.parser", "/tmp/questionFramePredicted.parser", "/tmp/model", 1, autoPi, false);
 
-        new SRLToAligner().generateQuestionAnswerFrameWithScore(questionFrameFileName, "/tmp/questionFramePredicted.parser.scores", questionFramePredictedFileName, true, true, false);
-        new SRLToAligner().generateQuestionAnswerFrameWithScore(processFileName, processPredictedFile, answerFramePredicted, false, false, true);
+        //new SRLToAligner().generateQuestionAnswerFrameWithScore(questionFrameFileName, "/tmp/questionFramePredicted.parser.scores", questionFramePredictedFileName, true, true, false);
+        //new SRLToAligner().generateQuestionAnswerFrameWithScore(processFileName, processPredictedFile, answerFramePredicted, false, false, true);
     }
     
     public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {

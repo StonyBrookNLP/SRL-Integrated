@@ -115,7 +115,7 @@ public class PredicateIdentifier extends AbstractStep {
         }
         if (!predicateSet && predicateCandidate.size() > 0)
         {
-            System.out.println("FORCED");
+            /*System.out.println("FORCED");
             double maxConf = Double.MIN_VALUE;
             int maxIndex = -1;
             Label maxLabel = null;
@@ -144,7 +144,7 @@ public class PredicateIdentifier extends AbstractStep {
             allLabelConfPair.put(GlobalV.T, wProbPair);
             
             
-            predicateSet = true;
+            predicateSet = true;*/
         }
         
         if (!predicateSet)

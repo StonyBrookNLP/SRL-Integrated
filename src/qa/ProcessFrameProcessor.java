@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import qa.dep.DependencyTree;
 import qa.util.FileUtil;
@@ -105,17 +106,17 @@ public class ProcessFrameProcessor {
             }
         }
         focusProcessOnRole();
-        System.out.println("END OF LOAD SENTENCES "+procArr.size());
+        System.out.println("END OF LOAD SENTENCES " + procArr.size());
     }
 
     public void updateTrigger() {
 
     }
 
-    public void setQuestionFrame(boolean val)
-    {
+    public void setQuestionFrame(boolean val) {
         questionFrame = val;
     }
+
     public HashMap<String, Integer> getProcessCount() {
         return processCountPair;
     }
@@ -224,6 +225,100 @@ public class ProcessFrameProcessor {
                 //System.out.println(rawText);
             }
 
+        }
+        writer.close();
+    }
+
+    public void turnOffRoleOffInterest(ArrayList<ProcessFrame> procFrames, String roleOfInterest) {
+        for (int i = 0; i < procFrames.size(); i++) {
+            if (!roleOfInterest.toLowerCase().contains("undergoer")) {
+                procFrames.get(i).setUnderGoer("");
+            }
+            if (!roleOfInterest.toLowerCase().contains("enabler")) {
+                procFrames.get(i).setEnabler("");
+            }
+            if (!roleOfInterest.toLowerCase().contains("trigger")) {
+                procFrames.get(i).setTrigger("");
+            }
+            if (!roleOfInterest.toLowerCase().contains("result")) {
+                procFrames.get(i).setResult("");
+            }
+            if (!roleOfInterest.toLowerCase().contains("underspecified")) {
+                procFrames.get(i).setUnderSpecified("");
+            }
+        }
+    }
+
+    public void checkForCorrectness(ProcessFrame p, String roleOfInterest, String frameLineWithAnnotation) {
+        String[] fields = frameLineWithAnnotation.split("\t");
+        String[] annotations = new String[5];
+        if (roleOfInterest.toLowerCase().contains("undergoer")) {
+            if (fields[0 + 7].equalsIgnoreCase("0")) {
+                p.setUnderGoer("");
+
+            }
+        }
+        if (roleOfInterest.toLowerCase().contains("enabler")) {
+            if (fields[1 + 7].equalsIgnoreCase("0")) {
+                p.setEnabler("");
+            }
+        }
+        if (roleOfInterest.toLowerCase().contains("trigger")) {
+            if (fields[2 + 7].equalsIgnoreCase("0")) {
+                p.setTrigger("");
+            }
+        }
+        if (roleOfInterest.toLowerCase().contains("result")) {
+            if (fields[3 + 7].equalsIgnoreCase("0")) {
+                p.setResult("");
+            }
+        }
+        if (roleOfInterest.toLowerCase().contains("underspecified")) {
+            if (fields[4 + 7].equalsIgnoreCase("0")) {
+                p.setUnderSpecified("");
+            }
+        }
+
+    }
+
+    public ArrayList<String> getRoleLabels() {
+        ArrayList<String> roleLabels = new ArrayList<String>();
+        boolean undergoerExist = procArr.stream().anyMatch(p -> p.getUndergoerIdx().size() > 0);
+        boolean enablerExist = procArr.stream().anyMatch(p -> p.getEnablerIdx().size() > 0);
+        boolean triggerExist = procArr.stream().anyMatch(p -> p.getTriggerIdx().size() > 0);
+        boolean resultExist = procArr.stream().anyMatch(p -> p.getResultIdx().size() > 0);
+        
+        if (undergoerExist)
+            roleLabels.add("A0");
+        if (enablerExist)
+            roleLabels.add("A1");
+        if (triggerExist)
+            roleLabels.add("T");
+        if (resultExist)
+            roleLabels.add("A2");
+        
+        return roleLabels;
+    }
+
+    public void toConLL2009FormatCleanV(String conll2009FileName, String[] frameLines, String roleofInterest) throws FileNotFoundException {
+        ArrayList<ProcessFrame> processFrames = getProcArr();
+        PrintWriter writer = new PrintWriter(conll2009FileName);
+        turnOffRoleOffInterest(processFrames, roleofInterest);
+        for (int i = 0; i < processFrames.size(); i++) {
+
+            String rawText = processFrames.get(i).getRawText();
+
+            List<String> tokenized = slem.tokenize(rawText);
+            processFrames.get(i).setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
+            try {
+                DependencyTree tree = depParser.parse(rawText);
+                checkForCorrectness(processFrames.get(i), roleofInterest, frameLines[i + 1]); // OFFSET HEADER
+                String conLLStr = ClearParserUtil.toCONLL2009Format(tree, processFrames.get(i));
+                writer.println(conLLStr);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("ERROR in converting to CONLL'09");
+            }
         }
         writer.close();
     }
@@ -461,6 +556,7 @@ public class ProcessFrameProcessor {
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
         ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalV.PROJECT_DIR + "/data/process_frame_24_july.tsv");
         proc.loadProcessData();
+        //proc.to
         //proc.toConLL2009Format(GlobalVariable.PROJECT_DIR + "/data/process_frame_june.conll09");
         //ProcessFrameProcessor proc = new ProcessFrameProcessor(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent_7_06_2015/ds_all_processes_w_pattern.tsv");
         //proc.loadProcessData();
@@ -507,6 +603,5 @@ public class ProcessFrameProcessor {
          }*/
         //ProcessFrameUtil.toClearParserFormat(qFrame.procArr, "./data/questionFrame.clearparser");
         //System.out.println(nbQ);
-
     }
 }

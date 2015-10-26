@@ -66,6 +66,7 @@ public class Pipeline extends SemanticRoleLabeler {
     }
 
     private void setup(Map<Step, FeatureSet> featureSets, PredicateReference predicateReference, List<String> argLabels) {
+        
         steps = new ArrayList<PipelineStep>();
         for (Step step : Step.values()) {
             if (featureSets.containsKey(step)) {

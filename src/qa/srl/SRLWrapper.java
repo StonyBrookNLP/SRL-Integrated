@@ -5,12 +5,14 @@
  */
 package qa.srl;
 
+import Util.CCGParserUtil;
 import Util.ClearParserUtil;
 import Util.Constant;
 import Util.GlobalV;
 import Util.MateParserUtil;
 import clear.engine.SRLPredict;
 import clear.engine.SRLTrain;
+import edu.uw.easysrl.main.EasySRL;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -151,7 +153,7 @@ public class SRLWrapper {
                     params = new String[MateParserUtil.PREDICT_ARGS_NOPI.length + 1];
                     //System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, params, 0, MateParserUtil.TRAIN_ARGS.length);
                     System.arraycopy(MateParserUtil.PREDICT_ARGS_NOPI, 0, params, 0, MateParserUtil.PREDICT_ARGS_NOPI.length);
-                    params[MateParserUtil.PREDICT_ARGS_NOPI.length-1] = "-da";
+                    params[MateParserUtil.PREDICT_ARGS_NOPI.length - 1] = "-da";
                     params[MateParserUtil.PREDICT_ARGS_NOPI.length] = predictionFileName;
                 } else {
                     params = MateParserUtil.PREDICT_ARGS_NOPI;
@@ -166,13 +168,13 @@ public class SRLWrapper {
                     params = new String[MateParserUtil.PREDICT_ARGS_PI.length + 1];
                     //System.arraycopy(MateParserUtil.TRAIN_ARGS, 0, params, 0, MateParserUtil.TRAIN_ARGS.length);
                     System.arraycopy(MateParserUtil.PREDICT_ARGS_PI, 0, params, 0, MateParserUtil.PREDICT_ARGS_PI.length);
-                    params[MateParserUtil.PREDICT_ARGS_PI.length-1] = "-da";
+                    params[MateParserUtil.PREDICT_ARGS_PI.length - 1] = "-da";
                     params[MateParserUtil.PREDICT_ARGS_PI.length] = predictionFileName;
                 } else {
                     params = MateParserUtil.PREDICT_ARGS_PI;
                 }
 
-                System.out.println("MATE AUTO PI "+Arrays.toString(params));
+                System.out.println("MATE AUTO PI " + Arrays.toString(params));
             }
 
             try {
@@ -181,11 +183,36 @@ public class SRLWrapper {
             } catch (InvocationTargetException e) {
                 System.out.println(e.getCause().toString());
             }
+        } else if (srlType == Constant.SRL_CCG) {
+     /*public static String[] PREDICT_ARGS = {"-m",
+        "", // model file name
+        "-o", // MODEL NAME
+        "srl",
+        "-f",
+        "",
+        "-g",
+        ""    
+    };*/
+            CCGParserUtil.PREDICT_ARGS[1] = modelFileName;
+            CCGParserUtil.PREDICT_ARGS[5] = testInputFileName;
+            CCGParserUtil.PREDICT_ARGS[7] = predictionFileName;
+            try {
+                Method onLoaded = EasySRL.class.getMethod("main", String[].class);
+                onLoaded.invoke(null, (Object) CCGParserUtil.PREDICT_ARGS);
+                //System.out.println("FINISH");
+            } catch (InvocationTargetException e) {
+                System.out.println(e.getCause().toString());
+            }
+
         }
 
     }
 
-    public void doPredict(String get, String replace, String get0, int srlType) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+
+    public static void main(String[] args) throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, FileNotFoundException {
+        new SRLWrapper().doPredict("/home/slouvan/NetBeansProjects/SRL-Integrated/data/input.txt", "/home/slouvan/NetBeansProjects/SRL-Integrated/data/output.txt", "./data/modelCCG", Constant.SRL_CCG, true, false);
+        String[] lines = FileUtil.readLinesFromFile("/home/slouvan/NetBeansProjects/SRL-Integrated/data/output.txt");
+        System.out.println(lines.length);
+        System.out.println("FINISH");
     }
 }

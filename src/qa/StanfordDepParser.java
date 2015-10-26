@@ -102,7 +102,7 @@ public class StanfordDepParser {
     public static void main(String[] args) throws IOException
     {
         StanfordDepParser parser = new StanfordDepParser();
-        DependencyTree tree = parser.parse("Clouds get their water from evaporation.");
+        DependencyTree tree = parser.parse("This is just another way of saying that evolution is the process of Self-realization.");
         System.out.println(tree.toString());
     }
 }

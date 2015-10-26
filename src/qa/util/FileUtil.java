@@ -9,7 +9,9 @@ import Util.Constant;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -44,6 +46,26 @@ public class FileUtil {
         File folder = new File(dirName);
         File[] files = folder.listFiles();
         return files;
+    }
+
+    public static String getFileHeader(String fileName) throws FileNotFoundException {
+        String[] lines = readLinesFromFile(fileName);
+        return lines[0];
+    }
+
+    public static void serializeToFile(Object o, String fileName) throws IOException {
+        FileOutputStream outFStream = new FileOutputStream(fileName);
+        ObjectOutputStream oos = new ObjectOutputStream(outFStream);
+        oos.writeObject(o);
+        oos.close();
+    }
+
+    public static Object deserializeFromFile(String fileName) throws FileNotFoundException, IOException, ClassNotFoundException {
+        FileInputStream inFStream = new FileInputStream(fileName);
+        ObjectInputStream ois = new ObjectInputStream(inFStream);
+        Object obj = ois.readObject();
+
+        return obj;
     }
 
     public static byte[] serialize(Object o) throws IOException {
@@ -94,10 +116,38 @@ public class FileUtil {
         return lines.toArray(new String[lines.size()]);
     }
 
+    public static String[] readLinesFromFile(String fileName, boolean skipHeader, String headerSignature) throws FileNotFoundException {
+        ArrayList<String> lines = new ArrayList<String>();
+        Scanner scanner = new Scanner(new File(fileName));
+
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine().toLowerCase();
+            if (skipHeader) {
+                if (!line.startsWith(headerSignature.toLowerCase())) {
+                    lines.add(line);
+                }
+            } else {
+                lines.add(line);
+            }
+
+        }
+
+        return lines.toArray(new String[lines.size()]);
+    }
+
     public static void dumpToFile(ArrayList<String> text, String fileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         for (String line : text) {
             writer.print(line);
+        }
+        writer.close();
+    }
+
+    public static void dumpToFileWHeader(ArrayList<String> text, String fileName, String header) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter(fileName);
+        writer.println(header);
+        for (String line : text) {
+            writer.print(line + "\n");
         }
         writer.close();
     }
@@ -166,8 +216,7 @@ public class FileUtil {
             List<Predicate> predicates = sentence.getPredicates();
             int nbPredicate = predicates.size();
             ArrayList<Integer> predicateIdx = new ArrayList<Integer>();
-            for (int i = 0; i < predicates.size(); i++)
-            {
+            for (int i = 0; i < predicates.size(); i++) {
                 predicateIdx.add(predicates.get(i).getIdx());
             }
             Collections.sort(predicateIdx);
@@ -187,7 +236,7 @@ public class FileUtil {
                 } else {
                     clearParserStr.append("_").append("\t");
                 }
-               
+
                 String tag;
                 //clearParserStr.append("_").append("\t"); // sejumlah banyaknya predicates
                 if (nbPredicate == 0) {
@@ -196,24 +245,30 @@ public class FileUtil {
                     boolean hasArg = false;
                     for (int j = 0; j < predicates.size(); ++j) {
                         Predicate pred = predicates.get(j);
-                        if (pred.getArgumentTag(word) != null)
-                        {
-                            if (!hasArg)
-                                clearParserStr.append(pred.getIdx()+":"+pred.getArgumentTag(word));
-                            else
-                                clearParserStr.append(";").append(pred.getIdx()+":"+pred.getArgumentTag(word));
+                        if (pred.getArgumentTag(word) != null) {
+                            if (!hasArg) {
+                                clearParserStr.append(pred.getIdx() + ":" + pred.getArgumentTag(word));
+                            } else {
+                                clearParserStr.append(";").append(pred.getIdx() + ":" + pred.getArgumentTag(word));
+                            }
                             hasArg = true;
                         }
                         //clearParserStr.append((tag = pred.getArgumentTag(word)) != null ? (pred.getIdx() + ":" + tag) : "_"); // tambahin ; 
                     }
-                    if (!hasArg)
+                    if (!hasArg) {
                         clearParserStr.append("_");
+                    }
                 }
                 clearParserStr.append("\n");
             }
             clearWriter.println(clearParserStr.toString());
         }
         clearWriter.close();
+    }
+
+    public static boolean isFileExist(String fileName) {
+        File f = new File(fileName);
+        return f.exists();
     }
 
     public static void main(String[] args) throws FileNotFoundException {
