@@ -7,6 +7,7 @@ package qa.dep;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import java.io.Serializable;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -20,7 +21,7 @@ import static se.lth.cs.srl.corpus.Word.pathToRoot;
  *
  * @author Ritwik Banerjee
  */
-public class DependencyTree extends TreeMap<Integer, DependencyNode> {
+public class DependencyTree extends TreeMap<Integer, DependencyNode> implements Serializable {
 
     /**
      * Constructs a dependency tree comprising of a single artificial root node.
@@ -153,8 +154,7 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
         DependencyNode nodeWithMostChildren = null;
         for (int i = 0; i < headCandidates.size(); i++) {
             DependencyNode currentNode = headCandidates.get(i);
-            if (getAllChildren(currentNode).size() > maxChildren)
-            {
+            if (getAllChildren(currentNode).size() > maxChildren) {
                 nodeWithMostChildren = currentNode;
             }
         }
@@ -236,8 +236,9 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
 
         boolean up = true;
         List<DependencyNode> path = findPath(src, target);
-        if (path.size() == 0) {
-            return "";
+
+        if (path.size() == 1) {
+            return "SELF";
         }
         StringBuilder ret = new StringBuilder();
         for (int i = 0; i < (path.size() - 1); ++i) {
@@ -280,8 +281,8 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
     public String getPOSPath(DependencyNode src, DependencyNode target) {
         boolean up = true;
         List<DependencyNode> path = findPath(src, target);
-        if (path.size() == 0) {
-            return "";
+        if (path.size() == 1) {
+            return "SELF";
         }
         StringBuilder ret = new StringBuilder();
         for (int i = 0; i < (path.size() - 1); ++i) {
@@ -506,6 +507,15 @@ public class DependencyTree extends TreeMap<Integer, DependencyNode> {
     public DependencyNode getWordDepNode(String word) {
         for (int i = firstKey(); i <= lastKey(); i++) {
             if (get(i).getForm().equalsIgnoreCase(word)) {
+                return get(i);
+            }
+        }
+        return null;
+    }
+
+    public DependencyNode getDepNodeContains(String word) {
+        for (int i = firstKey(); i <= lastKey(); i++) {
+            if (get(i).getForm().contains(word)) {
                 return get(i);
             }
         }

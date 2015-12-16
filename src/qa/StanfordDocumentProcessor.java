@@ -29,7 +29,7 @@ public class StanfordDocumentProcessor {
         Reader reader = new StringReader(text);
         DocumentPreprocessor dp = new DocumentPreprocessor(reader);
         ArrayList<String> sentenceList = new ArrayList<String>();
-
+        
         for (List<HasWord> sentence : dp) {
             String sentenceString = Sentence.listToString(sentence);
             sentenceList.add(sentenceString.toString());

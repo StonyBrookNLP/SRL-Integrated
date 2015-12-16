@@ -113,6 +113,8 @@ public class ArgumentSpanExtractor {
         return sentArgSpansPair;
     }
 
+    
+    
     public static ArrayList<String> getArgumentSpan(String rawText, int SRLType) throws IOException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         // if MATE
         // SRL predict

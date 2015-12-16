@@ -5,6 +5,8 @@
  */
 package sbu.srl.rolextract;
 
+import static Util.CCGParserUtil.getPropBankLabeledSentence;
+import Util.Constant;
 import Util.GlobalV;
 import Util.LibSVMUtil;
 import qa.util.FileUtil;
@@ -13,9 +15,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +33,10 @@ import qa.StanfordLemmatizerSingleton;
 import qa.StanfordTokenizerSingleton;
 import qa.dep.DependencyNode;
 import qa.dep.DependencyTree;
+import qa.srl.SRLWrapper;
+import sbu.srl.datastructure.ArgProcessAnnotationData;
+import sbu.srl.datastructure.ArgumentSpan;
+import sbu.srl.datastructure.Sentence;
 
 /**
  *
@@ -42,8 +50,19 @@ public class FeatureExtractor implements Serializable {
     ArrayList<String> features = new ArrayList<String>();
     ArrayList<String> featureVectors = new ArrayList<String>();
     transient FrameNetFeatureExtractor fNetExtractor;
+    public SRLFeatureExtractor srlExtractor;
+    public HashMap<String, Integer> multiClassLabel = new HashMap<String,Integer>();
     boolean frameBuilt = false;
+    boolean srlExtracted = false;
 
+    public String getMultiClassLabel(int id)
+    {
+        for (String label : multiClassLabel.keySet())
+            if (multiClassLabel.get(label) == id)
+                return label;
+        
+        return "WRONG";
+    }
     public void readFeatureFile(String fileName) throws FileNotFoundException {
         String featureNames[] = FileUtil.readLinesFromFile(fileName);
         for (String featureName : featureNames) {
@@ -89,10 +108,10 @@ public class FeatureExtractor implements Serializable {
     }
 
     // TODO 
-    void buildTokens(ArrayList<ProcessFrame> procFrameArr) {
-        for (int i = 0; i < procFrameArr.size(); i++) {
-            ProcessFrame pFrame = procFrameArr.get(i);
-            List<String> tokens = StanfordTokenizerSingleton.getInstance().tokenize(pFrame.getRawText());
+    void buildTokens(ArrayList<Sentence> sentences) {
+        for (int i = 0; i < sentences.size(); i++) {
+            Sentence sentence = sentences.get(i);
+            List<String> tokens = StanfordTokenizerSingleton.getInstance().tokenize(sentence.getRawText());
             for (int j = 0; j < tokens.size(); j++) {
                 if (!wordIndexPair.containsKey(tokens.get(j))) {
                     wordIndexPair.put(tokens.get(j), wordIndexPair.size());
@@ -101,23 +120,23 @@ public class FeatureExtractor implements Serializable {
         }
     }
 
-    public void extractFeature(ProcessFrame p, String targetRole, String annotationInfo) throws IOException {
+    public void extractFeature(Sentence sentence, ArgumentSpan span) throws IOException {
         for (String featureName : features) {
-            extractFeature(featureName, p, targetRole, annotationInfo);
+            extractFeature(featureName, sentence, span);
         }
     }
 
-    public void extractFeature(String featureName, ProcessFrame p, String targetRole, String annotationInfo) throws IOException {
-        ArrayList<Integer> tokenIdx = p.getRoleIdx(targetRole);
-        DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(p.getRawText());
+    public void extractFeature(String featureName, Sentence sentence, ArgumentSpan span) throws IOException {
+        ArrayList<Integer> tokenIdx = span.getRoleIdx();
+        DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(sentence.getRawText());
         // Check ada common ancestor yang berada di tokenIdx gak
         DependencyNode headNode = depTree.getHeadNode(tokenIdx);
         // jika ada jadiin anchor
         // kalau gak ada maka di antara tokenIdx, cari yang paling banyak anaknya
         if (headNode == null) {
-            System.out.println("No head node");
-            System.out.println("Raw text : " + p.getRawText() + " Target role :" + targetRole + " Role filler : " + p.getRoleFiller(targetRole));
-            System.out.println("");
+            //System.out.println("No head node");
+            //System.out.println("Raw text : " + p.getRawText() + " Target role :" + targetRole + " Role filler : " + p.getRoleFiller(targetRole));
+            //System.out.println("");
         } else {
             //System.out.println("Head node exist");
         }
@@ -127,12 +146,12 @@ public class FeatureExtractor implements Serializable {
         //for (int i = 0; i < tokenIdx.size(); i++) {
         switch (featureName) {
             case "process_name":
-                String featValues = p.getProcessName();
+                String featValues = sentence.getProcessName();
                 updateFeatureHashMap(featureName, featValues);
                 break;
 
             case "pattern":
-                featValues = annotationInfo.split("\t")[1];
+                featValues = span.getPattern();
                 updateFeatureHashMap(featureName, featValues);
                 break;
 
@@ -151,7 +170,7 @@ public class FeatureExtractor implements Serializable {
                 DependencyNode currentNode = headNode;//depTree.get(tokenIdx.get(i));
                 DependencyNode parentNode = depTree.get(currentNode.getHeadID());//depTree.get(currentNode.getHeadID());
                 featValues = parentNode.getLemma();
-                
+
                 //System.out.println("PARENT WORD : "+featValues);
                 updateFeatureHashMap(featureName, featValues);
                 break;
@@ -163,39 +182,49 @@ public class FeatureExtractor implements Serializable {
                 break;
 
             case "dep_rel_to_process_name":
-                String[] processNames = p.getProcessName().split("\\s");
+                String[] processNames = sentence.getProcessName().split("\\s");
                 String processName = "";
                 if (processNames.length > 1) {
                     processName = processNames[processNames.length - 1];
                 } else {
-                    processName = p.getProcessName();
+                    processName = sentence.getProcessName();
                 }
                 currentNode = headNode;//depTree.get(tokenIdx.get(i));
                 DependencyNode targetNode = depTree.getWordDepNode(processName);
                 if (targetNode == null) {
                     featValues = "";
-                    System.out.println("DOES NOT EXIST");
+                    targetNode = depTree.getDepNodeContains(processName);
+                    if (targetNode == null) {
+                        //System.out.println("DOES NOT EXIST");
+                    } else {
+                        featValues = depTree.getDepRelPath(currentNode, targetNode);
+                    }
                 } else {
                     //System.out.println(p.getRawText());
                     featValues = depTree.getDepRelPath(currentNode, targetNode);
                     //System.out.println(featValues);
                 }
-                updateFeatureHashMap(featureName, featValues);
+               updateFeatureHashMap(featureName, featValues);
                 break;
 
             case "pos_path_to_process_name":
-                processNames = p.getProcessName().split("\\s");
+                processNames = sentence.getProcessName().split("\\s");
                 processName = "";
                 if (processNames.length > 1) {
                     processName = processNames[processNames.length - 1];
                 } else {
-                    processName = p.getProcessName();
+                    processName = sentence.getProcessName();
                 }
                 currentNode = headNode;//depTree.get(tokenIdx.get(i));
                 targetNode = depTree.getWordDepNode(processName);
                 if (targetNode == null) {
                     featValues = "";
-                    //System.out.println("DOES NOT EXIST");
+                    targetNode = depTree.getDepNodeContains(processName);
+                    if (targetNode == null) {
+                        //System.out.println("DOES NOT EXIST");
+                    } else {
+                        featValues = depTree.getPOSPath(currentNode, targetNode);
+                    }
                 } else {
                     //System.out.println(p.getRawText());
                     featValues = depTree.getPOSPath(currentNode, targetNode);
@@ -238,7 +267,7 @@ public class FeatureExtractor implements Serializable {
                 if (!lemmaVerb.isEmpty() && framesInvoked != null) {
                     for (String fName : framesInvoked) {
                         if (fName.equalsIgnoreCase("Others_situation_as_stimulus")) {
-                            System.out.println(lemmaVerb);
+                            //System.out.println(lemmaVerb);
                         }
                         updateFeatureHashMap(featureName, fName);
                     }
@@ -248,12 +277,12 @@ public class FeatureExtractor implements Serializable {
                 // updateHashMap
                 break;
             case "frame_right":
-         // go to the right, find a verb, 
+                // go to the right, find a verb, 
                 // get the frame
                 // updateHashMap  
                 //lemmaVerb = depTree.getLemmaVerb(false, 3, tokenIdx.get(i));
                 lemmaVerb = depTree.getLemmaVerb(false, 3, headNode.getId());
-                
+
                 if (fNetExtractor == null) {
                     fNetExtractor = new FrameNetFeatureExtractor();
                 }
@@ -264,20 +293,29 @@ public class FeatureExtractor implements Serializable {
                     }
                 }
                 break;
-
+            case "srl_propbank":
+                String text = sentence.getRawText();
+                ArrayList<String> propBankFeatures = srlExtractor.generateFeature(text);
+                Set<String> uniqueFeat = new HashSet<String>(propBankFeatures);
+                for (String propBankFeature : uniqueFeat) {
+                    //System.out.println("PROPBANK : " + propBankFeature);
+                    updateFeatureHashMap(featureName, propBankFeature);
+                }
+                break;
         }
         // }
         //}
     }
+
+   
+
+    
 
     public void updateFeatureHashMap(String featureName, String featureValue) {
         HashMap<String, Integer> featValueIndexPair = featureIndexPair.get(featureName);
         HashMap<String, Integer> featValueCountPair = featureValueCountPair.get(featureName);
 
         if (!featValueIndexPair.containsKey(featureValue)) {
-            if (featureName.equalsIgnoreCase("frame_left")) {
-                System.out.println("DOUBLE UPDATE");
-            }
             featValueIndexPair.put(featureValue, featValueIndexPair.size() + 1);
         }
         if (!featValueCountPair.containsKey(featureValue)) {
@@ -290,14 +328,15 @@ public class FeatureExtractor implements Serializable {
         featureValueCountPair.put(featureName, featValueCountPair);
     }
 
-    public void extractFeatureVector(ProcessFrame p, String targetRole, String annotationInfo) throws IOException {
-        ArrayList<Integer> tokenIdx = p.getRoleIdx(targetRole);
-        for (int i = 0; i < tokenIdx.size(); i++) {
-            String featVector = extractFeatureVectorValue(tokenIdx.get(i), p, targetRole, annotationInfo, true);
-            featureVectors.add(featVector);
-        }
+    public void extractFeatureVector(Sentence sent, ArgumentSpan span, boolean isMultiClass) throws IOException {
+        ArrayList<Integer> tokenIdx = span.getRoleIdx();
+        DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(sent.getRawText());
+        DependencyNode headNode = depTree.getHeadNode(tokenIdx);
+        String featVector = extractFeatureVectorValue(headNode.getId(), sent, span, true, isMultiClass);
+        featureVectors.add(featVector);
     }
 
+   
     public void updateFeatureVector(StringBuilder featVector, int offset, String featValues, String featureName) {
         if (featureIndexPair.get(featureName).get(featValues) != null) {
             int featIdx = featureIndexPair.get(featureName).get(featValues);
@@ -305,48 +344,28 @@ public class FeatureExtractor implements Serializable {
         }
     }
 
-    public boolean isAnnotationExist(String targetRole, String annotationInfo) {
-        try {
-            if (targetRole.equalsIgnoreCase("A0")) {
-                int label = Integer.parseInt(annotationInfo.split("\t")[9]);
-            } else if (targetRole.equalsIgnoreCase("A1")) {
-                int label = Integer.parseInt(annotationInfo.split("\t")[10]);
-            } else if (targetRole.equalsIgnoreCase("A2")) {
-                String[] columns = annotationInfo.split("\t");
-                int x = 0;
-                int label = Integer.parseInt(annotationInfo.split("\t")[12]);
-            } else if (targetRole.equalsIgnoreCase("A3")) {
-            } else {
-                // Trigger
-                int label = Integer.parseInt(annotationInfo.split("\t")[11]);
-            }
-        } catch (Exception e) {
-            return false;
-        }
-
-        return true;
+    private int getClassLabel(String targetRole, ArgProcessAnnotationData procAnn) {
+        //ArrayList<ArgumentSpan> args = procAnn.getSentence().getRoleArgMap().get(targetRole);
+        //System.out.println("ARG LABEL : " + args.get(0).getAnnotatedLabel());
+        //return Integer.parseInt(args.get(0).getAnnotatedLabel());
+        return -1;
     }
 
-    private int getClassLabel(String targetRole, String annotationInfo) {
-        if (targetRole.equalsIgnoreCase("A0")) {
-            int label = Integer.parseInt(annotationInfo.split("\t")[9]);
-            return (label == 1) ? 1 : -1;
-        } else if (targetRole.equalsIgnoreCase("A1")) {
-            int label = Integer.parseInt(annotationInfo.split("\t")[10]);
-            return (label == 1) ? 1 : -1;
-        } else if (targetRole.equalsIgnoreCase("A2")) {
-            String[] columns = annotationInfo.split("\t");
-            int x = 0;
-            int label = Integer.parseInt(annotationInfo.split("\t")[12]);
-            return (label == 1) ? 1 : -1;
-        } else if (targetRole.equalsIgnoreCase("A3")) {
-            return 0;
-        } else {
-            // Trigger
-            int label = Integer.parseInt(annotationInfo.split("\t")[11]);
-            return (label == 1) ? 1 : -1;
+    private int getClassLabel(ArgumentSpan span, boolean isMultiClass) {
+        if (!isMultiClass)
+        {
+            return Integer.parseInt(span.getAnnotatedLabel());
+        }
+        else
+        {
+            return multiClassLabel.get(span.getMultiClassLabel());
         }
     }
+    
+    /*private int getMultiClassLabel(ArgumentSpan span) 
+    {
+        //span.get
+    }*/
 
     public void dumpFeatureVectors(String fileName) throws FileNotFoundException {
         FileUtil.dumpToFile(featureVectors, fileName, "");
@@ -371,22 +390,22 @@ public class FeatureExtractor implements Serializable {
         writer.close();
     }
 
-    public String extractFeatureVectorValue(int tokenIdx, ProcessFrame p, String targetRole, String annotationInfo, boolean isLabelAvailable) throws IOException {
-        DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(p.getRawText());
+    public String extractFeatureVectorValue(int tokenIdx, Sentence sent, ArgumentSpan span, boolean isLabelAvailable, boolean isMultiClass) throws IOException {
+        DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(sent.getRawText());
         StringBuilder featStr = new StringBuilder();
         int offset = 0;
-        int classLabel = isLabelAvailable ? getClassLabel(targetRole, annotationInfo) : -10;
+        int classLabel = isLabelAvailable ? getClassLabel(span, isMultiClass) : -10;
         for (int i = 0; i < features.size(); i++) {
             String featureName = features.get(i);
             switch (featureName) {
                 case "process_name":
-                    String featValues = p.getProcessName();
+                    String featValues = sent.getProcessName();
                     updateFeatureVector(featStr, offset, featValues, features.get(i));
                     offset += featureIndexPair.get(features.get(i)).size();
                     break;
 
                 case "pattern":
-                    featValues = annotationInfo.split("\t")[1];
+                    featValues = span.getPattern();
                     updateFeatureVector(featStr, offset, featValues, features.get(i));
                     offset += featureIndexPair.get(features.get(i)).size();
                     break;
@@ -407,7 +426,7 @@ public class FeatureExtractor implements Serializable {
                     DependencyNode currentNode = depTree.get(tokenIdx);
                     DependencyNode parentNode = depTree.get(currentNode.getHeadID());
                     featValues = parentNode.getLemma();
-                    System.out.println("PARENT " + featValues);
+                    //System.out.println("PARENT " + featValues);
                     updateFeatureVector(featStr, offset, featValues, features.get(i));
                     offset += featureIndexPair.get(features.get(i)).size();
                     break;
@@ -421,22 +440,27 @@ public class FeatureExtractor implements Serializable {
                     break;
 
                 case "dep_rel_to_process_name":
-                    String[] processNames = p.getProcessName().split("\\s");
+                    String[] processNames = sent.getProcessName().split("\\s");
                     String processName = "";
                     if (processNames.length > 1) {
                         processName = processNames[processNames.length - 1];
                     } else {
-                        processName = p.getProcessName();
+                        processName = sent.getProcessName();
                     }
                     currentNode = depTree.get(tokenIdx);
                     DependencyNode targetNode = depTree.getWordDepNode(processName);
                     if (targetNode == null) {
                         featValues = "";
-                        System.out.println("DOES NOT EXIST");
+                        targetNode = depTree.getDepNodeContains(processName);
+                        if (targetNode == null) {
+                            //System.out.println("DOES NOT EXIST");
+                        } else {
+                            featValues = depTree.getDepRelPath(currentNode, targetNode);
+                        }
                     } else {
-                        System.out.println(p.getRawText());
+                       // System.out.println(sent.getRawText());
                         featValues = depTree.getDepRelPath(currentNode, targetNode);
-                        System.out.println(featValues);
+                        //System.out.println(featValues);
                     }
                     updateFeatureVector(featStr, offset, featValues, features.get(i));
                     offset += featureIndexPair.get(features.get(i)).size();
@@ -444,22 +468,27 @@ public class FeatureExtractor implements Serializable {
                     break;
 
                 case "pos_path_to_process_name":
-                    processNames = p.getProcessName().split("\\s");
+                    processNames = sent.getProcessName().split("\\s");
                     processName = "";
                     if (processNames.length > 1) {
                         processName = processNames[processNames.length - 1];
                     } else {
-                        processName = p.getProcessName();
+                        processName = sent.getProcessName();
                     }
                     currentNode = depTree.get(tokenIdx);
                     targetNode = depTree.getWordDepNode(processName);
                     if (targetNode == null) {
                         featValues = "";
-                        System.out.println("DOES NOT EXIST");
+                        targetNode = depTree.getDepNodeContains(processName);
+                        if (targetNode == null) {
+                            System.out.println("DOES NOT EXIST");
+                        } else {
+                            featValues = depTree.getPOSPath(currentNode, targetNode);
+                        }
                     } else {
-                        System.out.println(p.getRawText());
+                       // System.out.println(sent.getRawText());
                         featValues = depTree.getPOSPath(currentNode, targetNode);
-                        System.out.println(featValues);
+                        //System.out.println(featValues);
                     }
                     updateFeatureVector(featStr, offset, featValues, features.get(i));
                     offset += featureIndexPair.get(features.get(i)).size();
@@ -513,11 +542,26 @@ public class FeatureExtractor implements Serializable {
                     }
                     offset += featureIndexPair.get(features.get(i)).size();
                     break;
+                case "srl_propbank":
+                    // cari sentence yang sesuai
+                    ArrayList<String> propBankFeatures = srlExtractor.extractFeature(sent.getRawText(), tokenIdx);
+                    // cari semua feature yng match dari sentence tsb
+                    Set<String> uniqueFeature = new HashSet<String>(propBankFeatures);
+                    for (String propBankFeature : uniqueFeature) {
+                        updateFeatureVector(featStr, offset, propBankFeature, featureName);
+                    }
+
+                    offset += featureIndexPair.get(features.get(i)).size();
+                    break;
             }
         }
-
+       // System.out.println(String.valueOf(classLabel) + " " + featStr.toString());
+        if (featStr.toString().length() == 0) {
+            featStr.append(Integer.MAX_VALUE + ":1"); // in case for unseen feature
+        }
         return String.valueOf(classLabel) + " " + LibSVMUtil.sortIndex(featStr.toString());
     }
+
 
     public static void main(String[] args) throws FileNotFoundException {
         // Test read

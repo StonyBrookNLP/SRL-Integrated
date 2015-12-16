@@ -3,12 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package sbu.srl.googlesent;
+package sbu.srl.rolextract;
 
 /**
  *
  * @author slouvan
  */
-public class AnnotationReader {
+class field {
     
+    public static void main(String[] args)
+    {
+        System.out.println(Integer.MAX_VALUE);
+    }
 }

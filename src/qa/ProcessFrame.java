@@ -295,7 +295,7 @@ public class ProcessFrame implements Serializable {
         int matchEnd = targetPattern.length;
         ArrayList<Integer> idx = new ArrayList<Integer>();
         for (int i = 0; i < tokenizedSentence.length && matchStart < matchEnd; i++) {
-            if (tokenizedSentence[i].equalsIgnoreCase(targetPattern[matchStart]) && !idxs.contains(i + 1)) {
+            if (tokenizedSentence[i].equalsIgnoreCase(targetPattern[matchStart]) && !idxs.contains(i + 1) ){//&& !idxs.contains(i + 1)) {
                 idx.add(i + 1); // because ConLL index starts from 1 
                 if (!inRegion) {
                     inRegion = true;

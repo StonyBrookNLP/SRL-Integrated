@@ -10,6 +10,7 @@ import Util.GlobalV;
 import Util.StringUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ import qa.util.FileUtil;
  */
 public class QueryPatternGenerator {
 
-    public void generateQueryPattern(String fileName) throws FileNotFoundException {
+    public void generateQueryPattern(String fileName) throws FileNotFoundException, IOException {
         Scanner scanner = new Scanner(new File(fileName));
         int cnt = 10;
         int currentDirCnt = cnt;
@@ -146,7 +147,7 @@ public class QueryPatternGenerator {
         writer.close();
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, IOException {
         QueryPatternGenerator gen = new QueryPatternGenerator();
         gen.generateQueryPattern(GlobalV.PROJECT_DIR + "/data/most_frequent_7_june.tsv");
     }

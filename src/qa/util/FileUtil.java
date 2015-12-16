@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import org.apache.commons.io.FileUtils;
 import se.lth.cs.srl.corpus.Predicate;
 import se.lth.cs.srl.corpus.Sentence;
 import se.lth.cs.srl.corpus.Word;
@@ -48,6 +49,23 @@ public class FileUtil {
         return files;
     }
 
+    /**
+     * This method makes a "deep clone" of any Java object it is given.
+     */
+    public static Object deepClone(Object object) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(baos);
+            oos.writeObject(object);
+            ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+            ObjectInputStream ois = new ObjectInputStream(bais);
+            return ois.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static String getFileHeader(String fileName) throws FileNotFoundException {
         String[] lines = readLinesFromFile(fileName);
         return lines[0];
@@ -66,6 +84,35 @@ public class FileUtil {
         Object obj = ois.readObject();
 
         return obj;
+    }
+
+    public static List<String[]> readDataObject(String fileName, String delimiter) throws FileNotFoundException {
+        final List<String[]> dataObjectList = new ArrayList<>();
+        Scanner scanner = new Scanner(new File(fileName));
+        String[] headerObjects = scanner.nextLine().split(delimiter);
+        dataObjectList.add(headerObjects);
+        while (scanner.hasNextLine()) {
+            String[] dataObjects = scanner.nextLine().split(delimiter);
+            if (dataObjects.length < headerObjects.length) {
+                String[] modDataObjects = new String[headerObjects.length];
+                for (int i = 0; i < modDataObjects.length; i++) {
+                    if (i < dataObjects.length) {
+                        modDataObjects[i] = dataObjects[i];
+                    } else {
+                        modDataObjects[i] = "";
+                    }
+                }
+                dataObjectList.add(modDataObjects);
+            } else if (dataObjects.length > headerObjects.length) {
+                System.out.println("DATA ITEM IS WRONG! LENGTH MISMATCH");
+                System.exit(0);
+            } else {
+                dataObjectList.add(dataObjects);
+            }
+        }
+        scanner.close();
+
+        return dataObjectList;
     }
 
     public static byte[] serialize(Object o) throws IOException {
@@ -166,9 +213,15 @@ public class FileUtil {
         writer.close();
     }
 
-    public static boolean mkDir(String dirName) {
+    public static boolean mkDir(String dirName) throws IOException {
         File file = new File(dirName);
-        return file.mkdir();
+        if (file.exists()) {
+            FileUtils.cleanDirectory(new File(dirName));
+            return true;
+        } else {
+            return file.mkdir();
+        }
+
     }
 
     public static String readCoNLLFormat(String fileName) throws FileNotFoundException {
@@ -177,7 +230,7 @@ public class FileUtil {
         while (scanner.hasNextLine()) {
             sb.append(scanner.nextLine() + "\n");
         }
-
+        scanner.close();
         return sb.toString().trim();
     }
 
@@ -272,11 +325,9 @@ public class FileUtil {
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        //String[] lines = readLinesFromFile("./data/sp/process.tsv");
-        //System.out.println(lines.length);
-        //System.out.println(readCoNLLFormat("temp.dep"));
-        fromConll2009ToClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/CombinedFold5MATEPi/gs.txt", "/Users/samuellouvan/NetBeansProjects/QA/CombinedFold5MATEPi/gs_converted.txt");
-        fromConll2009ToClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/CombinedFold5MATEPi/srl.txt", "/Users/samuellouvan/NetBeansProjects/QA/CombinedFold5MATEPi/srl_converted.txt");
+        System.out.println("Hello");
+        List<String[]> dataObjects = readDataObject("/home/slouvan/NetBeansProjects/SRL-Integrated/data/training_w_pattern.tsv", "\t");
+
     }
 
 }

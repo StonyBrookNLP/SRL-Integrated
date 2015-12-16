@@ -74,6 +74,7 @@ public class StanfordDepParser {
                                             SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
         
         Collection<TypedDependency> dependencies = ccProcessed.typedDependencies();
+        
         CoNLLOutputter.conllPrint(document, new FileOutputStream(new File("temp.dep")));
         String conllString = FileUtil.readCoNLLFormat("temp.dep");
         //System.out.println(documentText);

@@ -53,22 +53,51 @@ public class StanfordTokenizer {
         Annotation document = new Annotation(documentText);
         // run all Annotators on this text
         this.pipeline.annotate(document);
+        
         // Iterate over all of the sentences found
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        
         for (CoreMap sentence : sentences) {
             // Iterate over all tokens in a sentence
             for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
                 // Retrieve and add the lemma for each word into the
                 // list of lemmas
                 tokens.add(token.originalText());
+                
             }
         }
         return tokens;
     }
     
+    public List<CoreLabel> getTokenLabel(String documentText) {
+        List<CoreLabel> tokens = new LinkedList<CoreLabel>();
+        // Create an empty Annotation just with the given text
+        Annotation document = new Annotation(documentText);
+        // run all Annotators on this text
+        this.pipeline.annotate(document);
+        
+        // Iterate over all of the sentences found
+        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
+        
+        for (CoreMap sentence : sentences) {
+            // Iterate over all tokens in a sentence
+            for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
+                // Retrieve and add the lemma for each word into the
+                // list of lemmas
+                //System.out.println(token.beginPosition() + " "+token.endPosition());
+                tokens.add(token);
+                
+            }
+        }
+        return tokens;
+    }
     public static void main(String[] args)
     {
         StanfordTokenizer tokenizer = new StanfordTokenizer();
-        System.out.println(tokenizer.tokenize(" Cutting is the separation of a physical object, or a portion of a physical object, into two or more portions."));
+        List<CoreLabel> tokens = tokenizer.getTokenLabel("A long and strong beak that tears flesh is");
+        for (CoreLabel t : tokens)
+        {
+            System.out.println(t.beginPosition() + " "+t.endPosition() );
+        }
     }
 }

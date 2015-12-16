@@ -20,7 +20,7 @@ public class Experiment {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
         // Read process frames
-        ProcessFrameProcessor proc = new ProcessFrameProcessor("./data/result_training_data.frame.tsv");
+       /* ProcessFrameProcessor proc = new ProcessFrameProcessor("./data/result_training_data.frame.tsv");
         proc.loadProcessData();
         // Read annotation file
         String[] annotations = FileUtil.readLinesFromFile("./data/result_training_data.cleaned.tsv", true, "process");
@@ -44,7 +44,7 @@ public class Experiment {
         }
         ArrayList<String> featureVectors = fExtractor.featureVectors;
         
-        FileUtil.dumpToFile(featureVectors, "./data/result_training_data.vector","");
+        FileUtil.dumpToFile(featureVectors, "./data/result_training_data.vector","");*/
         // for each row in the process frame do
         //    perform dependency parse
         //    specify role of interest

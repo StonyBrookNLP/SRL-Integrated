@@ -6,6 +6,7 @@
 package qa.dep;
 
 import com.google.common.base.Joiner;
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -16,8 +17,9 @@ import java.util.Arrays;
  *
  * @author Ritwik Banerjee
  */
-public class DependencyNode implements Comparable {
+public class DependencyNode implements Comparable, Serializable {
 
+    static final long serialVersionUID = 2106L;
     public static final int ROOT_ID = 0;
     public static final String ROOT_FORM = "ROOT";
     public static final String ROOT_DEPREL = null;
