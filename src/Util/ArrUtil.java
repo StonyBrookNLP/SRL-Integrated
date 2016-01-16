@@ -62,6 +62,16 @@ public class ArrUtil {
                 target.add(source.get(i));
         }
     }
+    
+    public static int getMatchIdx(List<String> arr, String target)
+    {
+        for (int i = 0; i < arr.size(); i++)
+        {
+            if (arr.get(i).equals(target))
+                return i;
+        }
+        return -1;
+    }
     public static void main(String[] args)
     {
         ArrayList<Integer> arr1 = new ArrayList<>();

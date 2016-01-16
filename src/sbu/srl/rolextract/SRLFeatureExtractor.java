@@ -16,7 +16,7 @@ import sbu.srl.datastructure.Sentence;
  * @author slouvan
  */
 public class SRLFeatureExtractor implements Serializable{
-
+static final long serialVersionUID = 2106L;
     HashMap<String, Sentence> sentsLabeledPropBank;
 
     public SRLFeatureExtractor(HashMap<String, Sentence> sentsLabeledPropBank) {

@@ -6,6 +6,7 @@
 package sbu.srl.rolextract;
 
 import Util.CCGParserUtil;
+import static Util.CCGParserUtil.getPropBankLabeledSentence;
 import Util.ClearParserUtil;
 import Util.Constant;
 import Util.GlobalV;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import org.apache.commons.io.FileUtils;
 import qa.ProcessFrame;
 import static qa.ProcessFrame.getIdxMatchesv2;
 import qa.ProcessFrameProcessor;
@@ -113,8 +115,6 @@ public class ArgumentSpanExtractor {
         return sentArgSpansPair;
     }
 
-    
-    
     public static ArrayList<String> getArgumentSpan(String rawText, int SRLType) throws IOException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         // if MATE
         // SRL predict
@@ -183,9 +183,8 @@ public class ArgumentSpanExtractor {
         return null;
     }
 
-    public void generateArgumentCandidates(String frameFileName, String annotationFileName, String srlInputFileName, String srlOutputFileName, String srlModelName, int srlType, 
-                                           String frameFileOut, String annotationFileOut) throws IOException, FileNotFoundException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException
-    {
+    public void generateArgumentCandidates(String frameFileName, String annotationFileName, String srlInputFileName, String srlOutputFileName, String srlModelName, int srlType,
+            String frameFileOut, String annotationFileOut) throws IOException, FileNotFoundException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         ProcessFrameProcessor proc = new ProcessFrameProcessor(frameFileName);
         proc.loadProcessData();
         ArrayList<ProcessFrame> frames = proc.getProcArr();
@@ -224,14 +223,12 @@ public class ArgumentSpanExtractor {
                             System.out.println("BRAND NEW");
                             newFrame.setRoleFiller(GlobalV.labels[k], String.join(" ", targetPattern));
                             notAllDuplicate = true;
-                        }
-                        else
-                        {
+                        } else {
                             System.out.println("DUPLICATE DETECTED");
                         }
                     }
                     if (notAllDuplicate) {
-                        newAnnotations.add(newFrame.toStringAnnotation(pattern,query));
+                        newAnnotations.add(newFrame.toStringAnnotation(pattern, query));
                         newFrames.add(newFrame);
                     }
                     match = true;
@@ -244,11 +241,73 @@ public class ArgumentSpanExtractor {
         frames.addAll(newFrames);
 
         ProcessFrameUtil.dumpFramesToFile(frames, frameFileOut, FileUtil.getFileHeader(frameFileName));
-        FileUtil.dumpToFileWHeader(newAnnotations,annotationFileOut,FileUtil.getFileHeader(annotationFileName));
+        FileUtil.dumpToFileWHeader(newAnnotations, annotationFileOut, FileUtil.getFileHeader(annotationFileName));
     }
+
+    public void generateArgumentCandidates(String inputFileName, String outputFileName, int sentID) throws FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
+        String[] lines = FileUtil.readLinesFromFile(inputFileName);
+        int nbFiles = (int) Math.ceil(lines.length / 1000.0);
+        int cnt = 0;
+        PrintWriter writer = new PrintWriter("sentences.temp." + cnt);
+        ArrayList<String> sentences = new ArrayList<String>();
+        for (int i = 0; i < lines.length; i++) {
+            String[] fields = lines[i].split("\t");
+            if (i > 0 && i % 1000 == 0) {
+                writer.close();
+                writer = new PrintWriter("sentences.temp." + (++cnt));
+            }
+            if (!sentences.contains((fields[sentID])));
+            {
+                writer.println(fields[sentID]);
+                sentences.add(fields[sentID]);
+            }
+        }
+        if (writer != null) {
+            writer.close();
+        }
+        //writer = new PrintWriter("sentences.args.temp");
+        File allArgsFiles = new File("sentences.args.temp");
+        for (int i = 0; i < nbFiles; i++) {
+            System.out.println("Processed : " + (i * 1000));
+            new SRLWrapper().doPredict("sentences.temp." + i, "sentences.args.temp." + i, "./data/modelCCG", Constant.SRL_CCG, true, false);
+            String linePredictStr = FileUtils.readFileToString(new File("sentences.args.temp." + i));
+            FileUtils.write(allArgsFiles, linePredictStr, true);
+            //String resultLines[] = FileUtil.readLinesFromFile("sentences.args.temp"+i);
+        }
+
+        writer.close();
+
+        PrintWriter writerOut = new PrintWriter(outputFileName);
+        writerOut.println(lines[0]);
+        HashMap<String, ArrayList<String>> sentLabeledPair = CCGParserUtil.getArgumentCandidates("sentences.args.temp");
+        for (int i = 1; i < lines.length; i++) {
+            String fields[] = lines[i].split("\t");
+            writerOut.println(lines[i]);
+            if (sentLabeledPair.get(fields[sentID]) != null) {
+                ArrayList<String> argumentCandidates = sentLabeledPair.get(fields[sentID]);
+                for (int j = 0; j < argumentCandidates.size(); j++) {
+                    String[] newFields = new String[fields.length];
+                    newFields = Arrays.copyOf(fields, fields.length);
+                    for (int k = 3; k < 7; k++) {
+                        String str = argumentCandidates.get(j);
+                        if (str.indexOf("_") != -1 && str.split("_").length >= 2) {
+                            str = str.split("_")[0] + " " + str.split("_")[1];
+                        }
+                        newFields[k] = str;
+                    }
+                    String newLine = String.join("\t", newFields);
+                    System.out.println(newLine);
+                    writerOut.println(newLine);
+                }
+            }
+        }
+        writerOut.close();
+    }
+
     public static void main(String[] args) throws IOException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, FileNotFoundException, ClassNotFoundException {
-        
-        new ArgumentSpanExtractor().generateArgumentCandidates("./data/merged.lowercase.frame.tsv", "./data/merged.lowercase.tsv", "./data/input.txt", "./data/output.txt", 
-                                                                "./data/modelCCG", Constant.SRL_CCG, "./data/frames.dump.tsv", "./data/annotations.dump.tsv");      
+
+        //new ArgumentSpanExtractor().generateArgumentCandidates("./data/merged.lowercase.frame.tsv", "./data/merged.lowercase.tsv", "./data/input.txt", "./data/output.txt", 
+        //                                                        "./data/modelCCG", Constant.SRL_CCG, "./data/frames.dump.tsv", "./data/annotations.dump.tsv");      
+        new ArgumentSpanExtractor().generateArgumentCandidates("./data/filtered_patternrole.tsv", "./data/training_all.tsv", 7);
     }
 }

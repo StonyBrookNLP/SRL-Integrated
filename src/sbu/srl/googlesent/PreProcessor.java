@@ -32,6 +32,8 @@ public class PreProcessor {
         StanfordDepParserSingleton parser = StanfordDepParserSingleton.getInstance();
         ArrayList<String> cleanedLines = new ArrayList<String>();
         int cnt  = 1;
+        int totalError = 0;
+        System.out.println("Original sentence number"+cleanedLines.size());
         for (String line : lines) {
             String field[] = line.split("\t");
             try {
@@ -47,9 +49,12 @@ public class PreProcessor {
                 }
             } catch (Exception e) {
                 System.out.println("PARSING ERROR " + field[sentIdx]);
+                totalError++;
             }
-            cnt++;
+            
         }
+        System.out.println("Total parse error"+totalError);
+        System.out.println("Total sentence after filtering : "+cleanedLines.size());
         FileUtil.dumpToFile(cleanedLines, outFileName);
     }
 
@@ -85,8 +90,8 @@ public class PreProcessor {
 
         PreProcessor procObj = new PreProcessor();
         //procObj.preprocessGoogleData("./data/extracted_sentences.tsv", "./data/extracted_sentences.cleaned.tsv", 8, true);
-        procObj.generateProcessFrameFile("./data/CandidateSpanGeneration.tsv", "./data/CandidateSpanGeneration.frame.tsv");
+        //procObj.generateProcessFrameFile("./data/CandidateSpanGeneration.tsv", "./data/CandidateSpanGeneration.frame.tsv");
         //procObj.generateCoNLL09File("./data/trigger_training_data.cleaned.tsv", "./data/trigger_training_data.frame.tsv", "./data/trigger_training_data.conll09", "trigger");
-        //procObj.preprocessGoogleData("./data/filtered_sentences.tsv", "./data/filtered.cleaned.tsv", 3, true);
+        procObj.preprocessGoogleData("./data/filtered_sentences.tsv", "./data/filtered.cleaned.tsv", 7, true);
     }
 }

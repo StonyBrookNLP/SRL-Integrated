@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import qa.StanfordDepParserSingleton;
 import qa.StanfordTokenizerSingleton;
 import qa.dep.DependencyNode;
@@ -34,8 +35,73 @@ public class CCGParserUtil {
         "-g",
         ""
     };
+    public static String[] PREDICT_ARGS_PROCESS_ROLES = {"-m",
+        "", // model file name
+        "-o", // MODEL NAME
+        "srl",
+        "-f",
+        "",
+        "-g",
+        "",
+        "-n",
+        "100",
+        "-j",
+        ""
+    };
 
     public static String[] roleLabel = {"ARG0", "ARG1", "ARG2", "ARG3", "ARG4", "ARG5", "DIR", "LOC", "MNR", "TMP", "EXT", "REC", "PRD", "PNC", "CAU", "DIS", "ADV", "MOD", "NEG"};
+
+    public static HashMap<String, ArrayList<String>> getArgumentCandidates(String predictionFileName) throws FileNotFoundException, IOException {
+        HashMap<String, ArrayList<String>> sentenceArgumentsPair = new HashMap<String, ArrayList<String>>();
+
+        ArrayList<String> rawArguments = new ArrayList<String>();
+        String[] lines = FileUtil.readLinesFromFile(predictionFileName);
+        boolean insideSent = false;
+        String currentSent = "";
+        Sentence currentLabeledSent = null;
+        ArrayList<String> argumentSpans = new ArrayList<String>();
+
+        int cntSent = 0;
+        boolean first = true;
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].startsWith("SENT:")) {
+                // jika pertama kali maka 
+                if (first) {
+                    //      put sent + pattern kosong
+                    sentenceArgumentsPair.put(lines[i].split("SENT:")[1], null);
+                    //      set currentSet
+                    currentSent = lines[i].split("SENT:")[1].intern();
+                    currentLabeledSent = new Sentence(currentSent);
+                    first = false;
+                } else {
+                    sentenceArgumentsPair.put(currentSent, argumentSpans);
+                    currentSent = lines[i].split("SENT:")[1];
+                    currentLabeledSent = new Sentence(currentSent);
+                    argumentSpans = new ArrayList<String>();
+                    cntSent++;
+                }
+
+            } else if (!lines[i].isEmpty()) {
+                for (String label : roleLabel) {
+                    if (lines[i].contains(label)) {
+                        String[] args = lines[i].split(label);
+                        for (String arg : args) {
+                            if (!argumentSpans.contains(arg.trim())) {
+                                argumentSpans.add(arg.trim());
+                            }
+                        }
+                    }
+                }
+
+            } else if (lines[i].isEmpty()) {
+                insideSent = false;
+            }
+        }
+        sentenceArgumentsPair.put(currentSent, argumentSpans);
+        System.out.println("Number of sentences " + cntSent);
+
+        return sentenceArgumentsPair;
+    }
 
     //public static HashMap<> 
     public static HashMap<String, Sentence> getPropBankLabeledSentence(String predictionFileName) throws FileNotFoundException, IOException {
@@ -173,6 +239,7 @@ public class CCGParserUtil {
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
         //getArgumentCandidates("./data/output.txt", "./data/enabler_training_data.cleaned.tsv");
-        HashMap<String, Sentence> sentLabeledPair = getPropBankLabeledSentence("./data/output.txt");
+        //HashMap<String, Sentence> sentLabeledPair = getPropBankLabeledSentence("./data/output.txt");
+        HashMap<String, ArrayList<String>> sentLabeledPair = getArgumentCandidates("./data/filtered_patternrole.tsv");
     }
 }

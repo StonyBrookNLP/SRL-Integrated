@@ -6,15 +6,22 @@
 package sbu.srl.rolextract;
 
 import Util.ArgProcessAnnotationDataUtil;
+import Util.Constant;
 import Util.GlobalV;
 import Util.LibSVMUtil;
 import Util.ProcessFrameUtil;
+import Util.SentenceUtil;
+import edu.uw.easysrl.main.Argument;
+import edu.uw.easysrl.main.ParseResult;
+import edu.uw.easysrl.main.Predicate;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import static java.util.stream.Collectors.toList;
 import liblinear.FeatureNode;
@@ -22,11 +29,14 @@ import liblinear.Model;
 import libsvm.svm;
 import libsvm.svm_model;
 import libsvm.svm_node;
+import org.apache.commons.lang3.StringUtils;
 import qa.ProcessFrame;
 import qa.ProcessFrameProcessor;
 import qa.StanfordDepParserSingleton;
+import qa.StanfordTokenizerSingleton;
 import qa.dep.DependencyNode;
 import qa.dep.DependencyTree;
+import qa.srl.SRLWrapper;
 import qa.util.FileUtil;
 import sbu.srl.datastructure.ArgProcessAnnotationData;
 import sbu.srl.datastructure.ArgumentSpan;
@@ -48,9 +58,10 @@ public class SBURolePredict {
     String configFileName;
     String predictionFileName;
     private boolean isMulticlass = false;
+    boolean knownAnnotation = true;
 
     public SBURolePredict(String testFileName, String configFileName, String modelDir, String predictionFileName, boolean isMultiClass) throws IOException, FileNotFoundException, ClassNotFoundException {
-        dataReader = new SpockDataReader(testFileName, configFileName);
+        dataReader = new SpockDataReader(testFileName, configFileName, false);
         dataReader.readProcessData();
         this.configFileName = configFileName;
         this.predictionFileName = predictionFileName;
@@ -58,6 +69,7 @@ public class SBURolePredict {
         classLabels = dataReader.getRoleLabels();
         fExtractors = new HashMap<String, FeatureExtractor>();
         models = new HashMap<String, liblinear.Model>();
+
         if (isMultiClass) {
             classLabels.add("NONE");
             String roleName = "Multi";
@@ -117,16 +129,190 @@ public class SBURolePredict {
 
     }
 
+    public static boolean isOverlapping(String text, String otherText) {
+        List<String> tokenizedText = StanfordTokenizerSingleton.getInstance().tokenize(text);
+        List<String> tokenizedOtherText = StanfordTokenizerSingleton.getInstance().tokenize(otherText);
+        for (String strText : tokenizedText) {
+            if (tokenizedOtherText.contains(strText)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static Object getBestArgument(ParseResult parseResult, String targetText) {
+        List<Predicate> predicates = parseResult.getPredicates();
+        List<Argument> arguments = new ArrayList<Argument>();
+
+        for (Predicate predicate : predicates) {
+            arguments.addAll(predicate.getArguments());
+        }
+        ArrayList<Object> overlappedSpans = new ArrayList<>();
+        int minimumDistance = Integer.MAX_VALUE;
+        boolean overlapping = false;
+        for (Predicate predicate : predicates) {
+            if (isOverlapping(predicate.getText(), targetText)) {
+                minimumDistance = Math.min(minimumDistance, StringUtils.getLevenshteinDistance(targetText, predicate.getText()));
+                overlapping = true;
+            }
+        }
+        for (Argument argument : arguments) {
+            if (isOverlapping(targetText, argument.getText())) {
+                minimumDistance = Math.min(minimumDistance, StringUtils.getLevenshteinDistance(targetText, argument.getText()));
+                overlapping = true;
+            }
+        }
+        if (!overlapping) {
+            return null; // NONE
+        }
+        for (Predicate predicate : predicates) {
+            if (StringUtils.getLevenshteinDistance(targetText, predicate.getText()) == minimumDistance) {
+                overlappedSpans.add(predicate);
+            }
+        }
+        for (Argument argument : arguments) {
+            if (StringUtils.getLevenshteinDistance(targetText, argument.getText()) == minimumDistance) {
+                overlappedSpans.add(argument);
+            }
+        }
+        if (overlappedSpans.size() > 1) {
+            double maxScore = Double.MIN_VALUE;
+            Object bestSpan = null;
+            for (Object obj : overlappedSpans) {
+                if (obj instanceof Predicate) {
+                    if (((Predicate) obj).getScore() > maxScore) {
+                        maxScore = ((Predicate) obj).getScore();
+                        bestSpan = ((Predicate) obj);
+                    }
+                } else {
+                    if (((Argument) obj).getArgScore() > maxScore) {
+                        maxScore = ((Argument) obj).getArgScore();
+                        bestSpan = ((Argument) obj);
+                    }
+                }
+            }
+            return bestSpan;
+        } else {
+            return overlappedSpans.get(0);
+        }
+    }
+
+    public static void performPredictionEasySRL(String testObjFile, String testSentenceListFile, String outputFileName, String modelFileName, String foldDir) throws IOException, FileNotFoundException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        ArrayList<Sentence> sentences = (ArrayList<Sentence>) FileUtil.deserializeFromFile(testObjFile);
+        new SRLWrapper().doPredictProcessRoleCCG(testSentenceListFile, outputFileName, modelFileName, foldDir.concat("/test/easySrlOut"), Constant.SRL_CCG, true, false);
+        for (int i = 0; i < sentences.size(); i++) {
+            System.out.println("SENTENCE : " + i + sentences.get(i).getRawText());
+            Sentence currentSentence = sentences.get(i);
+            ArrayList<ArgumentSpan> spans = currentSentence.getAllAnnotatedArgumentSpan();
+            HashMap<String, String> argumentSpanThatHasAnnotation = currentSentence.getAllArgumentsThatHaveAnnotation();
+            spans = (ArrayList<ArgumentSpan>) spans.stream().distinct().collect(toList());
+            //if (knownAnnotation) {
+            spans = (ArrayList<ArgumentSpan>) spans.stream().filter(s -> argumentSpanThatHasAnnotation.get(currentSentence.getId() + "_" + s.getStartIdx() + "_" + s.getEndIdx()) != null).collect(toList());
+            //}
+            HashMap<String, ArrayList<ArgumentSpan>> roleArgPrediction = new HashMap<String, ArrayList<ArgumentSpan>>();
+            if (spans.size() == 0) {
+                continue;
+            }
+
+            List<ParseResult> parseResult = SentenceUtil.readEasySRLJSONdata(foldDir.concat("/test/easySrlOut"));
+            for (int j = 0; j < spans.size(); j++) {
+                HashMap<String, Double> roleProbPair = new HashMap<String, Double>();
+                HashMap<String, String> roleVectorPair = new HashMap<String, String>();
+                ArgumentSpan currentSpan = spans.get(j);
+                String text = currentSpan.getText();
+                ParseResult sentParseResult = parseResult.get(i);
+                int x = 0;
+
+                if (sentParseResult.getParseScore() == -1.0) {
+                    //currentSpan.setRoleProbPair(roleProbPair);
+                    currentSpan.predictRoleType(true);
+                    currentSpan.setRolePredicted("NONE");
+                    roleProbPair.put("NONE", 1.0);
+                    currentSpan.setRoleProbPair(roleProbPair);
+                } else {
+                    Object bestOverlap = getBestArgument(sentParseResult, text);
+                    if (bestOverlap != null) {
+                        //currentSpan.setRoleProbPair(roleProbPair);
+                        String rolePredicted = "";
+                        if (bestOverlap instanceof Predicate) {
+                            rolePredicted = "trigger";
+                            roleProbPair.put(rolePredicted, ((Predicate) bestOverlap).getScore());
+                        } else {
+                            try {
+                                System.out.println(((Argument) bestOverlap).getLabel());
+                                String label = ((Argument) bestOverlap).getLabel();
+
+                                if (label.equalsIgnoreCase("ARG0") || label.equalsIgnoreCase("CAU")) {
+                                    rolePredicted = "enabler";
+                                } else if (label.equalsIgnoreCase("ARG1") ) {
+                                    rolePredicted = "undergoer";
+                                } else if (label.equalsIgnoreCase("ARG2") || label.equalsIgnoreCase("PNC")) {
+                                    rolePredicted = "result";
+                                }
+                                else
+                                {
+                                    rolePredicted = "NONE";
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                System.out.println(bestOverlap.getClass().toString());
+                            }
+                            roleProbPair.put(rolePredicted, ((Argument) bestOverlap).getArgScore());
+                        }
+                        currentSpan.predictRoleType(true);
+                        currentSpan.setRolePredicted(rolePredicted);
+                        currentSpan.setRoleProbPair(roleProbPair);
+                    } else {
+                        currentSpan.predictRoleType(true);
+                        currentSpan.setRolePredicted("NONE");
+                        roleProbPair.put("NONE", 1.0);
+                        currentSpan.setRoleProbPair(roleProbPair);
+                    }
+
+                }
+
+                if (roleArgPrediction.get(currentSpan.getRolePredicted()) != null) {
+                    ArrayList<ArgumentSpan> predictedSpan = roleArgPrediction.get(currentSpan.getRolePredicted());
+                    predictedSpan.add(currentSpan);
+                    roleArgPrediction.put(currentSpan.getRolePredicted(), predictedSpan);
+                } else {
+                    ArrayList<ArgumentSpan> predictedSpan = new ArrayList<ArgumentSpan>();
+                    predictedSpan.add(currentSpan);
+                    roleArgPrediction.put(currentSpan.getRolePredicted(), predictedSpan);
+                }
+            }
+            if (roleArgPrediction == null) {
+                System.out.println("Something is going wrong here");
+                System.exit(0);
+            }
+            currentSentence.setRoleArgPrediction(roleArgPrediction);
+        }
+
+        // populateProbabilityILP(procDataAnnArr);
+        // make unique of the SAME arguments,  based on startID and endID
+        if (testObjFile.contains("gold")) {
+            FileUtil.serializeToFile(sentences, testObjFile.replace("gold", "easysrlpredict"));
+        } else {
+
+            FileUtil.serializeToFile(sentences, testObjFile.replace("test.", "easysrlpredict."));
+        }
+    }
+
     // ONLY ANNOTATED OR NOT
     public void performPrediction(String testingFileName) throws IOException, FileNotFoundException, ClassNotFoundException {
         ArrayList<Sentence> sentences = (ArrayList<Sentence>) FileUtil.deserializeFromFile(testingFileName);
         for (int i = 0; i < sentences.size(); i++) {
             Sentence currentSentence = sentences.get(i);
             ArrayList<ArgumentSpan> spans = currentSentence.getAllAnnotatedArgumentSpan();
-            HashMap<String,String> argumentSpanThatHasAnnotation = currentSentence.getAllArgumentsThatHaveAnnotation();
+            HashMap<String, String> argumentSpanThatHasAnnotation = currentSentence.getAllArgumentsThatHaveAnnotation();
             spans = (ArrayList<ArgumentSpan>) spans.stream().distinct().collect(toList());
-            spans = (ArrayList<ArgumentSpan>) spans.stream().filter( s -> argumentSpanThatHasAnnotation.get(currentSentence.getId()+"_"+s.getStartIdx()+"_"+s.getEndIdx()) != null).collect(toList());
+            if (knownAnnotation) {
+                spans = (ArrayList<ArgumentSpan>) spans.stream().filter(s -> argumentSpanThatHasAnnotation.get(currentSentence.getId() + "_" + s.getStartIdx() + "_" + s.getEndIdx()) != null).collect(toList());
+            }
             HashMap<String, ArrayList<ArgumentSpan>> roleArgPrediction = new HashMap<String, ArrayList<ArgumentSpan>>();
+            if (!knownAnnotation && spans.size() == 0) {
+                continue;
+            }
             for (int j = 0; j < spans.size(); j++) {
                 HashMap<String, Double> roleProbPair = new HashMap<String, Double>();
                 HashMap<String, String> roleVectorPair = new HashMap<String, String>();
@@ -148,22 +334,19 @@ public class SBURolePredict {
                     Model m = models.get(roleLabel);
                     int[] labels = m.getLabels();
                     //int positiveIdx = labels[0] == 1 ? 0 : 1;
-                    for (String label : fExtractor.multiClassLabel.keySet())
-                    {
+                    for (String label : fExtractor.multiClassLabel.keySet()) {
                         int labelID = fExtractor.multiClassLabel.get(label);
                         int probID = -1;
-                        for (int k = 0; k < labels.length; k++)
-                        {
-                            if (labels[k] == labelID)
-                            {
+                        for (int k = 0; k < labels.length; k++) {
+                            if (labels[k] == labelID) {
                                 probID = k;
                                 break;
                             }
-                            
+
                         }
                         roleProbPair.put(label, probs[probID]);
                     }
-                    
+
                     roleVectorPair.put(roleLabel, rawVector);
                     currentSpan.setRoleProbPair(roleProbPair);
                     currentSpan.setRoleFeatureVector(roleVectorPair);
@@ -207,12 +390,21 @@ public class SBURolePredict {
                     roleArgPrediction.put(currentSpan.getRolePredicted(), predictedSpan);
                 }
             }
+            if (roleArgPrediction == null) {
+                System.out.println("Something is going wrong here");
+                System.exit(0);
+            }
             currentSentence.setRoleArgPrediction(roleArgPrediction);
         }
 
         // populateProbabilityILP(procDataAnnArr);
         // make unique of the SAME arguments,  based on startID and endID
-        FileUtil.serializeToFile(sentences, testingFileName.replace("gold", "predict"));
+        if (testingFileName.contains("gold")) {
+            FileUtil.serializeToFile(sentences, testingFileName.replace("gold", "predict"));
+        } else {
+
+            FileUtil.serializeToFile(sentences, testingFileName.replace("test.", "predict."));
+        }
     }
 
     public void performPrediction() throws IOException {

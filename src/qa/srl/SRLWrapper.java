@@ -137,6 +137,20 @@ public class SRLWrapper {
         }
     }
 
+    public void doPredictProcessRoleCCG(String testInputFileName, String predictionFileName, String modelFileName, String jsonFileName,int srlType, boolean autoPi, boolean domainAdaptation) throws NoSuchMethodException, IllegalAccessException {
+        CCGParserUtil.PREDICT_ARGS_PROCESS_ROLES[1] = modelFileName;
+        CCGParserUtil.PREDICT_ARGS_PROCESS_ROLES[5] = testInputFileName;
+        CCGParserUtil.PREDICT_ARGS_PROCESS_ROLES[7] = predictionFileName;
+        CCGParserUtil.PREDICT_ARGS_PROCESS_ROLES[11] = jsonFileName;
+        try {
+            Method onLoaded = EasySRL.class.getMethod("main", String[].class);
+            onLoaded.invoke(null, (Object) CCGParserUtil.PREDICT_ARGS_PROCESS_ROLES);
+            //System.out.println("FINISH");
+        } catch (InvocationTargetException e) {
+            System.out.println(e.getCause().toString());
+        }
+    }
+
     public void doPredict(String testInputFileName, String predictionFileName, String modelFileName, int srlType, boolean autoPi, boolean domainAdaptation) throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         if (srlType == Constant.SRL_CLEARPARSER) {
             ClearParserUtil.PREDICT_ARGS[3] = testInputFileName;
@@ -184,15 +198,15 @@ public class SRLWrapper {
                 System.out.println(e.getCause().toString());
             }
         } else if (srlType == Constant.SRL_CCG) {
-     /*public static String[] PREDICT_ARGS = {"-m",
-        "", // model file name
-        "-o", // MODEL NAME
-        "srl",
-        "-f",
-        "",
-        "-g",
-        ""    
-    };*/
+            /*public static String[] PREDICT_ARGS = {"-m",
+             "", // model file name
+             "-o", // MODEL NAME
+             "srl",
+             "-f",
+             "",
+             "-g",
+             ""    
+             };*/
             CCGParserUtil.PREDICT_ARGS[1] = modelFileName;
             CCGParserUtil.PREDICT_ARGS[5] = testInputFileName;
             CCGParserUtil.PREDICT_ARGS[7] = predictionFileName;
@@ -207,7 +221,6 @@ public class SRLWrapper {
         }
 
     }
-
 
     public static void main(String[] args) throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, FileNotFoundException {
         new SRLWrapper().doPredict("/home/slouvan/NetBeansProjects/SRL-Integrated/data/input.txt", "/home/slouvan/NetBeansProjects/SRL-Integrated/data/output.txt", "./data/modelCCG", Constant.SRL_CCG, true, false);

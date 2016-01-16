@@ -17,7 +17,7 @@ import org.python.util.PythonInterpreter;
  * @author slouvan
  */
 public class FrameNetFeatureExtractor{
-
+static final long serialVersionUID = 2106L;
     PythonInterpreter pi;
     PyFunction pf;
 

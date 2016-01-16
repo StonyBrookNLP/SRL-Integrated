@@ -18,8 +18,8 @@ public class GlobalV {
         System.out.println(PROJECT_DIR);
     }
 
-    public static final String[] labels = {"A0", "A1", "T", "A2", "A3"};
-    public static final String[] roleName = {"undergoer", "enabler", "trigger", "result", "underspecified"};
+    public static final String[] labels = {"A0", "A1", "T", "A2"};
+    public static final String[] roleName = {"undergoer", "enabler", "trigger", "result"};
     public static String A0 = "A0";
     public static String A1 = "A1";
     public static String T = "T";

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package qa.extractor;
+package sbu.srl.googlesent;
 
 import Util.GlobalV;
 import java.io.File;
@@ -26,8 +26,9 @@ import qa.util.FileUtil;
 public class SentenceRoleProcessor {
 
     HashMap<String, Integer> patternIDPair = new HashMap<String, Integer>();
-    String [] fileHeaders = {"process", "pattern", "query", "undergoer", "enabler", "trigger", "result", "underspecified", "sentence", 
-                                                            "isundergoer", "isenabler", "istrigger", "isresult", "isunderspecified"};
+    String[] fileHeaders = {"process", "pattern", "query", "undergoer", "enabler", "trigger", "result", "sentence",
+        "isundergoer", "isenabler", "istrigger", "isresult"};
+
     public void initPatternIDPair() {
         int cnt = 1;
         patternIDPair.put("<process name> is the *", cnt++);
@@ -68,8 +69,19 @@ public class SentenceRoleProcessor {
                 return roleValuesPair;
             }
         } catch (Exception e) {
-            System.out.println("ERROR :"+sentence);
+            System.out.println("ERROR :" + sentence);
             return null;
+        }
+    }
+
+    public boolean isAllRolesConsumed(HashMap<String, String> extractedRoles) {
+        long nbEmpty = extractedRoles.values().stream().filter(s -> s.isEmpty()).count();
+        if (nbEmpty == extractedRoles.keySet().size()) {
+            return true;
+        } else {
+            System.out.println(nbEmpty);
+            System.out.println("FALSE");
+            return false;
         }
     }
 
@@ -83,26 +95,66 @@ public class SentenceRoleProcessor {
             if (!columns[0].toLowerCase().contains("process")) {
                 String processName = columns[0];
                 String pattern = columns[1];
-                String sentence = columns[3];
+                String sentence = columns[7];
 
                 String patternTemplate = pattern.replace(processName, "<process name>");
                 System.out.println("Sentence : " + sentence);
-                HashMap<String, String> extractedRoles = extractRole(sentence, patternTemplate);
-                if (extractedRoles != null && extractedRoles.size() >= 0) {
+                    HashMap<String, String> extractedRoles = extractRole(sentence, patternTemplate);
+                if (extractedRoles != null && extractedRoles.size() > 0) {
+                    while (!isAllRolesConsumed(extractedRoles)) {
+                        StringBuilder roleFillers = new StringBuilder();
+                        for (String roleLabel : GlobalV.labels) {
+                            if (extractedRoles.get(roleLabel) == null) {
+                                roleFillers.append("\t");
+                            } else {
+                                String[] roleArr = extractedRoles.get(roleLabel).split("\\|");
+                                if (roleArr.length > 1) {
+                                    //System.out.println("Multiple val role fillers");
+                                    roleFillers.append(roleArr[0].trim()).append("\t");
+                                    String residue = "";
+                                    for (int i = 1; i < roleArr.length; i++) {
+                                        residue = residue.concat(roleArr[i].trim()).concat("|");
+                                    }
+                                    residue = residue.substring(0, residue.length() - 1);
+                                    extractedRoles.put(roleLabel, residue);
+                                } else {
+                                    roleFillers.append(extractedRoles.get(roleLabel).trim()).append("\t");
+                                    extractedRoles.put(roleLabel, "");
+                                }
+                            }
+                        }
+                        writer.println(processName + "\t" + columns[1] + "\t" + columns[2] + "\t" + roleFillers.toString() + sentence);
+                    }
+                    
+                } else {
                     StringBuilder roleFillers = new StringBuilder();
                     for (String roleLabel : GlobalV.labels) {
-                        System.out.println("Role Label :" + roleLabel + " Role Fillers :" + extractedRoles.get(roleLabel));
-                        if (extractedRoles.get(roleLabel) == null)
-                            roleFillers.append("\t");
-                        else
-                            roleFillers.append( extractedRoles.get(roleLabel)).append("\t");
+                        roleFillers.append("\t");
                     }
-                    writer.println(processName+"\t"+columns[1]+"\t"+columns[2]+"\t"+roleFillers.toString()+sentence);
+                    writer.println(processName + "\t" + columns[1] + "\t" + columns[2] + "\t" + roleFillers.toString() + sentence);
                 }
-                
+                /*if (extractedRoles != null && extractedRoles.size() >= 0) {
+                 StringBuilder roleFillers = new StringBuilder();
+                 for (String roleLabel : GlobalV.labels) {
+                 System.out.println("Role Label :" + roleLabel + " Role Fillers :" + extractedRoles.get(roleLabel));
+                 if (extractedRoles.get(roleLabel) == null) {
+                 roleFillers.append("\t");
+                 } else {
+                 roleFillers.append(extractedRoles.get(roleLabel)).append("\t");
+                 }
+                 }
+                 writer.println(processName + "\t" + columns[1] + "\t" + columns[2] + "\t" + roleFillers.toString() + sentence);
+                 } else {
+                 StringBuilder roleFillers = new StringBuilder();
+                 for (String roleLabel : GlobalV.labels) {
+                 roleFillers.append("\t");
+                 }
+                 writer.println(processName + "\t" + columns[1] + "\t" + columns[2] + "\t" + roleFillers.toString() + sentence);
+                 }*/
+
             }
         }
-        
+
         writer.close();
     }
 
@@ -137,11 +189,7 @@ public class SentenceRoleProcessor {
     public static void main(String[] args) throws IOException {
         SentenceRoleProcessor processor = new SentenceRoleProcessor();
         processor.initPatternIDPair();
-        processor.processSentences("./data/filtered.cleaned.tsv","./data/extracted_sentences.tsv");
-        
-        /*
-         HashMap<String,String> test = new HashMap<String, String>();
-         test.put("<process name> is the *", "1");
-         System.out.println(test.get("<process name> is the *"));*/
+        processor.processSentences("./data/filtered.cleaned.tsv", "./data/filtered_patternrole.tsv");
+
     }
 }

@@ -22,10 +22,10 @@ public class StdUtil {
         System.out.println("Here is the standard output of the command:\n");
 
         while ((s = stdInput.readLine()) != null) {
-            if (s.contains("A0") || s.contains("A1") || s.contains("A2")) {
+            //if (s.contains("A0") || s.contains("A1") || s.contains("A2")) {
                 System.out.println(s);
 
-            }
+            //}
         }
     }
 

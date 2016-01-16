@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package qa.extractor;
+package sbu.srl.googlesent;
 
 import Util.StringUtil;
 import java.io.File;
@@ -333,7 +333,6 @@ public class RoleExtractor {
                     results.add(new RoleSpan("A2", node));
                 }
                 break;
-
             }
             default:
                 break;

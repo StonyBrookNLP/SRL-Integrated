@@ -8,6 +8,7 @@ package sbu.srl.rolextract;
 import static Util.CCGParserUtil.getPropBankLabeledSentence;
 import Util.Constant;
 import Util.GlobalV;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -48,15 +49,17 @@ public class SBURoleTrain {
     SpockDataReader annotationReader;
     String[] annotations;
     int fold = 5;
+    private boolean multiClass = false;
 
     public SBURoleTrain(String annotationFileName, String configFileName, String modelDir, boolean multiClass) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         this.modelDir = modelDir;
         // Read from arg annotation file
-        annotationReader = new SpockDataReader(annotationFileName, configFileName);
+        annotationReader = new SpockDataReader(annotationFileName, configFileName, false);
         annotationReader.readData();
         classLabels = annotationReader.getRoleLabels();
         fExtractors = new HashMap<String, FeatureExtractor>();
         SRLFeatureExtractor srlFeatExtractor = buildSRLOutput(annotationReader.getSentences());
+        this.multiClass = multiClass;
         if (multiClass) {
             classLabels.add("NONE");
             fExtractors.put("Multi", new FeatureExtractor());
@@ -87,7 +90,7 @@ public class SBURoleTrain {
         classLabels = annotationReader.getRoleLabels();
         fExtractors = new HashMap<String, FeatureExtractor>();
         SRLFeatureExtractor srlFeatExtractor = buildSRLOutput(annotationReader.getSentences());
-
+        this.multiClass = multiClass;
         if (multiClass) {
             classLabels.add("NONE");
             int cnt = 0;
@@ -99,7 +102,6 @@ public class SBURoleTrain {
                 fExtractors.get("Multi").multiClassLabel.put(roleName, ++cnt);
             }
 
-            
         } else {
             for (String roleName : classLabels) {
                 fExtractors.put(roleName, new FeatureExtractor());
@@ -112,7 +114,9 @@ public class SBURoleTrain {
         }
     }
 
+ 
     SRLFeatureExtractor buildSRLOutput(ArrayList<Sentence> sentences) throws FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
+        System.out.println("BuildSRL Output");
         PrintWriter writer = new PrintWriter("sentences.temp");
         for (int i = 0; i < sentences.size(); i++) {
             Sentence sentence = sentences.get(i);
@@ -123,14 +127,17 @@ public class SBURoleTrain {
         new SRLWrapper().doPredict("sentences.temp", "sentences.args.temp", "./data/modelCCG", Constant.SRL_CCG, true, false);
         HashMap<String, Sentence> sentLabeledPair = getPropBankLabeledSentence("sentences.args.temp");
         SRLFeatureExtractor srlExtractor = new SRLFeatureExtractor(sentLabeledPair);
+        System.out.println("End of BuildSRL Output");
         return srlExtractor;
     }
 
     public void trainMultiClassClassifier(String outputDir) throws IOException, NoSuchMethodException, IllegalAccessException {
-        boolean dirCreated = FileUtil.mkDir(outputDir);
-        if (!dirCreated) {
-            System.out.println("Failed to create a directory to store classifier model");
-            System.exit(0);
+        if (!(new File(outputDir)).exists()) {
+            boolean dirCreated = FileUtil.mkDir(outputDir);
+            if (!dirCreated) {
+                System.out.println("Failed to create a directory to store classifier model");
+                System.exit(0);
+            }
         }
         System.out.println("BEGIN TRAINING");
         ArrayList<Sentence> sentences = annotationReader.getSentences();
@@ -142,15 +149,29 @@ public class SBURoleTrain {
                 fExtractor.extractFeature(sentence, spans.get(j));
             }
         }
-        HashMap<String, Integer> totalTrainInstances = new HashMap<String,Integer>();
+        HashMap<String, Integer> totalTrainInstances = new HashMap<String, Integer>();
+        double nonNONECounter = 0;
+        HashMap<String,Integer> roleCounter = new HashMap<String,Integer>();
         for (int i = 0; i < sentences.size(); i++) {
             Sentence sentence = sentences.get(i);
             for (String roleName : classLabels) {
+                // count NON-NONE HERE
                 ArrayList<ArgumentSpan> spans = sentence.getMultiClassAnnotatedArgumentSpan(roleName, classLabels.size() - 1);
-                if (totalTrainInstances.get(roleName) != null)
-                    totalTrainInstances.put(roleName, totalTrainInstances.get(roleName)+spans.size());
-                else
+                // COUNTER
+                if (roleCounter.get(roleName) != null)
+                {
+                    roleCounter.put(roleName, roleCounter.get(roleName)+spans.size());
+                }
+                else{
+                    roleCounter.put(roleName, spans.size());
+                }
+                
+                
+                if (totalTrainInstances.get(roleName) != null) {
+                    totalTrainInstances.put(roleName, totalTrainInstances.get(roleName) + spans.size());
+                } else {
                     totalTrainInstances.put(roleName, spans.size());
+                }
                 for (ArgumentSpan span : spans) {
                     span.setMultiClassLabel(roleName);
                     fExtractor.extractFeature(sentence, span);
@@ -159,9 +180,25 @@ public class SBURoleTrain {
                 }
                 System.out.println("TOTAL feature vector for " + roleName + " :" + fExtractor.featureVectors.size());
             }
-        }        String roleLabel = "Multi";
+        }
+        String roleLabel = "Multi";
+        for (String role : roleCounter.keySet())
+        {
+            if (!role.equalsIgnoreCase("NONE"))
+            {
+                nonNONECounter += roleCounter.get(role);
+                System.out.println("Total "+role+" :"+roleCounter.get(role));
+            }
+        }
+        System.out.println("NON NONE COUNTER total : "+nonNONECounter);
+        int nbNONEToSample = (int)(nonNONECounter/4.0);
+        System.out.println("To sample : "+nbNONEToSample);
         fExtractors.get(roleLabel).dumpFeaturesIndex(outputDir + "/" + roleLabel + ".featureIndex");
-        fExtractors.get(roleLabel).dumpFeatureVectors(outputDir + "/" + roleLabel + ".vector");                   // vector file
+        // UNDERSAMPLE 
+        int noneClassID= fExtractors.get(roleLabel).multiClassLabel.get("NONE");
+        //fExtractors.get(roleLabel).dumpFeatureVectors(outputDir + "/" + roleLabel + ".vector");                   // vector file
+        fExtractors.get(roleLabel).dumpFeatureVectorsUnderSample(outputDir + "/" + roleLabel + ".vector", nbNONEToSample, String.valueOf(noneClassID));                   // vector file
+        
         LibLinearWrapper.doTrain(outputDir + "/" + roleLabel + ".vector", outputDir + "/" + roleLabel + ".model"); // output model
         FileUtil.serializeToFile(fExtractors.get(roleLabel), outputDir + "/" + roleLabel + ".featureExtract"); // output fExtractor object
         // feature weight analyzer
@@ -191,11 +228,21 @@ public class SBURoleTrain {
 
     }
 
+    public void train(String outputDir) throws IOException, NoSuchMethodException, IllegalAccessException {
+        if (this.multiClass) {
+            trainMultiClassClassifier(outputDir);
+        } else {
+            trainBinaryClassifier(outputDir);
+        }
+    }
+
     public void trainBinaryClassifier(String outputDir) throws IOException, NoSuchMethodException, IllegalAccessException {
-        boolean dirCreated = FileUtil.mkDir(outputDir);
-        if (!dirCreated) {
-            System.out.println("Failed to create a directory to store classifier model");
-            System.exit(0);
+        if (!(new File(outputDir)).exists()) {
+            boolean dirCreated = FileUtil.mkDir(outputDir);
+            if (!dirCreated) {
+                System.out.println("Failed to create a directory to store classifier model");
+                System.exit(0);
+            }
         }
         System.out.println("BEGIN TRAINING ");
         ArrayList<Sentence> sentences = annotationReader.getSentences();

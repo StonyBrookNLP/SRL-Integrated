@@ -43,7 +43,7 @@ import sbu.srl.datastructure.Sentence;
  * @author slouvan
  */
 public class FeatureExtractor implements Serializable {
-
+static final long serialVersionUID = 2106L;
     HashMap<String, HashMap<String, Integer>> featureIndexPair = new HashMap<String, HashMap<String, Integer>>();
     HashMap<String, HashMap<String, Integer>> featureValueCountPair = new HashMap<String, HashMap<String, Integer>>();
     HashMap<String, Integer> wordIndexPair = new HashMap<String, Integer>();
@@ -51,18 +51,20 @@ public class FeatureExtractor implements Serializable {
     ArrayList<String> featureVectors = new ArrayList<String>();
     transient FrameNetFeatureExtractor fNetExtractor;
     public SRLFeatureExtractor srlExtractor;
-    public HashMap<String, Integer> multiClassLabel = new HashMap<String,Integer>();
+    public HashMap<String, Integer> multiClassLabel = new HashMap<String, Integer>();
     boolean frameBuilt = false;
     boolean srlExtracted = false;
 
-    public String getMultiClassLabel(int id)
-    {
-        for (String label : multiClassLabel.keySet())
-            if (multiClassLabel.get(label) == id)
+    public String getMultiClassLabel(int id) {
+        for (String label : multiClassLabel.keySet()) {
+            if (multiClassLabel.get(label) == id) {
                 return label;
-        
+            }
+        }
+
         return "WRONG";
     }
+
     public void readFeatureFile(String fileName) throws FileNotFoundException {
         String featureNames[] = FileUtil.readLinesFromFile(fileName);
         for (String featureName : featureNames) {
@@ -71,10 +73,10 @@ public class FeatureExtractor implements Serializable {
                 if (featureName.contains("frame") && !frameBuilt) {
                     buildFrame();
                     featureValueCountPair.put(featureName, new HashMap<String, Integer>());
-                    if (!features.contains("frame_left")) {
+                    if (featureName.equalsIgnoreCase("frame_left") && !features.contains("frame_left")) {
                         features.add("frame_left");
                     }
-                    if (!features.contains("frame_right")) {
+                    if (featureName.equalsIgnoreCase("frame_right") && !features.contains("frame_right")) {
                         features.add("frame_right");
                     }
                 } else {
@@ -204,7 +206,7 @@ public class FeatureExtractor implements Serializable {
                     featValues = depTree.getDepRelPath(currentNode, targetNode);
                     //System.out.println(featValues);
                 }
-               updateFeatureHashMap(featureName, featValues);
+                updateFeatureHashMap(featureName, featValues);
                 break;
 
             case "pos_path_to_process_name":
@@ -265,10 +267,9 @@ public class FeatureExtractor implements Serializable {
                 String[] framesInvoked = fNetExtractor.getFrame(lemmaVerb + ".v");
 
                 if (!lemmaVerb.isEmpty() && framesInvoked != null) {
+                    System.out.println(framesInvoked);
                     for (String fName : framesInvoked) {
-                        if (fName.equalsIgnoreCase("Others_situation_as_stimulus")) {
-                            //System.out.println(lemmaVerb);
-                        }
+                        System.out.println(fName);
                         updateFeatureHashMap(featureName, fName);
                     }
                 }
@@ -307,14 +308,13 @@ public class FeatureExtractor implements Serializable {
         //}
     }
 
-   
-
-    
-
     public void updateFeatureHashMap(String featureName, String featureValue) {
         HashMap<String, Integer> featValueIndexPair = featureIndexPair.get(featureName);
         HashMap<String, Integer> featValueCountPair = featureValueCountPair.get(featureName);
-
+        if (featValueCountPair == null)
+        {
+            int x = 0;
+        }
         if (!featValueIndexPair.containsKey(featureValue)) {
             featValueIndexPair.put(featureValue, featValueIndexPair.size() + 1);
         }
@@ -336,7 +336,6 @@ public class FeatureExtractor implements Serializable {
         featureVectors.add(featVector);
     }
 
-   
     public void updateFeatureVector(StringBuilder featVector, int offset, String featValues, String featureName) {
         if (featureIndexPair.get(featureName).get(featValues) != null) {
             int featIdx = featureIndexPair.get(featureName).get(featValues);
@@ -352,23 +351,39 @@ public class FeatureExtractor implements Serializable {
     }
 
     private int getClassLabel(ArgumentSpan span, boolean isMultiClass) {
-        if (!isMultiClass)
-        {
+        if (!isMultiClass) {
             return Integer.parseInt(span.getAnnotatedLabel());
-        }
-        else
-        {
+        } else {
             return multiClassLabel.get(span.getMultiClassLabel());
         }
     }
-    
-    /*private int getMultiClassLabel(ArgumentSpan span) 
-    {
-        //span.get
-    }*/
 
+    /*private int getMultiClassLabel(ArgumentSpan span) 
+     {
+     //span.get
+     }*/
     public void dumpFeatureVectors(String fileName) throws FileNotFoundException {
         FileUtil.dumpToFile(featureVectors, fileName, "");
+    }
+    
+    public void dumpFeatureVectorsUnderSample(String fileName, int nbToSample, String classLabel) throws FileNotFoundException {
+        System.out.println("Class NONE to sample : "+nbToSample + "ID : "+classLabel);
+        System.out.println("Size of feature vector : "+featureVectors.size());
+        List<String>  noneFeatureVectors= featureVectors.stream().filter( s -> s.startsWith(classLabel)).collect(Collectors.toList()).subList(0, nbToSample);
+        featureVectors = (ArrayList<String>)featureVectors.stream().filter(s -> !s.startsWith(classLabel)).collect(Collectors.toList());
+        featureVectors.addAll(noneFeatureVectors);
+        System.out.println("Size of feature vector after undersample: "+featureVectors.size());
+        FileUtil.dumpToFile(featureVectors, fileName, "");
+    }
+
+    public int getUnknownFeatureIndex() {
+        int unknownIndex = 0;
+        for (String feat : featureIndexPair.keySet())
+        {
+            unknownIndex+= featureIndexPair.get(feat).size();
+        }
+        
+        return unknownIndex+1;
     }
 
     public void dumpFeaturesIndex(String fileName) throws FileNotFoundException {
@@ -458,7 +473,7 @@ public class FeatureExtractor implements Serializable {
                             featValues = depTree.getDepRelPath(currentNode, targetNode);
                         }
                     } else {
-                       // System.out.println(sent.getRawText());
+                        // System.out.println(sent.getRawText());
                         featValues = depTree.getDepRelPath(currentNode, targetNode);
                         //System.out.println(featValues);
                     }
@@ -486,7 +501,7 @@ public class FeatureExtractor implements Serializable {
                             featValues = depTree.getPOSPath(currentNode, targetNode);
                         }
                     } else {
-                       // System.out.println(sent.getRawText());
+                        // System.out.println(sent.getRawText());
                         featValues = depTree.getPOSPath(currentNode, targetNode);
                         //System.out.println(featValues);
                     }
@@ -555,13 +570,12 @@ public class FeatureExtractor implements Serializable {
                     break;
             }
         }
-       // System.out.println(String.valueOf(classLabel) + " " + featStr.toString());
+        // System.out.println(String.valueOf(classLabel) + " " + featStr.toString());
         if (featStr.toString().length() == 0) {
-            featStr.append(Integer.MAX_VALUE + ":1"); // in case for unseen feature
+            featStr.append(getUnknownFeatureIndex() + ":1"); // in case for unseen feature
         }
         return String.valueOf(classLabel) + " " + LibSVMUtil.sortIndex(featStr.toString());
     }
-
 
     public static void main(String[] args) throws FileNotFoundException {
         // Test read

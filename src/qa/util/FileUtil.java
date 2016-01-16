@@ -185,7 +185,7 @@ public class FileUtil {
     public static void dumpToFile(ArrayList<String> text, String fileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         for (String line : text) {
-            writer.print(line);
+            writer.println(line);
         }
         writer.close();
     }

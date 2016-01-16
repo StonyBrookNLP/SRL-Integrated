@@ -30,9 +30,12 @@ public class LibLinearWrapper {
             params[params.length - 2] = trainingFileName;
             params[params.length - 1] = modelFileName;
             onLoaded.invoke(null, (Object) params);
+            System.out.println("Training classifier");
         } catch (InvocationTargetException e) {
+            System.out.println("Exception in training");
             System.out.println(e.getCause().toString());
         }
+        System.out.println("Finished training classifier");
     }
 
     public static FeatureNode[] toFeatureNode(String rawVector, Model model) {
