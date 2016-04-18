@@ -1,0 +1,6 @@
+process	process
+pattern	pattern
+query	query
+role	undergoer:enabler:trigger:result
+rawText	sentence
+argAnnotation	isundergoer:isenabler:istrigger:isresult

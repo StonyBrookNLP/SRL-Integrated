@@ -1,0 +1,15 @@
+process_name
+pattern
+lemma
+pos
+parent_word
+parent_pos
+child_word_set
+dep_rel_to_process_name
+dep_rel_to_pattern
+pos_path_to_process_name
+child_pos_set
+child_dep_set
+frame_left
+frame_right
+srl_propbank
