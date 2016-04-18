@@ -50,6 +50,9 @@ class Test {
         /*File file = new File(".");
         System.out.println(file.getCanonicalPath());*/
         
-        
+        String str = "zdjkllocba";
+        char[] charsStr = str.toCharArray();
+        Arrays.sort(charsStr);
+        System.out.println(charsStr);
     }
 }

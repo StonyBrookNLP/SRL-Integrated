@@ -43,18 +43,25 @@ import sbu.srl.datastructure.Sentence;
  * @author slouvan
  */
 public class FeatureExtractor implements Serializable {
-static final long serialVersionUID = 2106L;
+
+    static final long serialVersionUID = 2106L;
     HashMap<String, HashMap<String, Integer>> featureIndexPair = new HashMap<String, HashMap<String, Integer>>();
     HashMap<String, HashMap<String, Integer>> featureValueCountPair = new HashMap<String, HashMap<String, Integer>>();
     HashMap<String, Integer> wordIndexPair = new HashMap<String, Integer>();
     ArrayList<String> features = new ArrayList<String>();
     ArrayList<String> featureVectors = new ArrayList<String>();
     transient FrameNetFeatureExtractor fNetExtractor;
+    HashMap<String, List<String>> verbFramePair;
+    HashMap<String, DependencyTree> sentDepTreePair;
     public SRLFeatureExtractor srlExtractor;
     public HashMap<String, Integer> multiClassLabel = new HashMap<String, Integer>();
     boolean frameBuilt = false;
     boolean srlExtracted = false;
 
+    public FeatureExtractor() throws IOException, FileNotFoundException, ClassNotFoundException
+    {
+        sentDepTreePair = (HashMap<String, DependencyTree>)FileUtil.deserializeFromFile("./data/depTree.ser");
+    }
     public String getMultiClassLabel(int id) {
         for (String label : multiClassLabel.keySet()) {
             if (multiClassLabel.get(label) == id) {
@@ -65,7 +72,7 @@ static final long serialVersionUID = 2106L;
         return "WRONG";
     }
 
-    public void readFeatureFile(String fileName) throws FileNotFoundException {
+    public void readFeatureFile(String fileName) throws FileNotFoundException, ClassNotFoundException, IOException {
         String featureNames[] = FileUtil.readLinesFromFile(fileName);
         for (String featureName : featureNames) {
             if (!featureName.startsWith("#")) {
@@ -90,21 +97,33 @@ static final long serialVersionUID = 2106L;
         }
     }
 
-    void buildFrame() {
+    void buildFrame() throws IOException, FileNotFoundException, ClassNotFoundException {
         // read frame files 
+        verbFramePair = (HashMap<String, List<String>>) FileUtil.deserializeFromFile("./data/frameInvoked.ser");
         featureIndexPair.put("frame_left", new HashMap<String, Integer>());
         featureIndexPair.put("frame_right", new HashMap<String, Integer>());
 
         HashMap<String, Integer> fNameIndexPairLeft = new HashMap<String, Integer>();
         HashMap<String, Integer> fNameIndexPairRight = new HashMap<String, Integer>();
-        fNetExtractor = new FrameNetFeatureExtractor();
-        String[] fNames = fNetExtractor.getAllFrames();
         int cnt = 1;
-        for (String fName : fNames) {
-            fNameIndexPairLeft.put(fName, cnt);
-            fNameIndexPairRight.put(fName, cnt);
-            cnt++;
+        for (String verb : verbFramePair.keySet()) {
+            List<String> frames = verbFramePair.get(verb);
+            for (String fName : frames) {
+                if (fNameIndexPairLeft.get(fName) == null || fNameIndexPairLeft.get(fName) == null) {
+                    fNameIndexPairLeft.put(fName, cnt);
+                    fNameIndexPairRight.put(fName, cnt);
+                    cnt++;
+                }
+            }
         }
+        /*fNetExtractor = new FrameNetFeatureExtractor();
+         String[] fNames = fNetExtractor.getAllFrames();
+         int cnt = 1;
+         for (String fName : fNames) {
+         fNameIndexPairLeft.put(fName, cnt);
+         fNameIndexPairRight.put(fName, cnt);
+         cnt++;
+         }*/
         featureIndexPair.put("frame_left", fNameIndexPairLeft);
         featureIndexPair.put("frame_right", fNameIndexPairRight);
     }
@@ -130,7 +149,8 @@ static final long serialVersionUID = 2106L;
 
     public void extractFeature(String featureName, Sentence sentence, ArgumentSpan span) throws IOException {
         ArrayList<Integer> tokenIdx = span.getRoleIdx();
-        DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(sentence.getRawText());
+        //DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(sentence.getRawText());
+        DependencyTree depTree = sentDepTreePair.get(sentence.getRawText());
         // Check ada common ancestor yang berada di tokenIdx gak
         DependencyNode headNode = depTree.getHeadNode(tokenIdx);
         // jika ada jadiin anchor
@@ -261,15 +281,15 @@ static final long serialVersionUID = 2106L;
                 // go to the left, find a verb, 
                 //String lemmaVerb = depTree.getLemmaVerb(true, 3, tokenIdx.get(i));
                 String lemmaVerb = depTree.getLemmaVerb(true, 3, headNode.getId());
-                if (fNetExtractor == null) {
+               /* if (fNetExtractor == null) {
                     fNetExtractor = new FrameNetFeatureExtractor();
-                }
-                String[] framesInvoked = fNetExtractor.getFrame(lemmaVerb + ".v");
+                }*/
+                List<String> framesInvoked = verbFramePair.get(lemmaVerb);//fNetExtractor.getFrame(lemmaVerb + ".v");
 
                 if (!lemmaVerb.isEmpty() && framesInvoked != null) {
-                    System.out.println(framesInvoked);
+                    //System.out.println(framesInvoked);
                     for (String fName : framesInvoked) {
-                        System.out.println(fName);
+                        //System.out.println(fName);
                         updateFeatureHashMap(featureName, fName);
                     }
                 }
@@ -284,10 +304,10 @@ static final long serialVersionUID = 2106L;
                 //lemmaVerb = depTree.getLemmaVerb(false, 3, tokenIdx.get(i));
                 lemmaVerb = depTree.getLemmaVerb(false, 3, headNode.getId());
 
-                if (fNetExtractor == null) {
+               /* if (fNetExtractor == null) {
                     fNetExtractor = new FrameNetFeatureExtractor();
-                }
-                framesInvoked = fNetExtractor.getFrame(lemmaVerb + ".v");
+                }*/
+                framesInvoked = verbFramePair.get(lemmaVerb);//fNetExtractor.getFrame(lemmaVerb + ".v");
                 if (!lemmaVerb.isEmpty() && framesInvoked != null) {
                     for (String fName : framesInvoked) {
                         updateFeatureHashMap(featureName, fName);
@@ -311,8 +331,7 @@ static final long serialVersionUID = 2106L;
     public void updateFeatureHashMap(String featureName, String featureValue) {
         HashMap<String, Integer> featValueIndexPair = featureIndexPair.get(featureName);
         HashMap<String, Integer> featValueCountPair = featureValueCountPair.get(featureName);
-        if (featValueCountPair == null)
-        {
+        if (featValueCountPair == null) {
             int x = 0;
         }
         if (!featValueIndexPair.containsKey(featureValue)) {
@@ -330,7 +349,8 @@ static final long serialVersionUID = 2106L;
 
     public void extractFeatureVector(Sentence sent, ArgumentSpan span, boolean isMultiClass) throws IOException {
         ArrayList<Integer> tokenIdx = span.getRoleIdx();
-        DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(sent.getRawText());
+        //DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(sent.getRawText());
+        DependencyTree depTree = sentDepTreePair.get(sent.getRawText());
         DependencyNode headNode = depTree.getHeadNode(tokenIdx);
         String featVector = extractFeatureVectorValue(headNode.getId(), sent, span, true, isMultiClass);
         featureVectors.add(featVector);
@@ -365,25 +385,24 @@ static final long serialVersionUID = 2106L;
     public void dumpFeatureVectors(String fileName) throws FileNotFoundException {
         FileUtil.dumpToFile(featureVectors, fileName, "");
     }
-    
+
     public void dumpFeatureVectorsUnderSample(String fileName, int nbToSample, String classLabel) throws FileNotFoundException {
-        System.out.println("Class NONE to sample : "+nbToSample + "ID : "+classLabel);
-        System.out.println("Size of feature vector : "+featureVectors.size());
-        List<String>  noneFeatureVectors= featureVectors.stream().filter( s -> s.startsWith(classLabel)).collect(Collectors.toList()).subList(0, nbToSample);
-        featureVectors = (ArrayList<String>)featureVectors.stream().filter(s -> !s.startsWith(classLabel)).collect(Collectors.toList());
+        System.out.println("Class NONE to sample : " + nbToSample + "ID : " + classLabel);
+        System.out.println("Size of feature vector : " + featureVectors.size());
+        List<String> noneFeatureVectors = featureVectors.stream().filter(s -> s.startsWith(classLabel)).collect(Collectors.toList()).subList(0, nbToSample);
+        featureVectors = (ArrayList<String>) featureVectors.stream().filter(s -> !s.startsWith(classLabel)).collect(Collectors.toList());
         featureVectors.addAll(noneFeatureVectors);
-        System.out.println("Size of feature vector after undersample: "+featureVectors.size());
+        System.out.println("Size of feature vector after undersample: " + featureVectors.size());
         FileUtil.dumpToFile(featureVectors, fileName, "");
     }
 
     public int getUnknownFeatureIndex() {
         int unknownIndex = 0;
-        for (String feat : featureIndexPair.keySet())
-        {
-            unknownIndex+= featureIndexPair.get(feat).size();
+        for (String feat : featureIndexPair.keySet()) {
+            unknownIndex += featureIndexPair.get(feat).size();
         }
-        
-        return unknownIndex+1;
+
+        return unknownIndex + 10; // dummy number, should be outside the training feature because we never saw it before
     }
 
     public void dumpFeaturesIndex(String fileName) throws FileNotFoundException {
@@ -397,7 +416,7 @@ static final long serialVersionUID = 2106L;
                     .sorted(Entry.comparingByValue())
                     .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
             for (String keySet : sortedMap.keySet()) {
-                System.out.println((offset + sortedMap.get(keySet)) + keySet + "\t" + featureName);
+                //System.out.println((offset + sortedMap.get(keySet)) + keySet + "\t" + featureName);
                 writer.println((offset + sortedMap.get(keySet)) + "\t" + keySet + "\t" + featureName);
             }
             offset += featureIndexPair.get(featureName).size();
@@ -406,7 +425,15 @@ static final long serialVersionUID = 2106L;
     }
 
     public String extractFeatureVectorValue(int tokenIdx, Sentence sent, ArgumentSpan span, boolean isLabelAvailable, boolean isMultiClass) throws IOException {
-        DependencyTree depTree = StanfordDepParserSingleton.getInstance().parse(sent.getRawText());
+        DependencyTree depTree = null;//StanfordDepParserSingleton.getInstance().parse(sent.getRawText());
+        if (isLabelAvailable)
+        {
+             depTree = sentDepTreePair.get(sent.getRawText());
+        }
+        else
+        {
+            depTree = StanfordDepParserSingleton.getInstance().parse(sent.getRawText());
+        }
         StringBuilder featStr = new StringBuilder();
         int offset = 0;
         int classLabel = isLabelAvailable ? getClassLabel(span, isMultiClass) : -10;
@@ -462,6 +489,7 @@ static final long serialVersionUID = 2106L;
                     } else {
                         processName = sent.getProcessName();
                     }
+                    System.out.println(tokenIdx);
                     currentNode = depTree.get(tokenIdx);
                     DependencyNode targetNode = depTree.getWordDepNode(processName);
                     if (targetNode == null) {
@@ -474,6 +502,10 @@ static final long serialVersionUID = 2106L;
                         }
                     } else {
                         // System.out.println(sent.getRawText());
+                        if (processName.equalsIgnoreCase("evaporation") && classLabel == 2)
+                        {
+                            System.out.println("Sentence : "+sent.getRawText()+" Argument Span : "+span.getText()+" Dep Path :"+depTree.getDepRelPath(currentNode, targetNode)+" class label"+classLabel);
+                        }
                         featValues = depTree.getDepRelPath(currentNode, targetNode);
                         //System.out.println(featValues);
                     }
@@ -533,10 +565,10 @@ static final long serialVersionUID = 2106L;
                     break;
                 case "frame_left":
                     String lemmaVerb = depTree.getLemmaVerb(true, 3, tokenIdx);
-                    if (fNetExtractor == null) {
-                        fNetExtractor = new FrameNetFeatureExtractor();
-                    }
-                    String[] framesInvoked = fNetExtractor.getFrame(lemmaVerb + ".v");
+                    /*if (fNetExtractor == null) {
+                     fNetExtractor = new FrameNetFeatureExtractor();
+                     }*/
+                    List<String> framesInvoked = verbFramePair.get(lemmaVerb);//fNetExtractor.getFrame(lemmaVerb + ".v");
                     if (!lemmaVerb.isEmpty() && framesInvoked != null) {
                         for (String fName : framesInvoked) {
                             updateFeatureVector(featStr, offset, fName, features.get(i));
@@ -546,10 +578,10 @@ static final long serialVersionUID = 2106L;
                     break;
                 case "frame_right":
                     lemmaVerb = depTree.getLemmaVerb(false, 3, tokenIdx);
-                    if (fNetExtractor == null) {
-                        fNetExtractor = new FrameNetFeatureExtractor();
-                    }
-                    framesInvoked = fNetExtractor.getFrame(lemmaVerb + ".v");
+                    /*if (fNetExtractor == null) {
+                     fNetExtractor = new FrameNetFeatureExtractor();
+                     }*/
+                    framesInvoked = verbFramePair.get(lemmaVerb);//fNetExtractor.getFrame(lemmaVerb + ".v");
                     if (!lemmaVerb.isEmpty() && framesInvoked != null) {
                         for (String fName : framesInvoked) {
                             updateFeatureVector(featStr, offset, fName, features.get(i));
@@ -579,7 +611,7 @@ static final long serialVersionUID = 2106L;
 
     public static void main(String[] args) throws FileNotFoundException {
         // Test read
-        new FeatureExtractor().readFeatureFile("./configSBUProcRel/features");
+        //new FeatureExtractor().readFeatureFile("./configSBUProcRel/features");
     }
 
 }

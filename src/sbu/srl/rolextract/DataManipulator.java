@@ -103,6 +103,40 @@ public class DataManipulator {
         }
     }
 
+    public static void diff(String trainingAllFileName, String trainingFourRoles, String outFileName) throws FileNotFoundException
+    {
+        String[] trainingAllLines = FileUtil.readLinesFromFile(trainingAllFileName);
+        String[] trainingFourRolesLines = FileUtil.readLinesFromFile(trainingFourRoles);
+        HashMap<String,String> sentAll = new HashMap<String,String>();
+        HashMap<String,String> sentFourRoles = new HashMap<String,String>();
+        for (int i = 0; i < trainingAllLines.length; i++)
+        {
+            sentAll.put(trainingAllLines[i].split("\t")[7].toLowerCase(), trainingAllLines[i].split("\t")[7].toLowerCase());
+        }
+        for (int i = 0; i < trainingFourRolesLines.length; i++)
+        {
+            sentFourRoles.put(trainingFourRolesLines[i].split("\t")[7].toLowerCase(), trainingFourRolesLines[i].split("\t")[7].toLowerCase());
+        }
+        
+        PrintWriter writer = new PrintWriter(outFileName);
+        for (int i = 0; i < trainingAllLines.length; i++)
+        {
+            String sent = trainingAllLines[i].split("\t")[7].toLowerCase();
+            if (sentFourRoles.get(sent) == null)
+            {
+                writer.println(trainingAllLines[i]);
+                System.out.println("NOT INTERSECTION");
+            }
+            else
+            {
+                System.out.println("Intersection");
+            }
+        }
+        
+        writer.close();
+        //HashMap<String> sentAll;// = new HashMap<String>();
+        //HashMap<String> sentTrainingFour = new HashMap<String>();
+    }
     public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
         /*String allLines[] = FileUtil.readLinesFromFile("./data/training_all.tsv");
          String currentTrainingData[] = FileUtil.readLinesFromFile("./data/training_4_roles.tsv");
@@ -123,9 +157,13 @@ public class DataManipulator {
 
          writer.close();    */
         //freqARGCollectorEasySRL();
-        processDiffBetweenTrainTest("./data/./training_4_roles.tsv", 
+        /*processDiffBetweenTrainTest("./data/./training_4_roles.tsv", 
                                     "/home/slouvan/NetBeansProjects/SRL-Integrated/data/cross-val-04-01-2016/fold-1/train/cv.1.train.sentence.sbu", 
-                                    "/home/slouvan/NetBeansProjects/SRL-Integrated/data/cross-val-04-01-2016/fold-1/test/cv.1.test.sentence.sbu");
+                                    "/home/slouvan/NetBeansProjects/SRL-Integrated/data/cross-val-04-01-2016/fold-1/test/cv.1.test.sentence.sbu");*/
+        
+        diff("/home/slouvan/NetBeansProjects/SRL-Integrated/data/training_all.tsv",
+             "/home/slouvan/NetBeansProjects/SRL-Integrated/data/training_4_roles.tsv", 
+             "/home/slouvan/NetBeansProjects/SRL-Integrated/data/thousand_sentences.tsv");
     }
 
 }

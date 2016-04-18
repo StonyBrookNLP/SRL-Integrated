@@ -6,6 +6,9 @@
 package sbu.srl.ml;
 
 import Util.LibLinearUtil;
+import de.bwaldvogel.liblinear.FeatureNode;
+import de.bwaldvogel.liblinear.Model;
+import de.bwaldvogel.liblinear.Train;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -13,8 +16,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
-import liblinear.FeatureNode;
-import liblinear.Model;
+
 
 /**
  *
@@ -26,7 +28,7 @@ public class LibLinearWrapper {
         String[] params = new String[LibLinearUtil.TRAIN_ARGS.length];
         System.arraycopy(LibLinearUtil.TRAIN_ARGS, 0, params, 0, LibLinearUtil.TRAIN_ARGS.length);
         try {
-            Method onLoaded = liblinear.Train.class.getMethod("main", String[].class);
+            Method onLoaded = Train.class.getMethod("main", String[].class);
             params[params.length - 2] = trainingFileName;
             params[params.length - 1] = modelFileName;
             onLoaded.invoke(null, (Object) params);

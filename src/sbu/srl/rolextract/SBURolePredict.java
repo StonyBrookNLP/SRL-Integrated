@@ -11,6 +11,9 @@ import Util.GlobalV;
 import Util.LibSVMUtil;
 import Util.ProcessFrameUtil;
 import Util.SentenceUtil;
+import de.bwaldvogel.liblinear.FeatureNode;
+import de.bwaldvogel.liblinear.Linear;
+import de.bwaldvogel.liblinear.Model;
 import edu.uw.easysrl.main.Argument;
 import edu.uw.easysrl.main.ParseResult;
 import edu.uw.easysrl.main.Predicate;
@@ -24,8 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import static java.util.stream.Collectors.toList;
-import liblinear.FeatureNode;
-import liblinear.Model;
+
 import libsvm.svm;
 import libsvm.svm_model;
 import libsvm.svm_node;
@@ -53,7 +55,7 @@ public class SBURolePredict {
     SpockDataReader dataReader;
     Set<String> classLabels = new HashSet<String>();
     HashMap<String, FeatureExtractor> fExtractors;
-    HashMap<String, liblinear.Model> models;
+    HashMap<String, Model> models;
     String[] annotations;
     String configFileName;
     String predictionFileName;
@@ -68,7 +70,7 @@ public class SBURolePredict {
         this.isMulticlass = isMultiClass;
         classLabels = dataReader.getRoleLabels();
         fExtractors = new HashMap<String, FeatureExtractor>();
-        models = new HashMap<String, liblinear.Model>();
+        models = new HashMap<String, Model>();
 
         if (isMultiClass) {
             classLabels.add("NONE");
@@ -77,7 +79,7 @@ public class SBURolePredict {
                 // Load feature extractor
                 fExtractors.put(roleName, (FeatureExtractor) FileUtil.deserializeFromFile(modelDir + "/" + roleName + ".featureExtract"));
                 // Load model
-                Model model = liblinear.Linear.loadModel(new FileReader(modelDir + "/" + roleName + ".model"));
+                Model model = Linear.loadModel(new FileReader(modelDir + "/" + roleName + ".model"));
                 //System.out.println(roleName);
                 models.put(roleName, model);
             }
@@ -87,7 +89,7 @@ public class SBURolePredict {
                     // Load feature extractor
                     fExtractors.put(roleName, (FeatureExtractor) FileUtil.deserializeFromFile(modelDir + "/" + roleName + ".featureExtract"));
                     // Load model
-                    Model model = liblinear.Linear.loadModel(new FileReader(modelDir + "/" + roleName + ".model"));
+                    Model model = Linear.loadModel(new FileReader(modelDir + "/" + roleName + ".model"));
                     //System.out.println(roleName);
                     models.put(roleName, model);
                 }
@@ -102,7 +104,7 @@ public class SBURolePredict {
         dataReader.sentences = sentences;
         classLabels = dataReader.getRoleLabels();
         fExtractors = new HashMap<String, FeatureExtractor>();
-        models = new HashMap<String, liblinear.Model>();
+        models = new HashMap<String, Model>();
         this.isMulticlass = isMultiClass;
         if (isMultiClass) {
             String roleName = "Multi";
@@ -110,7 +112,7 @@ public class SBURolePredict {
                 // Load feature extractor
                 fExtractors.put(roleName, (FeatureExtractor) FileUtil.deserializeFromFile(modelDir + "/" + roleName + ".featureExtract"));
                 // Load model
-                Model model = liblinear.Linear.loadModel(new FileReader(modelDir + "/" + roleName + ".model"));
+                Model model = Linear.loadModel(new FileReader(modelDir + "/" + roleName + ".model"));
                 // System.out.println(roleName);
                 models.put(roleName, model);
             }
@@ -120,7 +122,7 @@ public class SBURolePredict {
                     // Load feature extractor
                     fExtractors.put(roleName, (FeatureExtractor) FileUtil.deserializeFromFile(modelDir + "/" + roleName + ".featureExtract"));
                     // Load model
-                    Model model = liblinear.Linear.loadModel(new FileReader(modelDir + "/" + roleName + ".model"));
+                    Model model = Linear.loadModel(new FileReader(modelDir + "/" + roleName + ".model"));
                     // System.out.println(roleName);
                     models.put(roleName, model);
                 }
@@ -303,6 +305,7 @@ public class SBURolePredict {
         ArrayList<Sentence> sentences = (ArrayList<Sentence>) FileUtil.deserializeFromFile(testingFileName);
         for (int i = 0; i < sentences.size(); i++) {
             Sentence currentSentence = sentences.get(i);
+            System.out.println("[Prediction] "+i+" / "+sentences.size());
             ArrayList<ArgumentSpan> spans = currentSentence.getAllAnnotatedArgumentSpan();
             HashMap<String, String> argumentSpanThatHasAnnotation = currentSentence.getAllArgumentsThatHaveAnnotation();
             spans = (ArrayList<ArgumentSpan>) spans.stream().distinct().collect(toList());
@@ -313,6 +316,7 @@ public class SBURolePredict {
             if (!knownAnnotation && spans.size() == 0) {
                 continue;
             }
+            System.out.println(currentSentence.getRawText());
             for (int j = 0; j < spans.size(); j++) {
                 HashMap<String, Double> roleProbPair = new HashMap<String, Double>();
                 HashMap<String, String> roleVectorPair = new HashMap<String, String>();
@@ -326,11 +330,12 @@ public class SBURolePredict {
                     DependencyNode headNode = depTree.getHeadNode(tokenIdx);
                     //for (int k = 0; k < tokenIdx.size(); k++) {
                     String rawVector = fExtractor.extractFeatureVectorValue(headNode.getId(), currentSentence, currentSpan, false, isMulticlass);
+                    //System.out.println(rawVector);
                     //liblinear.Linear.predictProbability(;, x, prob_estimates)
                     FeatureNode[] x = LibLinearWrapper.toFeatureNode(rawVector, models.get(roleLabel));
-                    int prediction = liblinear.Linear.predict(models.get(roleLabel), x);
+                    int prediction = (int)Linear.predict(models.get(roleLabel), x);
                     double probs[] = new double[fExtractor.multiClassLabel.size()];
-                    liblinear.Linear.predictProbability(models.get(roleLabel), x, probs);
+                    Linear.predictProbability(models.get(roleLabel), x, probs);
                     Model m = models.get(roleLabel);
                     int[] labels = m.getLabels();
                     //int positiveIdx = labels[0] == 1 ? 0 : 1;
@@ -363,9 +368,9 @@ public class SBURolePredict {
                             String rawVector = fExtractor.extractFeatureVectorValue(headNode.getId(), currentSentence, currentSpan, false, isMulticlass);
                             //liblinear.Linear.predictProbability(;, x, prob_estimates)
                             FeatureNode[] x = LibLinearWrapper.toFeatureNode(rawVector, models.get(roleLabel));
-                            int prediction = liblinear.Linear.predict(models.get(roleLabel), x);
+                            int prediction = (int)Linear.predict(models.get(roleLabel), x);
                             double probs[] = new double[2];
-                            liblinear.Linear.predictProbability(models.get(roleLabel), x, probs);
+                            Linear.predictProbability(models.get(roleLabel), x, probs);
                             Model m = models.get(roleLabel);
                             int[] labels = m.getLabels();
                             int positiveIdx = labels[0] == 1 ? 0 : 1;

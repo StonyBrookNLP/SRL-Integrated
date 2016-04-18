@@ -314,10 +314,20 @@ public class SpockDataReader {
     public static void dumpSentenceLexTargetIdxs(ArrayList<Sentence> arrSentence, String outFileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(outFileName);
         for (Sentence sent : arrSentence) {
-            Pair<List<String>, List<Integer>> targetIdxPair = sent.getTargetLexAndIdxs();
-            String targets = Joiner.on("_").join(targetIdxPair.first);
-            String idxs = Joiner.on("_").join(targetIdxPair.second);
-            writer.println(sent.getRawText().trim()+"\t"+sent.getProcessName()+"\t"+targets+"\t"+idxs);
+            System.out.println(sent.getRawText());
+            Pair<List<String>, List<Integer>> targetIdxPair = null;
+            boolean error = false;
+            try {
+                targetIdxPair = sent.getTargetLexAndIdxs();
+            } catch (Exception e) {
+                //System.out.println("Error : "+sent.getRawText());
+                error = true;
+            }
+            if (!error) {
+                String targets = Joiner.on("_").join(targetIdxPair.first);
+                String idxs = Joiner.on("_").join(targetIdxPair.second);
+                writer.println(sent.getRawText().trim() + "\t" + sent.getProcessName() + "\t" + targets + "\t" + idxs);
+            }
         }
         writer.close();
     }

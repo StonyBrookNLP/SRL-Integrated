@@ -8,6 +8,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import liblinear.InvalidInputDataException;
 
 import se.lth.cs.srl.Learn;
 import se.lth.cs.srl.ml.LearningProblem;
@@ -54,7 +57,7 @@ public class LibLinearLearningProblem implements LearningProblem {
         out.close();
     }
 
-    public LibLinearModel train(boolean sparseModel) {
+    public LibLinearModel train(boolean sparseModel) throws InvalidInputDataException {
         File outputFile = new File(trainDataFile.toString() + ".model");
         if (Learn.learnOptions.deleteTrainFiles) {
             trainDataFile.deleteOnExit();
@@ -76,7 +79,14 @@ public class LibLinearLearningProblem implements LearningProblem {
 
     @Override
     public Model train() {
-        return train(false);
+
+        try {
+            return train(false);
+        } catch (InvalidInputDataException ex) {
+            Logger.getLogger(LibLinearLearningProblem.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+
     }
 
     @Override
@@ -106,7 +116,7 @@ public class LibLinearLearningProblem implements LearningProblem {
             }
             problemWriter.writeIndices(duplicatedIndices);
             out.println();
-           // System.out.println("");
+            // System.out.println("");
         }
         //System.out.println("");
     }
@@ -168,7 +178,7 @@ public class LibLinearLearningProblem implements LearningProblem {
         @Override
         public void writeIndices(Collection<Integer> indices) {
             for (Integer index : indices) {
-               // System.out.print(index);
+                // System.out.print(index);
                 //System.out.print(":1 ");
                 out.print(index);
                 out.print(":1 ");

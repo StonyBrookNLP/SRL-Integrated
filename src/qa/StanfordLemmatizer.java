@@ -109,9 +109,9 @@ public class StanfordLemmatizer {
     
     public static void main(String[] args) {
         System.out.println("Starting Stanford Lemmatizer");
-        //String text = "attraction";
+        //String text = "attraction";   
         StanfordLemmatizer slem = new StanfordLemmatizer();
-        System.out.println(slem.lemmatize("condensation"));
+        System.out.println(slem.lemmatize("fungi"));
         //System.out.println(slem.tokenize("She needs you. I want you."));
     }
 

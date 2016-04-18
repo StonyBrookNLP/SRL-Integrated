@@ -9,8 +9,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import liblinear.InvalidInputDataException;
 
 import se.lth.cs.srl.Learn;
 import se.lth.cs.srl.corpus.Predicate;
@@ -142,7 +145,12 @@ public class PredicateDisambiguator implements PipelineStep {
 				addInstance(pred,lp);
 			}
 			lp.done();
-			Model m=lp.train(true);
+			Model m = null;
+                    try {
+                        m = lp.train(true);
+                    } catch (InvalidInputDataException ex) {
+                        Logger.getLogger(PredicateDisambiguator.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 			models.put(key,m);
 			it.remove(); //This way we should lose references to the words and sentences we no longer need, and the gc should be able to clean this up for us.
 		}

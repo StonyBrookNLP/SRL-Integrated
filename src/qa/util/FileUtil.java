@@ -82,7 +82,7 @@ public class FileUtil {
         FileInputStream inFStream = new FileInputStream(fileName);
         ObjectInputStream ois = new ObjectInputStream(inFStream);
         Object obj = ois.readObject();
-
+        ois.close();
         return obj;
     }
 
@@ -159,7 +159,7 @@ public class FileUtil {
             String line = scanner.nextLine();
             lines.add(line);
         }
-
+        scanner.close();
         return lines.toArray(new String[lines.size()]);
     }
 

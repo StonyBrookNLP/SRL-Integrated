@@ -8,6 +8,8 @@ package sbu.srl.rolextract;
 import static Util.CCGParserUtil.getPropBankLabeledSentence;
 import Util.Constant;
 import Util.GlobalV;
+import de.bwaldvogel.liblinear.Linear;
+import de.bwaldvogel.liblinear.Model;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -23,7 +25,7 @@ import java.util.Map;
 import static java.util.Map.Entry.comparingByValue;
 import java.util.Set;
 import java.util.stream.Collectors;
-import liblinear.Model;
+
 import sbu.srl.ml.*;
 import qa.ProcessFrame;
 import qa.ProcessFrameProcessor;
@@ -117,7 +119,7 @@ public class SBURoleTrain {
  
     SRLFeatureExtractor buildSRLOutput(ArrayList<Sentence> sentences) throws FileNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
         System.out.println("BuildSRL Output");
-        PrintWriter writer = new PrintWriter("sentences.temp");
+        /*PrintWriter writer = new PrintWriter("sentences.temp");
         for (int i = 0; i < sentences.size(); i++) {
             Sentence sentence = sentences.get(i);
             String text = sentence.getRawText();
@@ -127,7 +129,9 @@ public class SBURoleTrain {
         new SRLWrapper().doPredict("sentences.temp", "sentences.args.temp", "./data/modelCCG", Constant.SRL_CCG, true, false);
         HashMap<String, Sentence> sentLabeledPair = getPropBankLabeledSentence("sentences.args.temp");
         SRLFeatureExtractor srlExtractor = new SRLFeatureExtractor(sentLabeledPair);
-        System.out.println("End of BuildSRL Output");
+        System.out.println("End of BuildSRL Output");*/
+        HashMap<String, Sentence> sentLabeledPair = getPropBankLabeledSentence("sentences.args.temp");
+        SRLFeatureExtractor srlExtractor = new SRLFeatureExtractor(sentLabeledPair);
         return srlExtractor;
     }
 
@@ -152,8 +156,10 @@ public class SBURoleTrain {
         HashMap<String, Integer> totalTrainInstances = new HashMap<String, Integer>();
         double nonNONECounter = 0;
         HashMap<String,Integer> roleCounter = new HashMap<String,Integer>();
+        
         for (int i = 0; i < sentences.size(); i++) {
             Sentence sentence = sentences.get(i);
+            System.out.println("Processing "+(i+1)+" / "+(sentences.size()));
             for (String roleName : classLabels) {
                 // count NON-NONE HERE
                 ArrayList<ArgumentSpan> spans = sentence.getMultiClassAnnotatedArgumentSpan(roleName, classLabels.size() - 1);
@@ -178,7 +184,7 @@ public class SBURoleTrain {
                     fExtractor.extractFeatureVector(sentence, span, true);
                     fExtractors.put("Multi", fExtractor);
                 }
-                System.out.println("TOTAL feature vector for " + roleName + " :" + fExtractor.featureVectors.size());
+                //System.out.println("TOTAL feature vector for " + roleName + " :" + fExtractor.featureVectors.size());
             }
         }
         String roleLabel = "Multi";
@@ -187,12 +193,12 @@ public class SBURoleTrain {
             if (!role.equalsIgnoreCase("NONE"))
             {
                 nonNONECounter += roleCounter.get(role);
-                System.out.println("Total "+role+" :"+roleCounter.get(role));
+                //System.out.println("Total "+role+" :"+roleCounter.get(role));
             }
         }
-        System.out.println("NON NONE COUNTER total : "+nonNONECounter);
+        //System.out.println("NON NONE COUNTER total : "+nonNONECounter);
         int nbNONEToSample = (int)(nonNONECounter/4.0);
-        System.out.println("To sample : "+nbNONEToSample);
+        //System.out.println("To sample : "+nbNONEToSample);
         fExtractors.get(roleLabel).dumpFeaturesIndex(outputDir + "/" + roleLabel + ".featureIndex");
         // UNDERSAMPLE 
         int noneClassID= fExtractors.get(roleLabel).multiClassLabel.get("NONE");
@@ -202,7 +208,7 @@ public class SBURoleTrain {
         LibLinearWrapper.doTrain(outputDir + "/" + roleLabel + ".vector", outputDir + "/" + roleLabel + ".model"); // output model
         FileUtil.serializeToFile(fExtractors.get(roleLabel), outputDir + "/" + roleLabel + ".featureExtract"); // output fExtractor object
         // feature weight analyzer
-        Model model = liblinear.Linear.loadModel(new FileReader(outputDir + "/" + roleLabel + ".model"));
+        Model model = Linear.loadModel(new FileReader(outputDir + "/" + roleLabel + ".model"));
         double[] featureWeights = model.getFeatureWeights();
         // read model, retrieve feature weight, store it in hashmap <index, value>. sort it by value
         HashMap<Integer, Double> indexWeightPair = new HashMap<Integer, Double>();
@@ -218,7 +224,7 @@ public class SBURoleTrain {
         String[] lines = FileUtil.readLinesFromFile(outputDir + "/" + roleLabel + ".featureIndex");
         for (Integer keySet : sortedMap.keySet()) {
             // for each elmt in hashmap print the featurevalue:featuretype:featureWeight // output it to a file
-            System.out.println("KEYSET INDEX : " + keySet);
+            // System.out.println("KEYSET INDEX : " + keySet);
             if (keySet <= lines.length) {
                 String fields[] = lines[keySet - 1].split("\t");
                 writer.println(fields[0] + "\t" + fields[1] + "\t" + fields[2] + "\t" + sortedMap.get(keySet));
@@ -284,7 +290,7 @@ public class SBURoleTrain {
                 LibLinearWrapper.doTrain(outputDir + "/" + roleLabel + ".vector", outputDir + "/" + roleLabel + ".model"); // output model
                 FileUtil.serializeToFile(fExtractors.get(roleLabel), outputDir + "/" + roleLabel + ".featureExtract"); // output fExtractor object
                 // feature weight analyzer
-                Model model = liblinear.Linear.loadModel(new FileReader(outputDir + "/" + roleLabel + ".model"));
+                Model model = Linear.loadModel(new FileReader(outputDir + "/" + roleLabel + ".model"));
                 double[] featureWeights = model.getFeatureWeights();
                 // read model, retrieve feature weight, store it in hashmap <index, value>. sort it by value
                 HashMap<Integer, Double> indexWeightPair = new HashMap<Integer, Double>();
@@ -294,7 +300,7 @@ public class SBURoleTrain {
 
                 Map<Integer, Double> sortedMap = indexWeightPair.entrySet().stream()
                         .sorted(reverseOrder(comparingByValue())).
-                        collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+                         collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
                 PrintWriter writer = new PrintWriter(outputDir + "/" + roleLabel + ".featureWeightRank");
                 String[] lines = FileUtil.readLinesFromFile(outputDir + "/" + roleLabel + ".featureIndex");
@@ -323,81 +329,7 @@ public class SBURoleTrain {
         }
     }
 
-    public void train() throws IOException, NoSuchMethodException, IllegalAccessException {
-        // for each sentence do
-        /*for (int i = 0; i < annotationReader.getProcDataArr().size(); i++) {
-         System.out.println("SENTENCE : " + i);
-         ArgProcessAnnotationData argProcessAnnData = annotationReader.getProcDataArr().get(i);
-         for (String roleName : classLabels) {
-         FeatureExtractor fExtractor = fExtractors.get(roleName);
-         if (argProcessAnnData.isRoleAndAnnotationExist(roleName)) {
-         fExtractor.extractFeature(argProcessAnnData, roleName);
-         fExtractors.put(roleName, fExtractor);
-         }
-         }
-         }
-
-         // for each sentence do
-         for (int i = 0; i < annotationReader.getProcDataArr().size(); i++) {
-         ArgProcessAnnotationData argProcessAnnData = annotationReader.getProcDataArr().get(i);
-         // for each class label X
-         for (String roleName : classLabels) {
-         FeatureExtractor fExtractor = fExtractors.get(roleName);
-         if (argProcessAnnData.isRoleAndAnnotationExist(roleName)) {
-         System.out.println("Extracting feature vector for " + roleName);
-         fExtractor.extractFeatureVector(argProcessAnnData, roleName);
-         fExtractors.put(roleName, fExtractor);
-         }
-         System.out.println("TOTAL feature vector for " + roleName + " :" + fExtractor.featureVectors.size());
-         }
-         }
-         int totalFeature = 0;
-         for (String roleLabel : fExtractors.keySet()) {
-         if (fExtractors.get(roleLabel).featureVectors.size() > 0) {
-         fExtractors.get(roleLabel).dumpFeaturesIndex(modelDir + "/" + roleLabel + ".featureIndex");
-         fExtractors.get(roleLabel).dumpFeatureVectors(GlobalV.PROJECT_DIR + "/data/" + roleLabel + ".vector");                   // vector file
-         LibLinearWrapper.doTrain(GlobalV.PROJECT_DIR + "/data/" + roleLabel + ".vector", modelDir + "/" + roleLabel + ".model"); // output model
-         FileUtil.serializeToFile(fExtractors.get(roleLabel), modelDir + "/" + roleLabel + ".featureExtract"); // output fExtractor object
-         // feature weight analyzer
-         Model model = liblinear.Linear.loadModel(new FileReader(modelDir + "/" + roleLabel + ".model"));
-         double[] featureWeights = model.getFeatureWeights();
-         // read model, retrieve feature weight, store it in hashmap <index, value>. sort it by value
-         HashMap<Integer, Double> indexWeightPair = new HashMap<Integer, Double>();
-         for (int i = 0; i < featureWeights.length; i++) {
-         indexWeightPair.put(i + 1, featureWeights[i]);
-         }
-
-         Map<Integer, Double> sortedMap = indexWeightPair.entrySet().stream()
-         .sorted(reverseOrder(comparingByValue())).
-         collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-
-         PrintWriter writer = new PrintWriter(modelDir + "/" + roleLabel + ".featureWeightRank");
-         String[] lines = FileUtil.readLinesFromFile(modelDir + "/" + roleLabel + ".featureIndex");
-         for (Integer keySet : sortedMap.keySet()) {
-         // for each elmt in hashmap print the featurevalue:featuretype:featureWeight // output it to a file
-         System.out.println("KEYSET INDEX : " + keySet);
-         if (keySet <= lines.length) {
-         String fields[] = lines[keySet - 1].split("\t");
-         writer.println(fields[0] + "\t" + fields[1] + "\t" + fields[2] + "\t" + sortedMap.get(keySet));
-         //System.out.println(fields[0] + "\t" + fields[1] + "\t" + fields[2] + "\t" + sortedMap.get(keySet));
-         }
-         }
-         writer.close();
-
-         }
-         }
-
-         for (String roleLabel : fExtractors.keySet()) {
-         totalFeature = 0;
-         if (fExtractors.get(roleLabel).featureVectors.size() > 0) {
-         HashMap<String, HashMap<String, Integer>> featIndex = fExtractors.get(roleLabel).featureIndexPair;
-         for (String featureName : featIndex.keySet()) {
-         totalFeature += featIndex.get(featureName).size();
-         }
-         }
-         System.out.println("TOTAL FEATURE LEARNED " + totalFeature + " " + roleLabel);
-         }*/
-    }
+    
 
     public static void main(String[] args) throws IOException, FileNotFoundException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         //SBURoleTrain trainer = new SBURoleTrain("./data/CandidateSpanGeneration.frame.tsv", "./data/CandidateSpanGeneration.tsv", GlobalV.PROJECT_DIR + "/data/model-26-10-2015-no-lexical");

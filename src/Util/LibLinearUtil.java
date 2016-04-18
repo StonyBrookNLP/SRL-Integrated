@@ -12,8 +12,8 @@ package Util;
 public class LibLinearUtil {
 
     public static String[] TRAIN_ARGS = {"-s",
-        "0", // TRAINING FILE INPUT
-        "-B",// MODEL NAME
+        "0", 
+        "-B",
         "1.0",
         "-c",
         "1",

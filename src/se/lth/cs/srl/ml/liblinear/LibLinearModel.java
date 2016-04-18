@@ -1,5 +1,6 @@
 package se.lth.cs.srl.ml.liblinear;
 
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -8,8 +9,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
 import liblinear.InvalidInputDataException;
+import liblinear.Linear;
+import liblinear.Train;
+
 
 import se.lth.cs.srl.Learn;
 import se.lth.cs.srl.ml.Model;
@@ -77,7 +80,7 @@ public class LibLinearModel implements Model {
 	}
 	
 	
-	static void trainModel(File dataFile,File outputFile) throws IOException, InterruptedException {
+	static void trainModel(File dataFile,File outputFile) throws IOException, InterruptedException, InvalidInputDataException {
 		//String[] llargs=new String[]{"-q","-s","0","-B","1",dataFile.toString(),outputFile.toString()};
 		
 		if(Learn.learnOptions.liblinearBinary!=null){
@@ -94,8 +97,8 @@ public class LibLinearModel implements Model {
                             
 				String[] llargs=new String[]{"-s","0","-B","1.0", "-c", "1",dataFile.toString(),outputFile.toString()};
                                 System.out.println("LIBLINEAR JARRRARA");
-				liblinear.Linear.disableDebugOutput(); //We would like to have llargs=new String[]{"-q","-s","0",dataFile.toString(),outputFile.toString()};, but there is something buggy with the java implmentation.
-				liblinear.Train.main(llargs);
+				Linear.disableDebugOutput(); //We would like to have llargs=new String[]{"-q","-s","0",dataFile.toString(),outputFile.toString()};, but there is something buggy with the java implmentation.
+				Train.main(llargs);
 			} catch (InvalidInputDataException e) {
 				e.printStackTrace();
 				System.err.println("LibLinear java failed. Look into this.");
