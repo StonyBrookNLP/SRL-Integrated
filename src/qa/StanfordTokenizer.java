@@ -72,7 +72,7 @@ public class StanfordTokenizer {
                 // Retrieve and add the lemma for each word into the
                 // list of lemmas
                 tokens.add(token.originalText());
-
+                
             }
         }
         return tokens;

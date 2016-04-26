@@ -5,6 +5,7 @@
  */
 package sbu.srl.rolextract;
 
+import static Util.CCGParserUtil.getPropBankLabeledSentence;
 import Util.Constant;
 import Util.SentenceUtil;
 import Util.StdUtil;
@@ -40,9 +41,9 @@ import scala.actors.threadpool.Arrays;
  */
 public class Test {
 
-    public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException {
-        try {
-            /*try {
+    public static void main(String[] args) throws  FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        /*try {
+            try {
             for (int i = 1; i <= 5; i++) {
             String outputDir = "/home/slouvan/NetBeansProjects/SRL-Integrated/data/cross-val-12-01-2016-byprocess-fold";
             File testFoldDir = new File(outputDir.concat("/fold-").concat("" + i).concat("/test"));
@@ -66,15 +67,15 @@ public class Test {
             Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
             } catch (InvocationTargetException ex) {
             Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
-            }*/
+            }
             
-            //SpockDataReader reader = new SpockDataReader("/home/slouvan/NetBeansProjects/SRL-Integrated/data/training_4_roles.tsv",
-            //        "/home/slouvan/NetBeansProjects/SRL-Integrated/configFrameFile/config.txt", false);
-            //reader.readData();
+            SpockDataReader reader = new SpockDataReader("/home/slouvan/NetBeansProjects/SRL-Integrated/data/training_4_roles.tsv",
+                    "/home/slouvan/NetBeansProjects/SRL-Integrated/configFrameFile/config.txt", false);
+            reader.readData();
             ArrayList<Sentence> sentences = (ArrayList<Sentence>)FileUtil.deserializeFromFile("./data/training_4_roles.ser");
             
-            //FileUtil.serializeToFile(sentences, "./data/training_4_roles.ser");
-            //PrintWriter writer = new PrintWriter("sentences.temp");
+            FileUtil.serializeToFile(sentences, "./data/training_4_roles.ser");
+            PrintWriter writer = new PrintWriter("sentences.temp");
             FrameNetFeatureExtractor fNetExtractor = new FrameNetFeatureExtractor();
             HashMap<String, List<String>> lemmaVerbFramePair = new HashMap<String,List<String>>();
             HashMap<String, DependencyTree> sentDepTreePair = new HashMap<String,DependencyTree>();
@@ -82,7 +83,7 @@ public class Test {
             for (Sentence sentence : sentences) {
                 System.out.println("Sent : "+(cnt++));
                 sentDepTreePair.put(sentence.getRawText(), StanfordDepParserSingleton.getInstance().parse(sentence.getRawText()));
-               /*System.out.println("Sent : "+(cnt++));
+               System.out.println("Sent : "+(cnt++));
                DependencyTree tree = sentence.getDepTree();
                for (int i = tree.firstKey(); i <= tree.lastKey() ;i++)
                {
@@ -91,7 +92,7 @@ public class Test {
                     if (!lemmaVerb.isEmpty() && framesInvoked != null && framesInvoked.length > 0) {
                         lemmaVerbFramePair.put(lemmaVerb, Arrays.asList(framesInvoked));
                     }
-               }*/
+               }
             }
             FileUtil.serializeToFile(sentDepTreePair, "./data/depTree.ser");
             int x = 0;
@@ -100,6 +101,15 @@ public class Test {
         } catch (IllegalArgumentException ex) {
             Logger.getLogger(Test.class.getName()).log(Level.SEVERE, null, ex);
         }
+        */
+        /*SpockDataReader reader = new SpockDataReader("/home/slouvan/NetBeansProjects/SRL-Integrated/data/training_4_roles.tsv",
+                   "/home/slouvan/NetBeansProjects/SRL-Integrated/configFrameFile/config.txt", false);
+        reader.readData();
+        ArrayList<Sentence> sentences = reader.getSentences();
+        int x  = 0;*/
+        new SRLWrapper().doPredict("test.input.easysrl", "test.output.easysrl", "./data/modelCCG", Constant.SRL_CCG, true, false);
+        HashMap<String, Sentence> map = getPropBankLabeledSentence("test.output.easysrl");
+        int x = 0;
     }
 }
 

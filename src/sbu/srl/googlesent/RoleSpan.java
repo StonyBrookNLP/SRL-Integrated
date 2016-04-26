@@ -5,6 +5,7 @@
  */
 package sbu.srl.googlesent;
 
+import java.util.Objects;
 import qa.dep.DependencyNode;
 
 /**
@@ -29,6 +30,27 @@ public class RoleSpan {
         this.roleLabel = roleLabel;
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 11 * hash + Objects.hashCode(this.nodeSpan);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final RoleSpan other = (RoleSpan) obj;
+        
+        return this.nodeSpan.getId() == other.nodeSpan.getId();
+       
+    }
+
     public DependencyNode getNodeSpan() {
         return nodeSpan;
     }
@@ -37,5 +59,6 @@ public class RoleSpan {
         this.nodeSpan = nodeSpan;
     }
 
+    
     
 }

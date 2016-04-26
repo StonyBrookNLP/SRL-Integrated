@@ -114,7 +114,8 @@ public class CCGParserUtil {
         HashMap<String, ArrayList<ArgumentSpan>> roleArgMap = new HashMap<String, ArrayList<ArgumentSpan>>();
         int cntSent = 0;
         boolean first = true;
-        for (int i = 0; i < lines.length; i++) {
+        int i;
+        for (i = 0; i < lines.length; i++) {
             if (lines[i].startsWith("SENT:")) {
                 // jika pertama kali maka 
                 if (first) {
@@ -157,17 +158,18 @@ public class CCGParserUtil {
                                     arrDepNodes.add(tree.get(j));
                                 }
                             }
-                        }
-                        if (roleArgMap.get(label) != null) {
-                            ArrayList<ArgumentSpan> spans = roleArgMap.get(label);
-                            spans.add(span);
-                            roleArgMap.put(label, spans);
-                        } else {
+                            if (roleArgMap.get(label) != null) {
+                                ArrayList<ArgumentSpan> spans = roleArgMap.get(label);
+                                spans.add(span);
+                                roleArgMap.put(label, spans);
+                            } else {
 
-                            ArrayList<ArgumentSpan> spans = new ArrayList<ArgumentSpan>();
-                            spans.add(span);
-                            roleArgMap.put(label, spans);
+                                ArrayList<ArgumentSpan> spans = new ArrayList<ArgumentSpan>();
+                                spans.add(span);
+                                roleArgMap.put(label, spans);
+                            }
                         }
+
                     }
 
                 }
@@ -175,6 +177,13 @@ public class CCGParserUtil {
                 insideSent = false;
             }
         }
+        if (lines.length > 0) {
+            currentLabeledSent.setRoleArgPropBank(roleArgMap);
+            sentTxtLabeledPair.put(currentSent, currentLabeledSent);
+        }
+        //      put sennt + pattern kosong
+        //sentArgPair.put(lines[i].split("SENT:")[1] + "#" + annotations[cntSent - 1].split("\t")[1], new ArrayList<String>());
+        cntSent++;
         sentTxtLabeledPair.put(currentSent, currentLabeledSent);
         System.out.println("Number of sentences " + cntSent);
 

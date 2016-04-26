@@ -190,6 +190,14 @@ public class FileUtil {
         writer.close();
     }
 
+    public static void dumpToFile(List<String> text, String fileName) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter(fileName);
+        for (String line : text) {
+            writer.println(line);
+        }
+        writer.close();
+    }
+
     public static void dumpToFileWHeader(ArrayList<String> text, String fileName, String header) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
         writer.println(header);
@@ -322,6 +330,12 @@ public class FileUtil {
     public static boolean isFileExist(String fileName) {
         File f = new File(fileName);
         return f.exists();
+    }
+    
+    public static boolean isDirectoryExist(String dirName)
+    {
+        File f = new File(dirName);
+        return f.exists() && f.isDirectory();
     }
 
     public static void main(String[] args) throws FileNotFoundException {

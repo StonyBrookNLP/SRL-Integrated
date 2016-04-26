@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 import qa.StanfordDepParser;
 import qa.dep.DependencyNode;
 import qa.dep.DependencyTree;
+import sbu.srl.datastructure.ArgumentSpan;
 
 /**
  *
@@ -37,7 +39,6 @@ public class RoleExtractor {
 
         scanner.close();
     }
-
     public void loadBlackList(String fileName) throws FileNotFoundException {
         Scanner scanner = new Scanner(new File(fileName));
         while (scanner.hasNextLine()) {
@@ -46,7 +47,6 @@ public class RoleExtractor {
         }
         scanner.close();
     }
-
     public ArrayList<RoleSpan> extract(int ruleID, DependencyTree tree) {
         ArrayList<RoleSpan> results = new ArrayList<RoleSpan>();
 
@@ -338,6 +338,11 @@ public class RoleExtractor {
                 break;
 
         }
+        // Make sure it's unique
+        Set<RoleSpan> uniqueSpan = new HashSet<RoleSpan>(results);
+        results.clear();
+        results.addAll(uniqueSpan);
+        results = (ArrayList<RoleSpan>)results.stream().sorted((e1, e2) -> Integer.compare(e1.nodeSpan.getId(), e2.nodeSpan.getId())).collect(Collectors.toList());
         StringUtil.removePunctuationStartEndFromRoleSpan(results);
         return results;
     }

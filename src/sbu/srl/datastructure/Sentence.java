@@ -33,7 +33,7 @@ public class Sentence implements Serializable {
     private String processName;
     DependencyTree depTree;
     HashMap<String, ArrayList<ArgumentSpan>> roleArgAnnotation;
-    HashMap<String, ArrayList<ArgumentSpan>> roleArgPropBank;
+    HashMap<String, ArrayList<ArgumentSpan>> roleArgPropBank;  // Used for easy SRL / or any SRL?
     HashMap<String, ArrayList<ArgumentSpan>> roleArgPrediction;
     private boolean annotated = false;
 
